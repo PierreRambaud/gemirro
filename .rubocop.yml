@@ -1,0 +1,21 @@
+AllCops:
+  Include:
+    - '**/Gemfile'
+    - lib/**/*
+    - spec/**/*
+    - gemirro.gemspec
+  Exclude:
+    - files/**/*
+    - templates/**/*
+MethodLength:
+  Exclude:
+    - lib/**/*
+ClassLength:
+  Exclude:
+    - lib/**/*
+ParameterLists:
+  Exclude:
+    - lib/**/*
+Style/CyclomaticComplexity:
+  Severity: warning
+  Max: 10

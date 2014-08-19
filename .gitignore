@@ -1,0 +1,4 @@
+.project
+coverage
+Gemfile.lock
+pkg
