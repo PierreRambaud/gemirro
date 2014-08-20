@@ -1,4 +1,4 @@
-# Gemirro
+# Gemirro | [![Build Status](https://travis-ci.org/PierreRambaud/gemirro.svg)](https://travis-ci.org/PierreRambaud/gemirro)
 
 Gemirro is a Ruby application that makes it easy way to create your own RubyGems mirror without having to push or write all gem you wanted in a configuration file.
 It does mirroring only, it has no authentication and you can't upload Gems to it.
