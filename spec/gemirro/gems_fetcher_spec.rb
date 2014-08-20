@@ -76,6 +76,8 @@ module Gemirro
 
     it 'should fetch all gems and log debug if gem is not satisfied' do
       gem = Gem.new('gemirro', '0.0.1')
+      gem.requirement.should_receive(:satisfied_by?)
+        .once.with(nil).and_return(false)
       @fetcher.source.gems << gem
       @fetcher.logger.should_receive(:debug)
         .once.with('Skipping gemirro-0.0.1.gem')
