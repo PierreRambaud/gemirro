@@ -11,11 +11,13 @@ module Gemirro
   describe 'Indexer' do
     include FakeFS::SpecHelpers
 
+    before(:each) do
+      skip if ::Gem::Version.new(RUBY_VERSION) >= ::Gem::Version.new('2.0.0')
+    end
+
     it 'should install indicies' do
       dir = MirrorDirectory.new('./')
       dir.add_directory('gem_generate_index/quick/Marshal.4.8')
-      dir.add_directory('quick/Marshal.4.8')
-
       ::Gem.configuration.should_receive(:really_verbose).once.and_return(true)
 
       @indexer = Indexer.new('./')
