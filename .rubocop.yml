@@ -16,6 +16,9 @@ ClassLength:
 ParameterLists:
   Exclude:
     - lib/**/*
-Style/CyclomaticComplexity:
+Metrics/CyclomaticComplexity:
+  Severity: warning
+  Max: 10
+Metrics/PerceivedComplexity:
   Severity: warning
   Max: 10

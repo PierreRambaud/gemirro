@@ -18,9 +18,9 @@ Gem::Specification.new do |s|
   s.required_ruby_version = '~> 1.9.2'
 
   s.add_dependency 'slop', '~>3.6'
-  s.add_dependency 'httpclient', '~>3.4'
+  s.add_dependency 'httpclient', '~>2.4'
   s.add_dependency 'confstruct', '~>0.2'
-  s.add_dependency 'builder', '~>3.3'
+  s.add_dependency 'builder', '~>3.2'
 
   s.add_development_dependency 'mime-types', '~>2.3'
   s.add_development_dependency 'rake', '~>10.0'
