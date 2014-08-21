@@ -1,0 +1,103 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Gemirro by PierreRambaud</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1 class="header">Gemirro</h1>
+        <p class="header">Gem to automatically make a mirror.</p>
+
+        <ul>
+          <li class="download"><a class="buttons" href="https://github.com/PierreRambaud/gemirro/zipball/master">Download ZIP</a></li>
+          <li class="download"><a class="buttons" href="https://github.com/PierreRambaud/gemirro/tarball/master">Download TAR</a></li>
+          <li><a class="buttons github" href="https://github.com/PierreRambaud/gemirro">View On GitHub</a></li>
+        </ul>
+
+        <p class="header">This project is maintained by <a class="header name" href="https://github.com/PierreRambaud">PierreRambaud</a></p>
+
+
+      </header>
+      <section>
+        <h1>
+<a name="gemirro--" class="anchor" href="#gemirro--"><span class="octicon octicon-link"></span></a>Gemirro | <a href="https://travis-ci.org/PierreRambaud/gemirro"><img src="https://travis-ci.org/PierreRambaud/gemirro.svg" alt="Build Status"></a>
+</h1>
+
+<p>Gemirro is a Ruby application that makes it easy way to create your own RubyGems mirror without having to push or write all gem you wanted in a configuration file.
+It does mirroring only, it has no authentication and you can't upload Gems to it.
+More you only need to launch the server and gems will automaticly be downloaded when requests come.</p>
+
+<h2>
+<a name="requirements" class="anchor" href="#requirements"><span class="octicon octicon-link"></span></a>Requirements</h2>
+
+<ul>
+<li>Ruby 1.9.2 or newer</li>
+<li>Enough space to store Gems</li>
+</ul><h2>
+<a name="installation" class="anchor" href="#installation"><span class="octicon octicon-link"></span></a>Installation</h2>
+
+<p>Assuming RubyGems isn't down you can install the Gem as following:</p>
+
+<div class="highlight highlight-bash"><pre><span class="nv">$ </span>gem install gemirro
+</pre></div>
+
+<h2>
+<a name="usage" class="anchor" href="#usage"><span class="octicon octicon-link"></span></a>Usage</h2>
+
+<p>The process of setting up a mirror is fairly easy and can be done in few seconds.</p>
+
+<p>The first step is to set up a new, empty mirror directory.
+This is done by running the <code>gemirro init</code> command.</p>
+
+<div class="highlight highlight-bash"><pre><span class="nv">$ </span>gemirro init /srv/http/mirror.com/
+</pre></div>
+
+<p>Once created you can edit the main configuration file called <code>config.rb</code>.
+This configuration file specifies what source to mirror, destination directory, server host and port, etc.</p>
+
+<p>Once configured and if you add gem in the <code>define_source</code>, you can pull them by running the following command:</p>
+
+<div class="highlight highlight-bash"><pre><span class="nv">$ </span>gemirro update
+</pre></div>
+
+<p>Once all the Gems have been downloaded you'll need to generate an index of all the installed files. This can be done as following:</p>
+
+<div class="highlight highlight-bash"><pre><span class="nv">$ </span>gemirro index
+</pre></div>
+
+<p>Last, launch the <code>TCPServer</code>, and all requests will check if gems are detected, and download them if necessary and generate index immediately.</p>
+
+<div class="highlight highlight-bash"><pre><span class="nv">$ </span>gemirro server
+</pre></div>
+
+<p>If you want to use a custom configuration file not located in the current directory, use the <code>-c</code> or <code>--config</code> option.</p>
+
+<h2>
+<a name="apache-configuration" class="anchor" href="#apache-configuration"><span class="octicon octicon-link"></span></a>Apache configuration</h2>
+
+<p>TODO</p>
+
+<h2>
+<a name="nginx-configuration" class="anchor" href="#nginx-configuration"><span class="octicon octicon-link"></span></a>Nginx configuration</h2>
+
+<p>TODO</p>
+      </section>
+      <footer>
+        <p><small>Hosted on <a href="http://pages.github.com">GitHub Pages</a> using the Dinky theme</small></p>
+      </footer>
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+		
+  </body>
+</html>
