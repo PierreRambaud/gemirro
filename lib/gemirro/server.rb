@@ -79,8 +79,9 @@ module Gemirro
     def fetch_gem(resource)
       name = File.basename(resource)
       regexp = /^(.*)-(\d+(?:\.\d+){,4})\.gem(?:spec\.rz)?$/
-      gem_name, gem_version = name.match(regexp).captures
 
+      return unless result = name.match(regexp)
+      gem_name, gem_version = result.captures
       return unless gem_name && gem_version
 
       logger.info("Try to download #{gem_name} with version #{gem_version}")
