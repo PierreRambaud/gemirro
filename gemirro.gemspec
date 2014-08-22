@@ -10,7 +10,7 @@ Gem::Specification.new do |s|
   s.license     = 'GPL-3.0'
   s.summary     = 'Gem for easily creating your own RubyGems mirror.'
   s.homepage    = 'https://github.com/PierreRambaud/gemirro'
-  s.description = 'Create your own gem mirro with a simple TCPServer.'
+  s.description = 'Create your own gem mirror with a simple TCPServer.'
   s.executables = ['gemirro']
 
   s.files = File.read(File.expand_path('../MANIFEST', __FILE__)).split("\n")
