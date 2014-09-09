@@ -54,7 +54,44 @@ If you want to use a custom configuration file not located in the current direct
 
 
 ##Apache configuration
-TODO
+
+You must active the apache `proxy` module.
+
+```bash
+$ sudo a2enmod proxy
+$ sudo a2enmod proxy_http
+```
+
+Create your VirtualHost and replace following `http://localhost:2000` with your custom server configuration located in your `config.rb` file and restart Apache.
+
+```
+<VirtualHost *:80>
+  ServerName mirror.gemirro
+  ProxyPreserveHost On
+  ProxyRequests off
+  ProxyPass / http://localhost:2000
+  ProxyPassReverse / http://localhost:2000
+</VirtualHost>
+```
 
 ##Nginx configuration
-TODO
+
+Replace `localhost:2000` with your custom server configuration located in your `config.rb` file and restart Nginx.
+
+```
+upstream gemirro {
+  server localhost:2000;
+}
+
+server {
+  server_name rbgems;
+
+  location / {
+    proxy_pass http://gemirro;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  }
+}
+```
+

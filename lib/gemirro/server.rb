@@ -39,10 +39,13 @@ module Gemirro
     #
     def run
       while (session = server.accept)
-        request = session.gets
+        request = session.gets.chomp
         logger.info(request)
 
-        trimmedrequest = request.gsub(/GET\ \//, '').gsub(/\ HTTP.*/, '').chomp
+        trimmedrequest = request
+          .gsub(/(HEAD|GET)\ \//, '')
+          .gsub(/\ HTTP.*/, '')
+          .chomp
         resource = "#{@destination}/#{trimmedrequest}"
 
         # Try to download gem if file doesn't exists
@@ -56,13 +59,17 @@ module Gemirro
           next
         end
 
-        if File.directory?(resource)
-          display_directory(session, resource)
-        else
-          mime_type = MIME::Types.type_for(resource)
-          session.print "HTTP/1.1 200/OK\r\nContent-type:#{mime_type}\r\n\r\n"
-          file = open(resource, 'rb')
-          session.puts(file.read)
+        begin
+          if File.directory?(resource)
+            display_directory(session, resource)
+          else
+            mime_type = MIME::Types.type_for(resource)
+            session.print "HTTP/1.1 200/OK\r\nContent-type:#{mime_type}\r\n\r\n"
+            file = open(resource, 'rb')
+            session.puts(file.read)
+          end
+        rescue Errno::ECONNRESET, Errno::EPIPE => e
+          logger.info(e.message)
         end
 
         session.close
