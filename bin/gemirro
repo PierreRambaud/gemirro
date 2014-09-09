@@ -3,4 +3,5 @@
 
 require File.expand_path('../../lib/gemirro', __FILE__)
 
-Gemirro::CLI.options.parse
+options = Gemirro::CLI.options
+puts options if options.parse.empty?
