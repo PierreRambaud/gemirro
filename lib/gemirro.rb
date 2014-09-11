@@ -10,8 +10,6 @@ require 'zlib'
 require 'httpclient'
 require 'logger'
 require 'stringio'
-require 'socket'
-require 'mime/types'
 
 unless $LOAD_PATH.include?(File.expand_path('../', __FILE__))
   $LOAD_PATH.unshift(File.expand_path('../', __FILE__))
@@ -22,7 +20,6 @@ require 'gemirro/configuration'
 require 'gemirro/gem'
 require 'gemirro/http'
 require 'gemirro/indexer'
-require 'gemirro/server'
 require 'gemirro/source'
 require 'gemirro/mirror_directory'
 require 'gemirro/mirror_file'

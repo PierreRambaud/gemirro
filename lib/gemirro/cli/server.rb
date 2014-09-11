@@ -14,6 +14,7 @@ Gemirro::CLI.options.command 'server' do
       abort
     end
 
-    Gemirro::Server.new.run
+    require 'gemirro/server'
+    Gemirro::Server.run!
   end
 end

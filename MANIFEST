@@ -34,7 +34,6 @@ spec/gemirro/http_spec.rb
 spec/gemirro/indexer_spec.rb
 spec/gemirro/mirror_directory_spec.rb
 spec/gemirro/mirror_file_spec.rb
-spec/gemirro/server_spec.rb
 spec/gemirro/source_spec.rb
 spec/gemirro/versions_fetcher_spec.rb
 spec/gemirro/versions_file_spec.rb

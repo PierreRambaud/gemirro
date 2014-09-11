@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+require 'sinatra/base'
+require 'thin'
 
 module Gemirro
   ##
@@ -13,23 +15,17 @@ module Gemirro
   # @!attribute [r] gems_fetcher
   #  @return [Gemirro::GemsFetcher]
   #
-  class Server
-    attr_reader :server, :destination, :versions_fetcher, :gems_fetcher
-
+  class Server < Sinatra::Base
     ##
-    # Initialize Server
+    # Configure server
     #
-    def initialize
-      configuration.server_host = 'localhost' if configuration.server_host.nil?
-      configuration.server_port = '2000' if configuration.server_port.nil?
-      logger.info('Running server on ' \
-                  "#{configuration.server_host}:#{configuration.server_port}")
-      @server = TCPServer.new(
-        configuration.server_host,
-        configuration.server_port
-      )
-
-      @destination = configuration.destination
+    configure do
+      config = Gemirro.configuration
+      config.server_host = 'localhost' if config.server_host.nil?
+      config.server_port = '2000' if config.server_port.nil?
+      set :port, config.server_port
+      set :bind, config.server_host
+      set :destination, config.destination.gsub(/\/$/, '')
     end
 
     ##
@@ -37,42 +33,22 @@ module Gemirro
     #
     # @return [nil]
     #
-    def run
-      while (session = server.accept)
-        request = session.gets.chomp
-        logger.info(request)
+    get('*') do |path|
+      resource = "#{settings.destination}#{path}"
 
-        trimmedrequest = request
-          .gsub(/(HEAD|GET)\ \//, '')
-          .gsub(/\ HTTP.*/, '')
-          .chomp
-        resource = "#{@destination}/#{trimmedrequest}"
+      # Try to download gem if file doesn't exists
+      fetch_gem(resource) unless File.exist?(resource)
+      # If not found again, return a 404
+      return not_found unless File.exist?(resource)
 
-        # Try to download gem if file doesn't exists
-        fetch_gem(resource) unless File.exist?(resource)
-
-        # If not found again, return a 404
-        unless File.exist?(resource)
-          logger.warn("404 - #{trimmedrequest.gsub(/^public\//, '')}")
-          session.print "HTTP/1.1 404/Object Not Found\r\n\r\n"
-          session.close
-          next
+      begin
+        if File.directory?(resource)
+          display_directory(resource)
+        else
+          send_file resource
         end
-
-        begin
-          if File.directory?(resource)
-            display_directory(session, resource)
-          else
-            mime_type = MIME::Types.type_for(resource)
-            session.print "HTTP/1.1 200/OK\r\nContent-type:#{mime_type}\r\n\r\n"
-            file = open(resource, 'rb')
-            session.puts(file.read)
-          end
-        rescue Errno::ECONNRESET, Errno::EPIPE => e
-          logger.info(e.message)
-        end
-
-        session.close
+      rescue Errno::ECONNRESET, Errno::EPIPE => e
+        logger.info(e.message)
       end
     end
 
@@ -88,10 +64,12 @@ module Gemirro
       regexp = /^(.*)-(\d+(?:\.\d+){,4})\.gem(?:spec\.rz)?$/
       result = name.match(regexp)
       return unless result
+
       gem_name, gem_version = result.captures
       return unless gem_name && gem_version
 
       logger.info("Try to download #{gem_name} with version #{gem_version}")
+
       begin
         gems_fetcher.source.gems.clear
         gems_fetcher.source.gems.push(Gemirro::Gem.new(gem_name, gem_version))
@@ -109,7 +87,7 @@ module Gemirro
     # @return [Indexer]
     #
     def generate_index
-      indexer    = Indexer.new(configuration.destination)
+      indexer    = Indexer.new(settings.destination)
       indexer.ui = ::Gem::SilentUI.new
 
       logger.info('Generating indexes')
@@ -119,24 +97,20 @@ module Gemirro
     ##
     # Display directory on the current sesion
     #
-    # @param [TCPSocket] session
     # @param [String] resource
     # @return [Array]
     #
-    def display_directory(session, resource)
-      session.print "HTTP/1.1 200/OK\r\nContent-type:text/html\r\n\r\n"
+    def display_directory(resource)
       base_dir = Dir.new(resource)
-      base_dir.entries.sort.each do |f|
+      base_dir.entries.sort.map do |f|
         dir_sign = ''
         resource_path = resource.gsub(/\/$/, '') + '/' + f
         dir_sign = '/' if File.directory?(resource_path)
         resource_path = resource_path.gsub(/^public\//, '')
-        resource_path = resource_path.gsub(@destination, '')
-
-        session.print(
-          "<a href=\"#{resource_path}\">#{f}#{dir_sign}</a><br>"
-        ) unless ['.', '..'].include?(File.basename(resource_path))
-      end
+        resource_path = resource_path.gsub(settings.destination, '')
+        "<a href=\"#{resource_path}\">#{f}#{dir_sign}</a><br>" \
+          unless ['.', '..'].include?(File.basename(resource_path))
+      end.compact
     end
 
     ##
