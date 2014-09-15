@@ -25,7 +25,7 @@ module Gemirro
         version = options.fetch_option(:v)
         expect(version.short).to eq('v')
         expect(version.long).to eq('version')
-        expect(version.call).to be_nil
+        expect { version.call }.to output(/gemirro v.* on ruby/).to_stdout
       end
 
       it 'should retrieve version information' do

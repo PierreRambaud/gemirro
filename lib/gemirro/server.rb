@@ -4,18 +4,16 @@ require 'thin'
 
 module Gemirro
   ##
-  # Launch TCPServer to easily download gems.
+  # Launch Sinatra server to easily download gems.
   #
-  # @!attribute [r] server
-  #  @return [TCPServer]
-  # @!attribute [r] destination
-  #  @return [String]
   # @!attribute [r] versions_fetcher
   #  @return [VersionsFetcher]
   # @!attribute [r] gems_fetcher
   #  @return [Gemirro::GemsFetcher]
   #
   class Server < Sinatra::Base
+    attr_accessor :versions_fetcher, :gems_fetcher
+
     ##
     # Configure server
     #
@@ -29,7 +27,8 @@ module Gemirro
     end
 
     ##
-    # Run the server and accept all connection
+    # Try to get all request and download files
+    # if files aren't found.
     #
     # @return [nil]
     #
