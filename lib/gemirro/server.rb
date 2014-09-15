@@ -40,14 +40,10 @@ module Gemirro
       # If not found again, return a 404
       return not_found unless File.exist?(resource)
 
-      begin
-        if File.directory?(resource)
-          display_directory(resource)
-        else
-          send_file resource
-        end
-      rescue Errno::ECONNRESET, Errno::EPIPE => e
-        logger.info(e.message)
+      if File.directory?(resource)
+        display_directory(resource)
+      else
+        send_file resource
       end
     end
 
@@ -138,7 +134,7 @@ module Gemirro
     # @return [Gemirro::GemsFetcher]
     #
     def gems_fetcher
-      @gems_fetcher = Gemirro::GemsFetcher.new(
+      @gems_fetcher ||= Gemirro::GemsFetcher.new(
         configuration.source, versions_fetcher)
     end
   end
