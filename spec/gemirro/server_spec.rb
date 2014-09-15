@@ -84,7 +84,8 @@ module Gemirro
       versions_fetcher.should_receive(:fetch).once.and_return(true)
 
       gems_fetcher = Gemirro::VersionsFetcher.new(source)
-      gems_fetcher.should_receive(:fetch).once.and_raise(StandardError, 'Not ok')
+      gems_fetcher.should_receive(:fetch).once.and_raise(
+        StandardError, 'Not ok')
 
       gem_indexer = Struct::GemIndexer.new
       gem_indexer.should_receive(:generate_index).once.and_return(true)
