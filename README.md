@@ -43,11 +43,14 @@ Once all the Gems have been downloaded you'll need to generate an index of all t
 $ gemirro index
 ```
 
-
-Last, launch the `TCPServer`, and all requests will check if gems are detected, and download them if necessary and generate index immediately.
+Last, launch the server, and all requests will check if gems are detected, and download them if necessary and generate index immediately.
 
 ```bash
-$ gemirro server
+$ gemirro server --start
+$ gemirro server --status
+$ gemirro server --restart
+$ gemirro server --stop
+
 ```
 
 If you want to use a custom configuration file not located in the current directory, use the `-c` or `--config` option.
