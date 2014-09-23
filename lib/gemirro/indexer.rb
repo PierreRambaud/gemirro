@@ -78,10 +78,7 @@ module Gemirro
         gem_mtime >= specs_mtime
       end
 
-      if updated_gems.empty?
-        puts 'No new gems'
-        terminate_interaction 0
-      end
+      terminate_interaction(0) if updated_gems.empty?
 
       specs = map_gems_to_specs updated_gems
       ::Gem::Specification.dirs = []

@@ -25,6 +25,7 @@ module Gemirro
 
     before(:each) do
       MirrorDirectory.new('/var/www/gemirro').add_directory('gems')
+      MirrorDirectory.new('/').add_directory('tmp')
       MirrorFile.new('/var/www/gemirro/test').write('content')
       Gemirro.configuration.destination = '/var/www/gemirro'
     end
@@ -68,13 +69,6 @@ module Gemirro
       Gemirro::Indexer.should_receive(:new).once.and_return(gem_indexer)
       ::Gem::SilentUI.should_receive(:new).once.and_return(true)
 
-      Gemirro.configuration.logger.should_receive(:info)
-        .with('Try to download gemirro with version 0.0.1')
-      Gemirro.configuration.logger.should_receive(:info)
-        .with('Updating gemspecs files...')
-      Gemirro.configuration.logger.should_receive(:info)
-        .with('Done')
-
       get '/gems/gemirro-0.0.1.gem'
       expect(last_response).to_not be_ok
     end
@@ -98,15 +92,6 @@ module Gemirro
       Gemirro::VersionsFetcher.should_receive(:new).once.and_return(versions_fetcher)
       Gemirro::Indexer.should_receive(:new).once.and_return(gem_indexer)
       ::Gem::SilentUI.should_receive(:new).once.and_return(true)
-
-      Gemirro.configuration.logger.should_receive(:info)
-        .with('Try to download gemirro with version 0.0.1')
-      Gemirro.configuration.logger.should_receive(:info)
-        .with('Updating gemspecs files...')
-      Gemirro.configuration.logger.should_receive(:error)
-        .with('Not ok')
-      Gemirro.configuration.logger.should_receive(:info)
-        .with('Done')
 
       get '/gems/gemirro-0.0.1.gem'
       expect(last_response).to_not be_ok

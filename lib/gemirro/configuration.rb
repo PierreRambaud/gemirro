@@ -5,7 +5,12 @@ module Gemirro
   # @return [Gemirro::Configuration]
   #
   def self.configuration
-    @configuration ||= Configuration.new
+    @configuration ||= Configuration.new do
+      server do
+        access_log '/tmp/gemirro.access.log'
+        error_log '/tmp/gemirro.error.log'
+      end
+    end
   end
 
   ##
@@ -13,8 +18,8 @@ module Gemirro
   # destination directory, source, ignored Gems, etc.
   #
   class Configuration < Confstruct::Configuration
-    attr_reader :logger, :mirror_directory
-    attr_accessor :source, :ignored_gems
+    attr_reader :mirror_directory
+    attr_accessor :source, :ignored_gems, :logger
 
     ##
     # Returns the logger

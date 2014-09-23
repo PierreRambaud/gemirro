@@ -14,16 +14,34 @@ module Gemirro
   class Server < Sinatra::Base
     attr_accessor :versions_fetcher, :gems_fetcher
 
+    access_logger = Logger.new(Gemirro.configuration.server.access_log)
+      .tap do |logger|
+      ::Logger.class_eval { alias_method :write, :'<<' }
+      logger.level = ::Logger::INFO
+    end
+
+    error_logger = ::File.new(Gemirro.configuration.server.error_log, 'a+')
+    error_logger.sync = true
+
+    before do
+      Gemirro.configuration.logger = access_logger
+      env['rack.errors'] = error_logger
+    end
+
     ##
     # Configure server
     #
     configure do
       config = Gemirro.configuration
-      config.server_host = 'localhost' if config.server_host.nil?
-      config.server_port = '2000' if config.server_port.nil?
-      set :port, config.server_port
-      set :bind, config.server_host
+      config.server.host = 'localhost' if config.server.host.nil?
+      config.server.port = '2000' if config.server.port.nil?
+      set :port, config.server.port
+      set :bind, config.server.host
       set :destination, config.destination.gsub(/\/$/, '')
+      set :environment, config.environment
+
+      enable :logging
+      use Rack::CommonLogger, access_logger
     end
 
     ##
@@ -107,14 +125,6 @@ module Gemirro
         "<a href=\"#{resource_path}\">#{f}#{dir_sign}</a><br>" \
           unless ['.', '..'].include?(File.basename(resource_path))
       end.compact
-    end
-
-    ##
-    # @see Gemirro::Configuration#logger
-    # @return [Logger]
-    #
-    def logger
-      configuration.logger
     end
 
     ##
