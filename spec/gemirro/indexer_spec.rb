@@ -12,7 +12,7 @@ module Gemirro
     include FakeFS::SpecHelpers
 
     before(:each) do
-      skip if ::Gem::Version.new(RUBY_VERSION) >= ::Gem::Version.new('2.0.0')
+      skip if ::Gem::Version.new(RUBY_VERSION.dup) >= ::Gem::Version.new('2.0.0')
     end
 
     it 'should install indicies' do
@@ -46,10 +46,8 @@ module Gemirro
         .with('https://rubygems.org/specs.4.8.gz').and_return(http_get)
 
       files = @indexer.install_indicies
-      expect(files).to eq(['specs.4.8.gz'])
-      files.each do |f|
-        expect(MirrorFile.new(f).read).to eq('content')
-      end
+      expect(files).to eq(['gem_generate_index/specs.4.8.gz'])
+      expect(MirrorFile.new('specs.4.8.gz').read).to eq('content')
     end
   end
 end

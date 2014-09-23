@@ -59,7 +59,7 @@ module Gemirro
 
       Struct.new('GemIndexer')
       gem_indexer = Struct::GemIndexer.new
-      gem_indexer.should_receive(:generate_index).once.and_return(true)
+      gem_indexer.should_receive(:update_gemspecs).once.and_return(true)
       gem_indexer.should_receive(:ui=).once.and_return(true)
 
       Gemirro.configuration.should_receive(:source).twice.and_return(source)
@@ -71,7 +71,9 @@ module Gemirro
       Gemirro.configuration.logger.should_receive(:info)
         .with('Try to download gemirro with version 0.0.1')
       Gemirro.configuration.logger.should_receive(:info)
-        .with('Generating indexes')
+        .with('Updating gemspecs files...')
+      Gemirro.configuration.logger.should_receive(:info)
+        .with('Done')
 
       get '/gems/gemirro-0.0.1.gem'
       expect(last_response).to_not be_ok
@@ -88,7 +90,7 @@ module Gemirro
         StandardError, 'Not ok')
 
       gem_indexer = Struct::GemIndexer.new
-      gem_indexer.should_receive(:generate_index).once.and_return(true)
+      gem_indexer.should_receive(:update_gemspecs).once.and_return(true)
       gem_indexer.should_receive(:ui=).once.and_return(true)
 
       Gemirro.configuration.should_receive(:source).twice.and_return(source)
@@ -100,9 +102,11 @@ module Gemirro
       Gemirro.configuration.logger.should_receive(:info)
         .with('Try to download gemirro with version 0.0.1')
       Gemirro.configuration.logger.should_receive(:info)
-        .with('Generating indexes')
+        .with('Updating gemspecs files...')
       Gemirro.configuration.logger.should_receive(:error)
         .with('Not ok')
+      Gemirro.configuration.logger.should_receive(:info)
+        .with('Done')
 
       get '/gems/gemirro-0.0.1.gem'
       expect(last_response).to_not be_ok

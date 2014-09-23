@@ -73,20 +73,21 @@ module Gemirro
         logger.error(e.message)
       end
 
-      generate_index
+      update_gemspecs
     end
 
     ##
-    # Generate index and install indicies.
+    # Update gemspecs files
     #
     # @return [Indexer]
     #
-    def generate_index
+    def update_gemspecs
       indexer    = Indexer.new(settings.destination)
       indexer.ui = ::Gem::SilentUI.new
 
-      logger.info('Generating indexes')
-      indexer.generate_index
+      logger.info('Updating gemspecs files...')
+      indexer.update_gemspecs
+      logger.info('Done')
     end
 
     ##
