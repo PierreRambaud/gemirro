@@ -138,7 +138,8 @@ module Gemirro
     # @see Gemirro::VersionsFetcher.fetch
     #
     def versions_fetcher
-      @versions_fetcher ||= Gemirro::VersionsFetcher.new(configuration.source).fetch
+      @versions_fetcher ||= Gemirro::VersionsFetcher
+        .new(configuration.source).fetch
     end
 
     ##

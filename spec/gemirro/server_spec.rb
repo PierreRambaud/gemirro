@@ -65,7 +65,8 @@ module Gemirro
 
       Gemirro.configuration.should_receive(:source).twice.and_return(source)
       Gemirro::GemsFetcher.should_receive(:new).once.and_return(gems_fetcher)
-      Gemirro::VersionsFetcher.should_receive(:new).once.and_return(versions_fetcher)
+      Gemirro::VersionsFetcher.should_receive(:new)
+        .once.and_return(versions_fetcher)
       Gemirro::Indexer.should_receive(:new).once.and_return(gem_indexer)
       ::Gem::SilentUI.should_receive(:new).once.and_return(true)
 
@@ -89,7 +90,8 @@ module Gemirro
 
       Gemirro.configuration.should_receive(:source).twice.and_return(source)
       Gemirro::GemsFetcher.should_receive(:new).once.and_return(gems_fetcher)
-      Gemirro::VersionsFetcher.should_receive(:new).once.and_return(versions_fetcher)
+      Gemirro::VersionsFetcher.should_receive(:new)
+        .once.and_return(versions_fetcher)
       Gemirro::Indexer.should_receive(:new).once.and_return(gem_indexer)
       ::Gem::SilentUI.should_receive(:new).once.and_return(true)
 

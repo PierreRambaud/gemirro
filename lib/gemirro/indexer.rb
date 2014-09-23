@@ -51,7 +51,8 @@ module Gemirro
         if ["#{@specs_index}.gz",
             "#{@latest_specs_index}.gz",
             "#{@prerelease_specs_index}.gz"].include?(path)
-          source_content = Marshal.load(Zlib::GzipReader.new(StringIO.new(source_content)).read)
+          source_content = Marshal.load(
+            Zlib::GzipReader.new(StringIO.new(source_content)).read)
           content = Marshal.load(Zlib::GzipReader.open(path).read)
           new_content = source_content.concat(content).uniq
 
