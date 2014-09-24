@@ -56,7 +56,7 @@ $ gemirro server --stop
 If you want to use a custom configuration file not located in the current directory, use the `-c` or `--config` option.
 
 
-##Apache configuration
+## Apache configuration
 
 You must active the apache `proxy` module.
 
@@ -77,7 +77,7 @@ Create your VirtualHost and replace following `http://localhost:2000` with your 
 </VirtualHost>
 ```
 
-##Nginx configuration
+## Nginx configuration
 
 Replace `localhost:2000` with your custom server configuration located in your `config.rb` file and restart Nginx.
 
@@ -97,4 +97,11 @@ server {
   }
 }
 ```
+
+## Known issues
+
+### could not find a temporary directory
+
+If you use ruby >= 2.0, some urls in the server throwing errors telling `could not find a temporary directory`.
+You only need to do a `chmod o+t /tmp`
 
