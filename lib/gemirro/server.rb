@@ -20,7 +20,7 @@ module Gemirro
       logger.level = ::Logger::INFO
     end
 
-    error_logger = ::File.new(Gemirro.configuration.server.error_log, 'a+')
+    error_logger = File.new(Gemirro.configuration.server.error_log, 'a+')
     error_logger.sync = true
 
     before do
@@ -148,6 +148,14 @@ module Gemirro
     def gems_fetcher
       @gems_fetcher ||= Gemirro::GemsFetcher.new(
         configuration.source, versions_fetcher)
+    end
+
+    ##
+    # @see Gemirro::Configuration#logger
+    # @return [Logger]
+    #
+    def logger
+      configuration.logger
     end
   end
 end

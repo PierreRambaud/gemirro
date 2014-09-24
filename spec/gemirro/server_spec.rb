@@ -24,6 +24,7 @@ module Gemirro
     include FakeFS::SpecHelpers
 
     before(:each) do
+      @fake_logger = Logger.new(STDOUT)
       MirrorDirectory.new('/var/www/gemirro').add_directory('gems')
       MirrorDirectory.new('/').add_directory('tmp')
       MirrorFile.new('/var/www/gemirro/test').write('content')
@@ -31,9 +32,8 @@ module Gemirro
     end
 
     it 'should display directory' do
-      fake_logger = Logger.new(STDOUT)
-      Logger.should_receive(:new).twice.and_return(fake_logger)
-      fake_logger.should_receive(:tap).and_return(nil)
+      Logger.should_receive(:new).twice.and_return(@fake_logger)
+      @fake_logger.should_receive(:tap).and_return(nil)
       get '/'
       expect(last_response.body).to eq('<a href="/gems">gems/</a><br>' \
                                        '<a href="/test">test</a><br>')
@@ -73,6 +73,10 @@ module Gemirro
       Gemirro::Indexer.should_receive(:new).once.and_return(gem_indexer)
       ::Gem::SilentUI.should_receive(:new).once.and_return(true)
 
+      Gemirro.configuration.should_receive(:logger)
+        .exactly(3).and_return(@fake_logger)
+      @fake_logger.should_receive(:info).exactly(3)
+
       get '/gems/gemirro-0.0.1.gem'
       expect(last_response).to_not be_ok
     end
@@ -98,6 +102,10 @@ module Gemirro
       Gemirro::Indexer.should_receive(:new).once.and_return(gem_indexer)
       ::Gem::SilentUI.should_receive(:new).once.and_return(true)
 
+      Gemirro.configuration.should_receive(:logger)
+        .exactly(3).and_return(@fake_logger)
+      @fake_logger.should_receive(:info).exactly(2)
+      @fake_logger.should_receive(:error)
       get '/gems/gemirro-0.0.1.gem'
       expect(last_response).to_not be_ok
     end
