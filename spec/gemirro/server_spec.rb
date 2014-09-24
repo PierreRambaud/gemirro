@@ -31,6 +31,9 @@ module Gemirro
     end
 
     it 'should display directory' do
+      fake_logger = Logger.new(STDOUT)
+      Logger.should_receive(:new).twice.and_return(fake_logger)
+      fake_logger.should_receive(:tap).and_return(nil)
       get '/'
       expect(last_response.body).to eq('<a href="/gems">gems/</a><br>' \
                                        '<a href="/test">test</a><br>')
