@@ -12,7 +12,8 @@ module Gemirro
     include FakeFS::SpecHelpers
 
     before(:each) do
-      skip if ::Gem::Version.new(RUBY_VERSION) >= ::Gem::Version.new('2.0.0')
+      skip if ::Gem::Version.new(RUBY_VERSION.dup) >= ::Gem::Version
+              .new('2.0.0')
     end
 
     it 'should install indicies' do

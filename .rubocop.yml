@@ -17,8 +17,11 @@ ParameterLists:
   Exclude:
     - lib/**/*
 Metrics/CyclomaticComplexity:
-  Severity: warning
-  Max: 10
+  Exclude:
+    - lib/**/*
 Metrics/PerceivedComplexity:
-  Severity: warning
-  Max: 10
+  Exclude:
+    - lib/**/*
+Metrics/AbcSize:
+  Exclude:
+    - lib/**/*

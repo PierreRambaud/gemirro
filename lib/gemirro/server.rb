@@ -15,7 +15,7 @@ module Gemirro
     attr_accessor :versions_fetcher, :gems_fetcher
 
     access_logger = Logger.new(Gemirro.configuration.server.access_log)
-      .tap do |logger|
+                    .tap do |logger|
       ::Logger.class_eval { alias_method :write, :'<<' }
       logger.level = ::Logger::INFO
     end
@@ -138,8 +138,8 @@ module Gemirro
     # @see Gemirro::VersionsFetcher.fetch
     #
     def versions_fetcher
-      @versions_fetcher ||= Gemirro::VersionsFetcher
-        .new(configuration.source).fetch
+      @versions_fetcher ||= Gemirro::VersionsFetcher.new(
+                            configuration.source).fetch
     end
 
     ##
