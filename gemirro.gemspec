@@ -15,7 +15,7 @@ Gem::Specification.new do |s|
 
   s.files = File.read(File.expand_path('../MANIFEST', __FILE__)).split("\n")
 
-  s.required_ruby_version = '~> 1.9.2'
+  s.required_ruby_version = '>= 1.9.2'
 
   s.add_dependency 'slop', '~>3.6'
   s.add_dependency 'httpclient', '~>2.4'
