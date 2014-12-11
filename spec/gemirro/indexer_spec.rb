@@ -13,7 +13,7 @@ module Gemirro
 
     before(:each) do
       skip if ::Gem::Version.new(RUBY_VERSION.dup) >= ::Gem::Version
-              .new('2.0.0')
+                                                      .new('2.0.0')
     end
 
     it 'should install indicies' do
