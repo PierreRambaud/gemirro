@@ -32,8 +32,8 @@ module Gemirro
     end
 
     it 'should display directory' do
-      Logger.should_receive(:new).twice.and_return(@fake_logger)
-      @fake_logger.should_receive(:tap).and_return(nil)
+      allow(Logger).to receive(:new).twice.and_return(@fake_logger)
+      allow(@fake_logger).to receive(:tap).and_return(nil)
       get '/'
       expect(last_response.body).to eq('<a href="/gems">gems/</a><br>' \
                                        '<a href="/test">test</a><br>')
@@ -56,26 +56,26 @@ module Gemirro
       source = Gemirro::Source.new('test', 'http://rubygems.org')
 
       versions_fetcher = Gemirro::VersionsFetcher.new(source)
-      versions_fetcher.should_receive(:fetch).once.and_return(true)
+      allow(versions_fetcher).to receive(:fetch).once.and_return(true)
 
       gems_fetcher = Gemirro::VersionsFetcher.new(source)
-      gems_fetcher.should_receive(:fetch).once.and_return(true)
+      allow(gems_fetcher).to receive(:fetch).once.and_return(true)
 
       Struct.new('GemIndexer')
       gem_indexer = Struct::GemIndexer.new
-      gem_indexer.should_receive(:update_gemspecs).once.and_return(true)
-      gem_indexer.should_receive(:ui=).once.and_return(true)
+      allow(gem_indexer).to receive(:update_gemspecs).once.and_return(true)
+      allow(gem_indexer).to receive(:ui=).once.and_return(true)
 
-      Gemirro.configuration.should_receive(:source).twice.and_return(source)
-      Gemirro::GemsFetcher.should_receive(:new).once.and_return(gems_fetcher)
-      Gemirro::VersionsFetcher.should_receive(:new)
+      allow(Gemirro.configuration).to receive(:source).twice.and_return(source)
+      allow(Gemirro::GemsFetcher).to receive(:new).once.and_return(gems_fetcher)
+      allow(Gemirro::VersionsFetcher).to receive(:new)
         .once.and_return(versions_fetcher)
-      Gemirro::Indexer.should_receive(:new).once.and_return(gem_indexer)
-      ::Gem::SilentUI.should_receive(:new).once.and_return(true)
+      allow(Gemirro::Indexer).to receive(:new).once.and_return(gem_indexer)
+      allow(::Gem::SilentUI).to receive(:new).once.and_return(true)
 
-      Gemirro.configuration.should_receive(:logger)
+      allow(Gemirro.configuration).to receive(:logger)
         .exactly(3).and_return(@fake_logger)
-      @fake_logger.should_receive(:info).exactly(3)
+      allow(@fake_logger).to receive(:info).exactly(3)
 
       get '/gems/gemirro-0.0.1.gem'
       expect(last_response).to_not be_ok
@@ -85,27 +85,27 @@ module Gemirro
       source = Gemirro::Source.new('test', 'http://rubygems.org')
 
       versions_fetcher = Gemirro::VersionsFetcher.new(source)
-      versions_fetcher.should_receive(:fetch).once.and_return(true)
+      allow(versions_fetcher).to receive(:fetch).once.and_return(true)
 
       gems_fetcher = Gemirro::VersionsFetcher.new(source)
-      gems_fetcher.should_receive(:fetch).once.and_raise(
+      allow(gems_fetcher).to receive(:fetch).once.and_raise(
         StandardError, 'Not ok')
 
       gem_indexer = Struct::GemIndexer.new
-      gem_indexer.should_receive(:update_gemspecs).once.and_return(true)
-      gem_indexer.should_receive(:ui=).once.and_return(true)
+      allow(gem_indexer).to receive(:update_gemspecs).once.and_return(true)
+      allow(gem_indexer).to receive(:ui=).once.and_return(true)
 
-      Gemirro.configuration.should_receive(:source).twice.and_return(source)
-      Gemirro::GemsFetcher.should_receive(:new).once.and_return(gems_fetcher)
-      Gemirro::VersionsFetcher.should_receive(:new)
+      allow(Gemirro.configuration).to receive(:source).twice.and_return(source)
+      allow(Gemirro::GemsFetcher).to receive(:new).once.and_return(gems_fetcher)
+      allow(Gemirro::VersionsFetcher).to receive(:new)
         .once.and_return(versions_fetcher)
-      Gemirro::Indexer.should_receive(:new).once.and_return(gem_indexer)
-      ::Gem::SilentUI.should_receive(:new).once.and_return(true)
+      allow(Gemirro::Indexer).to receive(:new).once.and_return(gem_indexer)
+      allow(::Gem::SilentUI).to receive(:new).once.and_return(true)
 
-      Gemirro.configuration.should_receive(:logger)
+      allow(Gemirro.configuration).to receive(:logger)
         .exactly(3).and_return(@fake_logger)
-      @fake_logger.should_receive(:info).exactly(2)
-      @fake_logger.should_receive(:error)
+      allow(@fake_logger).to receive(:info).exactly(2)
+      allow(@fake_logger).to receive(:error)
       get '/gems/gemirro-0.0.1.gem'
       expect(last_response).to_not be_ok
     end

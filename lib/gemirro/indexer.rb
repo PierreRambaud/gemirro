@@ -42,7 +42,7 @@ module Gemirro
         file = path.sub(/^#{Regexp.escape @directory}\/?/, '')
         dst_name = File.join @dest_directory, file
 
-        resp = Http.get("#{Gemirro.configuration.source.host}/#{file}")
+        resp = Http.get("#{Gemirro.configuration.source.host}/#{File.basename(file)}")
         next unless resp.code == 200
         source_content = resp.body
 

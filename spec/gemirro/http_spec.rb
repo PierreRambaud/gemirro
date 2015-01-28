@@ -14,7 +14,7 @@ module Gemirro
       uri = 'http://github.com/PierreRambaud'
       Struct.new('HTTPError', :status, :reason)
       result = Struct::HTTPError.new(401, 'Unauthorized')
-      Http.client.should_receive(:get)
+      allow(Http.client).to receive(:get)
         .once.with(uri, follow_redirect: true).and_return(result)
       expect { Http.get(uri) }
         .to raise_error HTTPClient::BadResponseError, 'Unauthorized'
@@ -24,7 +24,7 @@ module Gemirro
       uri = 'http://github.com/PierreRambaud'
       Struct.new('HTTPResponse', :status, :body)
       result = Struct::HTTPResponse.new(200, 'body content')
-      Http.client.should_receive(:get)
+      allow(Http.client).to receive(:get)
         .once.with(uri, follow_redirect: true).and_return(result)
 
       response = Http.get(uri)

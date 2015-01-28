@@ -47,11 +47,11 @@ module Gemirro
     it 'should log error when fetch gem failed' do
       gem = Gem.new('gemirro')
       version = ::Gem::Version.new('0.0.1')
-      @source.should_receive(:fetch_gem)
+      allow(@source).to receive(:fetch_gem)
         .once.with('gemirro', version).and_raise(ArgumentError)
-      @fetcher.logger.should_receive(:error)
+      allow(@fetcher.logger).to receive(:error)
         .once.with(/Failed to retrieve/)
-      @fetcher.logger.should_receive(:debug)
+      allow(@fetcher.logger).to receive(:debug)
         .once.with(/Adding (.*) to the list of ignored Gems/)
 
       expect(@fetcher.fetch_gem(gem, version)).to be_nil
@@ -61,7 +61,7 @@ module Gemirro
     it 'should fetch gem' do
       gem = Gem.new('gemirro')
       version = ::Gem::Version.new('0.0.1')
-      @source.should_receive(:fetch_gem)
+      allow(@source).to receive(:fetch_gem)
         .once.with('gemirro', version).and_return('gemirro')
 
       expect(@fetcher.fetch_gem(gem, version)).to eq('gemirro')
@@ -69,17 +69,17 @@ module Gemirro
 
     it 'should retrieve versions for specific gem' do
       gem = Gem.new('gemirro', '0.0.2')
-      @versions_file.should_receive(:versions_for)
+      allow(@versions_file).to receive(:versions_for)
         .once.with('gemirro').and_return(['0.0.1', '0.0.2'])
       expect(@fetcher.versions_for(gem)).to eq([::Gem::Version.new('0.0.2')])
     end
 
     it 'should fetch all gems and log debug if gem is not satisfied' do
       gem = Gem.new('gemirro', '0.0.1')
-      gem.requirement.should_receive(:satisfied_by?)
+      allow(gem.requirement).to receive(:satisfied_by?)
         .once.with(nil).and_return(false)
       @fetcher.source.gems << gem
-      @fetcher.logger.should_receive(:debug)
+      allow(@fetcher.logger).to receive(:debug)
         .once.with('Skipping gemirro-0.0.1.gem')
       expect(@fetcher.fetch).to eq([gem])
     end
@@ -87,16 +87,16 @@ module Gemirro
     it 'should fetch all gems' do
       gem = Gem.new('gemirro', '0.0.2')
       @fetcher.source.gems << gem
-      @fetcher.should_receive(:versions_for).once.and_return(['0.0.2'])
-      gem.requirement.should_receive(:satisfied_by?)
+      allow(@fetcher).to receive(:versions_for).once.and_return(['0.0.2'])
+      allow(gem.requirement).to receive(:satisfied_by?)
         .once.with('0.0.2').and_return(true)
-      @fetcher.should_receive(:fetch_gem)
+      allow(@fetcher).to receive(:fetch_gem)
         .once.with(gem, '0.0.2').and_return('gemfile')
-      @fetcher.configuration.should_receive(:ignore_gem)
+      allow(@fetcher.configuration).to receive(:ignore_gem)
         .once.with('gemirro', '0.0.2')
-      @fetcher.logger.should_receive(:info)
+      allow(@fetcher.logger).to receive(:info)
         .once.with('Fetching gemirro-0.0.2.gem')
-      @fetcher.configuration.mirror_directory.should_receive(:add_file)
+      allow(@fetcher.configuration.mirror_directory).to receive(:add_file)
         .once.with('gemirro-0.0.2.gem', 'gemfile')
       expect(@fetcher.fetch).to eq([gem])
     end
