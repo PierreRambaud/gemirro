@@ -14,6 +14,8 @@ module Gemirro
   class Server < Sinatra::Base
     attr_accessor :versions_fetcher, :gems_fetcher
 
+    SPECS_FILE_TYPES = [:specs, :prerelease_specs]
+
     access_logger = Logger.new(Gemirro.configuration.server.access_log)
                     .tap do |logger|
       ::Logger.class_eval { alias_method :write, :'<<' }
@@ -35,9 +37,11 @@ module Gemirro
       config = Gemirro.configuration
       config.server.host = 'localhost' if config.server.host.nil?
       config.server.port = '2000' if config.server.port.nil?
+
+      set :views, Gemirro::Configuration.views_directory
       set :port, config.server.port
       set :bind, config.server.host
-      set :destination, config.destination.gsub(/\/$/, '')
+      set :public_folder, config.destination.gsub(/\/$/, '')
       set :environment, config.environment
 
       enable :logging
@@ -50,7 +54,7 @@ module Gemirro
     #
     # @return [nil]
     #
-    get('*') do |path|
+    get('/gems/*.gem') do |path|
       resource = "#{settings.destination}#{path}"
 
       # Try to download gem if file doesn't exists
@@ -58,11 +62,29 @@ module Gemirro
       # If not found again, return a 404
       return not_found unless File.exist?(resource)
 
-      if File.directory?(resource)
-        display_directory(resource)
-      else
-        send_file resource
-      end
+      send_file resource
+    end
+
+    ##
+    # Display information about one gem
+    #
+    # @ return [nil]
+    #
+    get('/gem/:gemname') do
+      gems = gems_collection
+      @gem = gems.find_by_name(params[:gemname])
+      erb(:gem)
+    end
+
+    ##
+    # Display home page containing the list of gems already
+    # downloaded on the server
+    #
+    # @ return [nil]
+    #
+    get('/') do
+      @gems = gems_collection
+      erb(:index)
     end
 
     ##
@@ -109,25 +131,6 @@ module Gemirro
     end
 
     ##
-    # Display directory on the current sesion
-    #
-    # @param [String] resource
-    # @return [Array]
-    #
-    def display_directory(resource)
-      base_dir = Dir.new(resource)
-      base_dir.entries.sort.map do |f|
-        dir_sign = ''
-        resource_path = resource.gsub(/\/$/, '') + '/' + f
-        dir_sign = '/' if File.directory?(resource_path)
-        resource_path = resource_path.gsub(/^public\//, '')
-        resource_path = resource_path.gsub(settings.destination, '')
-        "<a href=\"#{resource_path}\">#{f}#{dir_sign}</a><br>" \
-          unless ['.', '..'].include?(File.basename(resource_path))
-      end.compact
-    end
-
-    ##
     # @see Gemirro.configuration
     #
     def configuration
@@ -156,6 +159,36 @@ module Gemirro
     #
     def logger
       configuration.logger
+    end
+
+    ##
+    # Generate Gems collection from Marshal dump
+    #
+    # @return [Gemirro::GemVersionCollection]
+    #
+    def gems_collection
+      gems = specs_files_paths.map do |specs_file_path|
+        if File.exist?(specs_file_path)
+          Marshal.load(Zlib::GzipReader.open(specs_file_path).read)
+        else
+          []
+        end
+      end.inject(:|)
+
+      GemVersionCollection.new(gems)
+    end
+
+    ##
+    # Return specs fils paths
+    #
+    # @return [Array]
+    #
+    def specs_files_paths
+      marshal_version = Gemirro::Configuration.marshal_version
+      SPECS_FILE_TYPES.map do |specs_file_type|
+        File.join(settings.public_folder,
+                  [specs_file_type, marshal_version, 'gz.orig'].join('.'))
+      end
     end
   end
 end

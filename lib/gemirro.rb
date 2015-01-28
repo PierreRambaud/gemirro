@@ -18,6 +18,8 @@ end
 require 'gemirro/version'
 require 'gemirro/configuration'
 require 'gemirro/gem'
+require 'gemirro/gem_version'
+require 'gemirro/gem_version_collection'
 require 'gemirro/http'
 require 'gemirro/indexer'
 require 'gemirro/source'

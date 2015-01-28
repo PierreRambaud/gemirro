@@ -41,8 +41,6 @@ module Gemirro
       files.each do |path|
         file = path.sub(/^#{Regexp.escape @directory}\/?/, '')
         dst_name = File.join @dest_directory, file
-        # next if File.exist?(dst_name) &&
-        #   (File.mtime(dst_name) >= Time.now - 360)
 
         resp = Http.get("#{Gemirro.configuration.source.host}/#{file}")
         next unless resp.code == 200
@@ -55,6 +53,10 @@ module Gemirro
             Zlib::GzipReader.new(StringIO.new(source_content)).read)
           content = Marshal.load(Zlib::GzipReader.open(path).read)
           new_content = source_content.concat(content).uniq
+
+          Zlib::GzipWriter.open("#{dst_name}.orig") do |io|
+            io.write(Marshal.dump(content))
+          end
 
           Zlib::GzipWriter.open(dst_name) do |io|
             io.write(Marshal.dump(new_content))

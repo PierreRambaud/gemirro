@@ -40,6 +40,15 @@ module Gemirro
     end
 
     ##
+    # Returns the views path to render templates
+    #
+    # @return [String]
+    #
+    def self.views_directory
+      File.expand_path('../../../views', __FILE__)
+    end
+
+    ##
     # Returns default configuration file path
     #
     # @return [String]
