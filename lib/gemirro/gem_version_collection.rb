@@ -68,12 +68,13 @@ module Gemirro
     # @return [Array]
     #
     def by_name(&block)
-      @grouped ||= @gems.group_by(&:name).map do |name, collection|
-        [name, GemVersionCollection.new(collection)]
-      end
-
-      @grouped.sort_by do |name, _collection|
-        name.downcase
+      if @grouped.nil?
+        @grouped = @gems.group_by(&:name).map do |name, collection|
+          [name, GemVersionCollection.new(collection)]
+        end
+        @grouped.sort_by! do |name, _collection|
+          name.downcase
+        end
       end
 
       if block_given?

@@ -13,6 +13,7 @@ module Gemirro
   #  @return [String]
   #
   class GemVersion
+    include Comparable
     attr_reader :name, :number, :platform
 
     ##
@@ -51,7 +52,7 @@ module Gemirro
     #
     def <=>(other)
       sort = other.name <=> @name
-      sort = other.version <=> @version if sort.zero?
+      sort = version <=> other.version if sort.zero?
       sort = (other.ruby? && !ruby?) ? 1 : -1 if sort.zero? &&
                                                  ruby? != other.ruby?
       sort = other.platform <=> @platform if sort.zero?
