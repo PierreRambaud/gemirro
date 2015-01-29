@@ -23,12 +23,16 @@ module Gemirro
       indexer.quick_marshal_dir = '/tmp/gem_generate_index/quick/Marshal.4.8'
       indexer.dest_directory = '/tmp/test'
       indexer.directory = '/tmp/gem_generate_index'
+      indexer.instance_variable_set("@specs_index", '/tmp/gem_generate_index/specs.4.8')
       indexer.files = [
         '/tmp/gem_generate_index/quick/Marshal.4.8',
-        '/tmp/gem_generate_index/specs.4.8.gz'
+        '/tmp/gem_generate_index/specs.4.8.gz',
+        '/tmp/gem_generate_index/something.4.8.gz'
       ]
 
       allow(FileUtils).to receive(:mkdir_p).once.with('/tmp/test/quick', verbose: true)
+      allow(FileUtils).to receive(:rm_rf)
+        .once.with('/tmp/gem_generate_index/something.4.8.gz')
       allow(FileUtils).to receive(:rm_rf)
         .once.with('/tmp/gem_generate_index/specs.4.8.gz')
       allow(FileUtils).to receive(:rm_rf)
@@ -40,15 +44,31 @@ module Gemirro
 
       source = Source.new('Rubygems', 'https://rubygems.org')
       allow(Gemirro.configuration).to receive(:source).and_return(source)
+
       Struct.new('HttpGet', :code, :body)
-      http_get = Struct::HttpGet.new(200, 'content')
+      wio = StringIO.new('w')
+      w_gz = Zlib::GzipWriter.new(wio)
+      w_gz.write(['content'])
+      w_gz.close
+      http_get = Struct::HttpGet.new(200, wio.string)
+      allow(Marshal).to receive(:load).and_return(['content'])
+      allow(Marshal).to receive(:dump).and_return(['content'])
+      allow(Zlib::GzipWriter).to receive(:open).once.with('/tmp/test/specs.4.8.gz.orig')
+      allow(Zlib::GzipWriter).to receive(:open).once.with('/tmp/test/specs.4.8.gz')
       allow(Http).to receive(:get)
         .with('https://rubygems.org/specs.4.8.gz').and_return(http_get)
+      allow(Http).to receive(:get)
+        .with('https://rubygems.org/something.4.8.gz').and_return(http_get)
 
-      allow(indexer).to receive(:@cspecs_index).and_return('/tmp/gem_generate_index/specs.4.8.gz')
+      Struct.new('GzipReader', :read)
+      gzip_reader = Struct::GzipReader.new(wio.string)
+      allow(Zlib::GzipReader).to receive(:open)
+        .once
+        .with('/tmp/gem_generate_index/specs.4.8.gz')
+        .and_return(gzip_reader)
+
       files = indexer.install_indicies
-      expect(files).to eq(['/tmp/gem_generate_index/specs.4.8.gz'])
-      expect(MirrorFile.new('/tmp/test/specs.4.8.gz').read).to eq('content')
+      expect(files).to eq(['/tmp/gem_generate_index/specs.4.8.gz', '/tmp/gem_generate_index/something.4.8.gz'])
     end
 
     it 'should exit if there is no new gems' do
