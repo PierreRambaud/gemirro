@@ -14,8 +14,6 @@ module Gemirro
   class Server < Sinatra::Base
     attr_accessor :versions_fetcher, :gems_fetcher
 
-    SPECS_FILE_TYPES = [:specs, :prerelease_specs]
-
     access_logger = Logger.new(Gemirro.configuration.server.access_log)
                     .tap do |logger|
       ::Logger.class_eval { alias_method :write, :'<<' }
@@ -42,6 +40,7 @@ module Gemirro
       set :port, config.server.port
       set :bind, config.server.host
       set :public_folder, config.destination.gsub(/\/$/, '')
+      set :destination, config.destination.gsub(/\/$/, '')
       set :environment, config.environment
 
       enable :logging
@@ -54,7 +53,7 @@ module Gemirro
     #
     # @return [nil]
     #
-    get('/gems/*.gem') do |path|
+    get(%r{(/gems/.*\.gem)}) do |path|
       resource = "#{settings.destination}#{path}"
 
       # Try to download gem if file doesn't exists
@@ -62,7 +61,7 @@ module Gemirro
       # If not found again, return a 404
       return not_found unless File.exist?(resource)
 
-      send_file resource
+      send_file(resource)
     end
 
     ##
@@ -185,10 +184,14 @@ module Gemirro
     #
     def specs_files_paths
       marshal_version = Gemirro::Configuration.marshal_version
-      SPECS_FILE_TYPES.map do |specs_file_type|
+      specs_file_types.map do |specs_file_type|
         File.join(settings.public_folder,
                   [specs_file_type, marshal_version, 'gz.orig'].join('.'))
       end
+    end
+
+    def specs_file_types
+      [:specs, :prerelease_specs]
     end
   end
 end

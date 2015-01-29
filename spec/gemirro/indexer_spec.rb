@@ -15,7 +15,8 @@ module Gemirro
       dir = MirrorDirectory.new('/tmp')
       dir.add_directory('test')
       dir.add_directory('gem_generate_index/quick/Marshal.4.8')
-      allow(::Gem.configuration).to receive(:really_verbose).once.and_return(true)
+      allow(::Gem.configuration).to receive(:really_verbose)
+        .once.and_return(true)
 
       indexer = Indexer.new('/tmp/test')
       allow(indexer).to receive(:say)
@@ -23,14 +24,16 @@ module Gemirro
       indexer.quick_marshal_dir = '/tmp/gem_generate_index/quick/Marshal.4.8'
       indexer.dest_directory = '/tmp/test'
       indexer.directory = '/tmp/gem_generate_index'
-      indexer.instance_variable_set("@specs_index", '/tmp/gem_generate_index/specs.4.8')
+      indexer.instance_variable_set('@specs_index',
+                                    '/tmp/gem_generate_index/specs.4.8')
       indexer.files = [
         '/tmp/gem_generate_index/quick/Marshal.4.8',
         '/tmp/gem_generate_index/specs.4.8.gz',
         '/tmp/gem_generate_index/something.4.8.gz'
       ]
 
-      allow(FileUtils).to receive(:mkdir_p).once.with('/tmp/test/quick', verbose: true)
+      allow(FileUtils).to receive(:mkdir_p)
+        .once.with('/tmp/test/quick', verbose: true)
       allow(FileUtils).to receive(:rm_rf)
         .once.with('/tmp/gem_generate_index/something.4.8.gz')
       allow(FileUtils).to receive(:rm_rf)
@@ -39,7 +42,8 @@ module Gemirro
         .once.with('/tmp/test/quick/Marshal.4.8', verbose: true)
       allow(FileUtils).to receive(:mv)
         .once
-        .with('/tmp/gem_generate_index/quick/Marshal.4.8', '/tmp/test/quick/Marshal.4.8',
+        .with('/tmp/gem_generate_index/quick/Marshal.4.8',
+              '/tmp/test/quick/Marshal.4.8',
               verbose: true, force: true)
 
       source = Source.new('Rubygems', 'https://rubygems.org')
@@ -53,8 +57,10 @@ module Gemirro
       http_get = Struct::HttpGet.new(200, wio.string)
       allow(Marshal).to receive(:load).and_return(['content'])
       allow(Marshal).to receive(:dump).and_return(['content'])
-      allow(Zlib::GzipWriter).to receive(:open).once.with('/tmp/test/specs.4.8.gz.orig')
-      allow(Zlib::GzipWriter).to receive(:open).once.with('/tmp/test/specs.4.8.gz')
+      allow(Zlib::GzipWriter).to receive(:open)
+        .once.with('/tmp/test/specs.4.8.gz.orig')
+      allow(Zlib::GzipWriter).to receive(:open)
+        .once.with('/tmp/test/specs.4.8.gz')
       allow(Http).to receive(:get)
         .with('https://rubygems.org/specs.4.8.gz').and_return(http_get)
       allow(Http).to receive(:get)
@@ -68,7 +74,8 @@ module Gemirro
         .and_return(gzip_reader)
 
       files = indexer.install_indicies
-      expect(files).to eq(['/tmp/gem_generate_index/specs.4.8.gz', '/tmp/gem_generate_index/something.4.8.gz'])
+      expect(files).to eq(['/tmp/gem_generate_index/specs.4.8.gz',
+                           '/tmp/gem_generate_index/something.4.8.gz'])
     end
 
     it 'should exit if there is no new gems' do

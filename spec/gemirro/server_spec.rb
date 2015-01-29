@@ -2,6 +2,7 @@
 require 'rack/test'
 require 'gemirro/mirror_directory'
 require 'gemirro/mirror_file'
+require 'gemirro/gem_version_collection'
 
 ENV['RACK_ENV'] = 'test'
 
@@ -29,14 +30,15 @@ module Gemirro
       MirrorDirectory.new('/').add_directory('tmp')
       MirrorFile.new('/var/www/gemirro/test').write('content')
       Gemirro.configuration.destination = '/var/www/gemirro'
+      FakeFS::FileSystem.clone(Gemirro::Configuration.views_directory)
     end
 
-    it 'should display directory' do
+    it 'should display index page' do
       allow(Logger).to receive(:new).twice.and_return(@fake_logger)
       allow(@fake_logger).to receive(:tap).and_return(nil)
+        .and_yield(@fake_logger)
+
       get '/'
-      expect(last_response.body).to eq('<a href="/gems">gems/</a><br>' \
-                                       '<a href="/test">test</a><br>')
       expect(last_response).to be_ok
     end
 
@@ -79,6 +81,13 @@ module Gemirro
 
       get '/gems/gemirro-0.0.1.gem'
       expect(last_response).to_not be_ok
+      expect(last_response.status).to eq(404)
+
+      MirrorFile.new('/var/www/gemirro/gems/gemirro-0.0.1.gem').write('content')
+      get '/gems/gemirro-0.0.1.gem'
+      expect(last_response).to be_ok
+      expect(last_response.status).to eq(200)
+      expect(last_response.body).to eq('content')
     end
 
     it 'should catch exceptions' do
