@@ -33,7 +33,7 @@ module Gemirro
     # @return [Boolean]
     #
     def ruby?
-      !(@platform =~ /ruby/i).nil?
+      !(@platform =~ /^ruby$/i).nil?
     end
 
     ##
@@ -66,7 +66,8 @@ module Gemirro
     # @return [String]
     #
     def gemfile_name
-      [@name, @number, @platform].compact.join('-')
+      platform = ruby? ? nil : @platform
+      [@name, @number, platform].compact.join('-')
     end
   end
 end

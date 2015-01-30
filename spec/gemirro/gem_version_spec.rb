@@ -14,7 +14,19 @@ module Gemirro
       expect(gem.platform).to eq('ruby')
       expect(gem.ruby?).to be_truthy
       expect(gem.version).to be_a(::Gem::Version)
-      expect(gem.gemfile_name).to eq('gemirro-0.0.1-ruby')
+      expect(gem.gemfile_name).to eq('gemirro-0.0.1')
+    end
+
+    it 'should be initialized with other platform' do
+      gem = GemVersion.new('gemirro',
+                           '0.0.1',
+                           'jruby')
+      expect(gem.name).to eq('gemirro')
+      expect(gem.number).to eq('0.0.1')
+      expect(gem.platform).to eq('jruby')
+      expect(gem.ruby?).to be_falsy
+      expect(gem.version).to be_a(::Gem::Version)
+      expect(gem.gemfile_name).to eq('gemirro-0.0.1-jruby')
     end
 
     it 'should compare with an other gem' do

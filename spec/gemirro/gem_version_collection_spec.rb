@@ -40,8 +40,15 @@ module Gemirro
                                               'ruby'],
                                              GemVersion.new('alumina',
                                                             '0.0.1',
+                                                            'ruby'),
+                                             GemVersion.new('alumina',
+                                                            '0.0.2',
                                                             'ruby')])
-      expect(collection.find_by_name('alumina').first[0]).to eq('alumina')
+      expect(collection.find_by_name('something')).to be_nil
+      expect(collection.find_by_name('alumina').newest.name)
+        .to eq('alumina')
+      expect(collection.find_by_name('alumina').newest.version.to_s)
+        .to eq('0.0.2')
     end
   end
 end

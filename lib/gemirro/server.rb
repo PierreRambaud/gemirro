@@ -40,21 +40,33 @@ module Gemirro
       set :port, config.server.port
       set :bind, config.server.host
       set :public_folder, config.destination.gsub(/\/$/, '')
-      set :destination, config.destination.gsub(/\/$/, '')
       set :environment, config.environment
+      set :dump_errors, true
+      set :raise_errors, true
 
       enable :logging
       use Rack::CommonLogger, access_logger
     end
 
     ##
+    # Set template for not found action
+    #
+    # @return [nil]
+    #
+    not_found do
+      erb(:not_found)
+    end
+
+    ##
     # Display information about one gem
     #
-    # @ return [nil]
+    # @return [nil]
     #
     get('/gem/:gemname') do
       gems = gems_collection
       @gem = gems.find_by_name(params[:gemname])
+      return not_found if @gem.nil?
+
       erb(:gem)
     end
 
@@ -62,7 +74,7 @@ module Gemirro
     # Display home page containing the list of gems already
     # downloaded on the server
     #
-    # @ return [nil]
+    # @return [nil]
     #
     get('/') do
       @gems = gems_collection
@@ -76,10 +88,10 @@ module Gemirro
     # @return [nil]
     #
     get('*') do |path|
-      resource = "#{settings.destination}#{path}"
+      resource = "#{settings.public_folder}#{path}"
 
-      # Try to download gem if file doesn't exists
-      fetch_gem(resource) unless File.exist?(resource)
+      # Try to download gem
+      fetch_gem(resource)
       # If not found again, return a 404
       return not_found unless File.exist?(resource)
 
@@ -112,21 +124,23 @@ module Gemirro
         logger.error(e.message)
       end
 
-      update_gemspecs
+      update_indexes
     end
 
     ##
-    # Update gemspecs files
+    # Update indexes files
     #
     # @return [Indexer]
     #
-    def update_gemspecs
-      indexer    = Indexer.new(settings.destination)
+    def update_indexes
+      indexer    = Gemirro::Indexer.new(configuration.destination)
+      indexer.only_origin = true
       indexer.ui = ::Gem::SilentUI.new
 
-      logger.info('Updating gemspecs files...')
-      indexer.update_gemspecs
-      logger.info('Done')
+      configuration.logger.info('Generating indexes')
+      indexer.generate_index
+    rescue SystemExit => e
+      configuration.logger.info(e.message)
     end
 
     ##
@@ -210,7 +224,7 @@ module Gemirro
       def spec_for(gemname, version, platform = 'ruby')
         filename = [gemname, version]
         filename.push(platform) if platform != 'ruby'
-        spec_file = File.join(settings.destination,
+        spec_file = File.join(settings.public_folder,
                               'quick',
                               Gemirro::Configuration.marshal_identifier,
                               "#{filename.join('-')}.gemspec.rz")

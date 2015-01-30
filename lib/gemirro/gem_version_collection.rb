@@ -15,7 +15,7 @@ module Gemirro
     attr_reader :grouped
 
     ##
-    # @params [Array] gems
+    # @param [Array] gems
     #
     def initialize(gems = [])
       @gems = gems.map do |object|
@@ -48,7 +48,7 @@ module Gemirro
     ##
     # Return size of a gem
     #
-    # @reutnr [Integer]
+    # @return [Integer]
     #
     def size
       @gems.size
@@ -64,7 +64,7 @@ module Gemirro
     ##
     # Group gems by name
     #
-    # @param [Proc] &block
+    # @param [Proc] block
     # @return [Array]
     #
     def by_name(&block)
@@ -91,9 +91,11 @@ module Gemirro
     # @return [Array]
     #
     def find_by_name(gemname)
-      by_name.select do |name, _collection|
+      gem = by_name.select do |name, _collection|
         name == gemname
       end
+
+      gem.first.last if gem.any?
     end
   end
 end

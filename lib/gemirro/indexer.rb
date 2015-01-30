@@ -13,9 +13,15 @@ module Gemirro
   #  @return [String]
   # @!attribute [r] dest_directory
   #  @return [String]
+  # @!attribute [r] only_origin
+  #  @return [Boolean]
   #
   class Indexer < ::Gem::Indexer
-    attr_accessor :files, :quick_marshal_dir, :directory, :dest_directory
+    attr_accessor(:files,
+                  :quick_marshal_dir,
+                  :directory,
+                  :dest_directory,
+                  :only_origin)
 
     ##
     # Generate indicies on the destination directory
@@ -41,33 +47,43 @@ module Gemirro
       files.each do |path|
         file = path.sub(/^#{Regexp.escape @directory}\/?/, '')
         dst_name = File.join @dest_directory, file
-        source_host = Gemirro.configuration.source.host
-
-        resp = Http.get("#{source_host}/#{File.basename(file)}")
-        next unless resp.code == 200
-        source_content = resp.body
 
         if ["#{@specs_index}.gz",
             "#{@latest_specs_index}.gz",
             "#{@prerelease_specs_index}.gz"].include?(path)
-          source_content = Marshal.load(
-            Zlib::GzipReader.new(StringIO.new(source_content)).read)
-          content = Marshal.load(Zlib::GzipReader.open(path).read)
-          new_content = source_content.concat(content).uniq
 
+          content = Marshal.load(Zlib::GzipReader.open(path).read)
           Zlib::GzipWriter.open("#{dst_name}.orig") do |io|
             io.write(Marshal.dump(content))
           end
 
-          Zlib::GzipWriter.open(dst_name) do |io|
-            io.write(Marshal.dump(new_content))
+          unless @only_origin
+            source_content = download_from_source(file)
+            next if source_content.nil?
+            source_content = Marshal.load(Zlib::GzipReader
+                                            .new(StringIO
+                                                   .new(source_content)).read)
+            new_content = source_content.concat(content).uniq
+
+            Zlib::GzipWriter.open(dst_name) do |io|
+              io.write(Marshal.dump(new_content))
+            end
           end
         else
+          source_content = download_from_source(file)
+          next if source_content.nil?
           MirrorFile.new(dst_name).write(source_content)
         end
 
         FileUtils.rm_rf(path)
       end
+    end
+
+    def download_from_source(file)
+      source_host = Gemirro.configuration.source.host
+      resp = Http.get("#{source_host}/#{File.basename(file)}")
+      return unless resp.code == 200
+      resp.body
     end
 
     def update_gemspecs

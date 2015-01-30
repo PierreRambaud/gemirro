@@ -1,0 +1,46 @@
+<div class="col-lg-12">
+  <div class="col-lg-3 center-block pull-none text-center">
+    <a class="btn btn-default" href="<%= url '/'%>">Back to Gem Index</a>
+  </div>
+</div>
+
+<div class="col-lg-12">
+  <% @gem.by_name do |name, versions| %>
+    <div class="col-lg-6 center-block pull-none">
+      <div class="panel panel-info">
+        <div class="panel-heading">
+          <a href="<%= url("gem/#{name}") %>">
+            <h2 class="panel-title"><%= name %> (<%= versions.newest.number %>)</h2>
+          </a>
+        </div>
+        <div class="panel-body">
+          <p>
+            <% newest_gem = versions.newest %>
+            <% if spec = spec_for(name, newest_gem.number, newest_gem.platform) %>
+            <%= spec.description %>
+            <br/>
+            <span class="author">– <%= spec.authors.map do |author|
+                                       "<a href='#{spec.homepage}'>#{author}</a>"
+                                       end.join(', ') %></span>
+            <% end %>
+          </p>
+        </div>
+
+        <ul class="list-group">
+          <% versions.each.reverse_each do |version| %>
+            <li class="list-group-item clearfix">
+              <p class="pull-left">
+                <code>gem install <%= version.name %> -v "<%= version.number %>"</code>
+                <% unless version.platform =~ /^ruby/i %>
+                  <small class="platform"><%= version.platform %></small>
+                <% end %>
+              </p>
+              <div class="pull-right">
+                <a class="btn btn-primary btn-sm" href="<%= url("/gems/#{version.gemfile_name}.gem") %>">Download</a>
+              </div>
+            </li>
+          <% end %>
+        </ul>
+    </div>
+  <% end %>
+</div>

@@ -48,6 +48,31 @@ module Gemirro
       expect(last_response).to_not be_ok
     end
 
+    it 'should return 404 when gem does not exist' do
+      get '/gem/something'
+      expect(last_response.status).to eq(404)
+      expect(last_response).to_not be_ok
+    end
+
+    it 'should display gem specifications' do
+      marshal_dump = Marshal.dump([['groove-dl',
+                                    ::Gem::Version.create('0.1.0'),
+                                    'ruby']])
+
+      MirrorFile.new('/var/www/gemirro/specs.4.8.gz.orig').write(marshal_dump)
+      Struct.new('SuccessGzipReader', :read)
+      gzip_reader = Struct::SuccessGzipReader.new(marshal_dump)
+
+      allow(Zlib::GzipReader).to receive(:open)
+        .once
+        .with('/var/www/gemirro/specs.4.8.gz.orig')
+        .and_return(gzip_reader)
+
+      get '/gem/groove-dl'
+      expect(last_response.status).to eq(200)
+      expect(last_response).to be_ok
+    end
+
     it 'should download existing file' do
       get '/test'
       expect(last_response.body).to eq('content')
@@ -65,8 +90,9 @@ module Gemirro
 
       Struct.new('GemIndexer')
       gem_indexer = Struct::GemIndexer.new
-      allow(gem_indexer).to receive(:update_gemspecs).once.and_return(true)
+      allow(gem_indexer).to receive(:only_origin=).once.and_return(true)
       allow(gem_indexer).to receive(:ui=).once.and_return(true)
+      allow(gem_indexer).to receive(:generate_index).once.and_return(true)
 
       allow(Gemirro.configuration).to receive(:source).twice.and_return(source)
       allow(Gemirro::GemsFetcher).to receive(:new).once.and_return(gems_fetcher)
@@ -101,8 +127,9 @@ module Gemirro
         StandardError, 'Not ok')
 
       gem_indexer = Struct::GemIndexer.new
-      allow(gem_indexer).to receive(:update_gemspecs).once.and_return(true)
+      allow(gem_indexer).to receive(:only_origin=).once.and_return(true)
       allow(gem_indexer).to receive(:ui=).once.and_return(true)
+      allow(gem_indexer).to receive(:generate_index).once.and_raise(SystemExit)
 
       allow(Gemirro.configuration).to receive(:source).twice.and_return(source)
       allow(Gemirro::GemsFetcher).to receive(:new).once.and_return(gems_fetcher)
@@ -112,8 +139,8 @@ module Gemirro
       allow(::Gem::SilentUI).to receive(:new).once.and_return(true)
 
       allow(Gemirro.configuration).to receive(:logger)
-        .exactly(3).and_return(@fake_logger)
-      allow(@fake_logger).to receive(:info).exactly(2)
+        .exactly(4).and_return(@fake_logger)
+      allow(@fake_logger).to receive(:info).exactly(3)
       allow(@fake_logger).to receive(:error)
       get '/gems/gemirro-0.0.1.gem'
       expect(last_response).to_not be_ok
