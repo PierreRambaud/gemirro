@@ -19,7 +19,7 @@ module Gemirro
     it 'should fetch versions' do
       Struct.new('FetchVersions', :body)
       result = Struct::FetchVersions.new(true)
-      Http.should_receive(:get).once.with(
+      allow(Http).to receive(:get).once.with(
         "https://rubygems.org/#{Configuration.versions_file}"
       ).and_return(result)
       expect(@source.fetch_versions).to be_truthy
@@ -28,7 +28,7 @@ module Gemirro
     it 'should fetch gem' do
       Struct.new('FetchGem', :body)
       result = Struct::FetchGem.new(true)
-      Http.should_receive(:get).once.with(
+      allow(Http).to receive(:get).once.with(
         'https://rubygems.org/gems/gemirro-0.0.1.gem').and_return(result)
       expect(@source.fetch_gem('gemirro', '0.0.1')).to be_truthy
     end

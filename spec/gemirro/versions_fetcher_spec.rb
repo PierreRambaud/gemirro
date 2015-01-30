@@ -15,10 +15,10 @@ module Gemirro
     end
 
     it 'should fetch versions' do
-      Gemirro.configuration.logger.should_receive(:info)
+      allow(Gemirro.configuration.logger).to receive(:info)
         .once.with("Updating #{@source.name} (#{@source.host})")
-      @source.should_receive(:fetch_versions).once.and_return([])
-      VersionsFile.should_receive(:load).with([])
+      allow(@source).to receive(:fetch_versions).once.and_return([])
+      allow(VersionsFile).to receive(:load).with([])
       expect(@fetcher.fetch).to be_nil
     end
   end

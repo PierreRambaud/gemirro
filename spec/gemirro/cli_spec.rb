@@ -35,7 +35,7 @@ module Gemirro
       end
 
       it 'should raise SystemExit if file does not exists' do
-        CLI.should_receive(:abort)
+        allow(CLI).to receive(:abort)
           .with('The configuration file /config.rb does not exist')
           .and_raise SystemExit
         expect { CLI.load_configuration('config.rb') }.to raise_error SystemExit

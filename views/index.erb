@@ -1,0 +1,38 @@
+
+<div class="col-lg-12">
+  <div class="col-lg-3 center-block pull-none">
+    <pre class="bg-info"><code>gem sources -a <%= url("/") %></code></pre>
+  </div>
+</div>
+
+<div class="col-lg-12">
+  <% if @gems.any? %>
+    <div class="col-lg-6 center-block pull-none">
+      <% @gems.by_name do |name, versions| %>
+        <div class="panel panel-info">
+          <div class="panel-heading">
+            <a href="<%= url("gem/#{name}") %>">
+              <h2 class="panel-title"><%= name %> <span class="badge pull-right"><%= versions.newest.number %></span></h2>
+            </a>
+          </div>
+
+          <div class="panel-body">
+            <% spec = spec_for(name, versions.newest.number) %>
+            <% if spec.is_a?(::Gem::Specification) %>
+              <%= spec.description %>
+            <% end %>
+
+            <% versions.reverse_each.first(5).each do |version| %>
+              <p>
+                <code>gem install <%= version.name %> <%= "--prerelease" if version.number.to_s.match(/[a-z]/i) %> -v "<%= version.number %>"</code>
+                <% unless version.platform =~ /^ruby/i %>
+                  <small class="platform"><%= version.platform %></small>
+                <% end %>
+              </p>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>

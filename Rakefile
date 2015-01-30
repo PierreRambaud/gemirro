@@ -7,4 +7,4 @@ Dir['./task/*.rake'].each do |task|
   import(task)
 end
 
-task default: [:rubocop, :spec]
+task default: [:spec, :rubocop]

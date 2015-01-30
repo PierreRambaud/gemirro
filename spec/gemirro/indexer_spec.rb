@@ -12,40 +12,70 @@ module Gemirro
     include FakeFS::SpecHelpers
 
     it 'should install indicies' do
-      dir = MirrorDirectory.new('./')
+      dir = MirrorDirectory.new('/tmp')
+      dir.add_directory('test')
       dir.add_directory('gem_generate_index/quick/Marshal.4.8')
-      ::Gem.configuration.should_receive(:really_verbose).once.and_return(true)
+      allow(::Gem.configuration).to receive(:really_verbose)
+        .once.and_return(true)
 
-      indexer = Indexer.new('./')
-      indexer.should_receive(:say)
-        .once.with('Downloading index into production dir ./')
-      indexer.quick_marshal_dir = 'gem_generate_index/quick/Marshal.4.8'
-      indexer.dest_directory = './'
-      indexer.directory = 'gem_generate_index'
+      indexer = Indexer.new('/tmp/test')
+      allow(indexer).to receive(:say)
+        .once.with('Downloading index into production dir /tmp/test')
+      indexer.quick_marshal_dir = '/tmp/gem_generate_index/quick/Marshal.4.8'
+      indexer.dest_directory = '/tmp/test'
+      indexer.directory = '/tmp/gem_generate_index'
+      indexer.instance_variable_set('@specs_index',
+                                    '/tmp/gem_generate_index/specs.4.8')
       indexer.files = [
-        'gem_generate_index/quick/Marshal.4.8',
-        'gem_generate_index/specs.4.8.gz'
+        '/tmp/gem_generate_index/quick/Marshal.4.8',
+        '/tmp/gem_generate_index/specs.4.8.gz',
+        '/tmp/gem_generate_index/something.4.8.gz'
       ]
 
-      FileUtils.should_receive(:mkdir_p).once.with('./quick', verbose: true)
-      FileUtils.should_receive(:rm_rf)
-        .once.with('gem_generate_index/specs.4.8.gz')
-      FileUtils.should_receive(:rm_rf)
-        .once.with('./quick/Marshal.4.8', verbose: true)
-      FileUtils.should_receive(:mv)
+      allow(FileUtils).to receive(:mkdir_p)
+        .once.with('/tmp/test/quick', verbose: true)
+      allow(FileUtils).to receive(:rm_rf)
+        .once.with('/tmp/gem_generate_index/something.4.8.gz')
+      allow(FileUtils).to receive(:rm_rf)
+        .once.with('/tmp/gem_generate_index/specs.4.8.gz')
+      allow(FileUtils).to receive(:rm_rf)
+        .once.with('/tmp/test/quick/Marshal.4.8', verbose: true)
+      allow(FileUtils).to receive(:mv)
         .once
-        .with('gem_generate_index/quick/Marshal.4.8', './quick/Marshal.4.8',
+        .with('/tmp/gem_generate_index/quick/Marshal.4.8',
+              '/tmp/test/quick/Marshal.4.8',
               verbose: true, force: true)
+
       source = Source.new('Rubygems', 'https://rubygems.org')
-      Gemirro.configuration.should_receive(:source).and_return(source)
+      allow(Gemirro.configuration).to receive(:source).and_return(source)
+
       Struct.new('HttpGet', :code, :body)
-      http_get = Struct::HttpGet.new(200, 'content')
-      Http.should_receive(:get)
+      wio = StringIO.new('w')
+      w_gz = Zlib::GzipWriter.new(wio)
+      w_gz.write(['content'])
+      w_gz.close
+      http_get = Struct::HttpGet.new(200, wio.string)
+      allow(Marshal).to receive(:load).and_return(['content'])
+      allow(Marshal).to receive(:dump).and_return(['content'])
+      allow(Zlib::GzipWriter).to receive(:open)
+        .once.with('/tmp/test/specs.4.8.gz.orig')
+      allow(Zlib::GzipWriter).to receive(:open)
+        .once.with('/tmp/test/specs.4.8.gz')
+      allow(Http).to receive(:get)
         .with('https://rubygems.org/specs.4.8.gz').and_return(http_get)
+      allow(Http).to receive(:get)
+        .with('https://rubygems.org/something.4.8.gz').and_return(http_get)
+
+      Struct.new('GzipReader', :read)
+      gzip_reader = Struct::GzipReader.new(wio.string)
+      allow(Zlib::GzipReader).to receive(:open)
+        .once
+        .with('/tmp/gem_generate_index/specs.4.8.gz')
+        .and_return(gzip_reader)
 
       files = indexer.install_indicies
-      expect(files).to eq(['gem_generate_index/specs.4.8.gz'])
-      expect(MirrorFile.new('specs.4.8.gz').read).to eq('content')
+      expect(files).to eq(['/tmp/gem_generate_index/specs.4.8.gz',
+                           '/tmp/gem_generate_index/something.4.8.gz'])
     end
 
     it 'should exit if there is no new gems' do
@@ -54,12 +84,12 @@ module Gemirro
       MirrorFile.new('./specs.4.8').write('')
 
       indexer = Indexer.new('./')
-      indexer.should_receive(:make_temp_directories).and_return(true)
+      allow(indexer).to receive(:make_temp_directories).and_return(true)
 
       expect { indexer.update_gemspecs }.to raise_error SystemExit
     end
 
-    it 'should generate gemspecs files' do
+    it 'should update gemspecs files' do
       dir = MirrorDirectory.new('/')
       dir.add_directory('gems')
       dir.add_directory('quick')
@@ -75,10 +105,10 @@ module Gemirro
       MirrorFile.new("#{indexer.directory}/quick/gemirro-0.1.0.gemspec.rz")
         .write('test')
 
-      indexer.should_receive(:gem_file_list)
+      allow(indexer).to receive(:gem_file_list)
         .and_return(['gems/gemirro-0.1.0.gem'])
-      indexer.should_receive(:make_temp_directories).once.and_return(true)
-      indexer.should_receive(:build_marshal_gemspecs).once.and_return([
+      allow(indexer).to receive(:make_temp_directories).once.and_return(true)
+      allow(indexer).to receive(:build_marshal_gemspecs).once.and_return([
         "#{indexer.directory}/quick/gemirro-0.1.0.gemspec.rz"])
 
       indexer.update_gemspecs
