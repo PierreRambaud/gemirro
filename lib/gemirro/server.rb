@@ -48,23 +48,6 @@ module Gemirro
     end
 
     ##
-    # Try to get all request and download files
-    # if files aren't found.
-    #
-    # @return [nil]
-    #
-    get(%r{(/gems/.*\.gem)}) do |path|
-      resource = "#{settings.destination}#{path}"
-
-      # Try to download gem if file doesn't exists
-      fetch_gem(resource) unless File.exist?(resource)
-      # If not found again, return a 404
-      return not_found unless File.exist?(resource)
-
-      send_file(resource)
-    end
-
-    ##
     # Display information about one gem
     #
     # @ return [nil]
@@ -84,6 +67,23 @@ module Gemirro
     get('/') do
       @gems = gems_collection
       erb(:index)
+    end
+
+    ##
+    # Try to get all request and download files
+    # if files aren't found.
+    #
+    # @return [nil]
+    #
+    get('*') do |path|
+      resource = "#{settings.destination}#{path}"
+
+      # Try to download gem if file doesn't exists
+      fetch_gem(resource) unless File.exist?(resource)
+      # If not found again, return a 404
+      return not_found unless File.exist?(resource)
+
+      send_file(resource)
     end
 
     ##
@@ -190,8 +190,36 @@ module Gemirro
       end
     end
 
+    ##
+    # Return specs fils types
+    #
+    # @return [Array]
+    #
     def specs_file_types
       [:specs, :prerelease_specs]
+    end
+
+    helpers do
+      ##
+      # Return gem specification from gemname and version
+      #
+      # @param [String] gemname
+      # @param [String] version
+      # @return [::Gem::Specification]
+      #
+      def spec_for(gemname, version, platform = 'ruby')
+        filename = [gemname, version]
+        filename.push(platform) if platform != 'ruby'
+        spec_file = File.join(settings.destination,
+                              'quick',
+                              Gemirro::Configuration.marshal_identifier,
+                              "#{filename.join('-')}.gemspec.rz")
+
+        File.open(spec_file, 'r') do |uz_file|
+          uz_file.binmode
+          Marshal.load(::Gem.inflate(uz_file.read))
+        end if File.exist?(spec_file)
+      end
     end
   end
 end

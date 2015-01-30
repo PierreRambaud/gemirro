@@ -18,6 +18,11 @@
           </div>
 
           <div class="panel-body">
+            <% spec = spec_for(name, versions.newest.number) %>
+            <% if spec.is_a?(::Gem::Specification) %>
+              <%= spec.description %>
+            <% end %>
+
             <% versions.reverse_each.first(5).each do |version| %>
               <p>
                 <code>gem install <%= version.name %> <%= "--prerelease" if version.number.to_s.match(/[a-z]/i) %> -v "<%= version.number %>"</code>
