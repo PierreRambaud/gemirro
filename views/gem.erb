@@ -10,20 +10,32 @@
       <div class="panel panel-info">
         <div class="panel-heading">
           <a href="<%= url("gem/#{name}") %>">
-            <h2 class="panel-title"><%= name %> (<%= versions.newest.number %>)</h2>
+            <h2 class="panel-title"><%= name %> <span class="badge pull-right"><%= versions.newest.number %></span></h2>
           </a>
         </div>
         <div class="panel-body">
-          <p>
-            <% newest_gem = versions.newest %>
-            <% if spec = spec_for(name, newest_gem.number, newest_gem.platform) %>
-            <%= spec.description %>
-            <br/>
-            <span class="author">– <%= spec.authors.map do |author|
-                                       "<a href='#{spec.homepage}'>#{author}</a>"
-                                       end.join(', ') %></span>
-            <% end %>
-          </p>
+          <% newest_gem = versions.newest %>
+          <% if spec = spec_for(name, newest_gem.number, newest_gem.platform) %>
+            <p><%= spec.description %></p>
+
+            <h3>Dependencies</h3>
+            <ul class="list-group">
+              <% spec.dependencies.each do |dependency| %>
+                <li class="list-group-item">
+                  <a href="<%= url("gem/#{dependency.name}") %>"><%= [dependency.name, dependency.requirement].join(' ') %></a>
+                </li>
+              <% end %>
+            </ul>
+
+            <h3>Authors</h3>
+            <ul class="list-group">
+              <% spec.authors.each do |author| %>
+                <li class="list-group-item">
+                  <a href="<%= spec.homepage %>"><%= author %></a>
+                </li>
+              <% end %>
+            </ul>
+          <% end %>
         </div>
 
         <ul class="list-group">
