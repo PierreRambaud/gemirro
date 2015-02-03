@@ -20,7 +20,6 @@ Gem::Specification.new do |s|
   s.add_dependency 'slop', '~>3.6'
   s.add_dependency 'httpclient', '~>2.4'
   s.add_dependency 'confstruct', '~>0.2'
-  s.add_dependency 'builder', '~>3.2'
   s.add_dependency 'sinatra', '~>1.4'
   s.add_dependency 'thin', '~>1.6'
 
