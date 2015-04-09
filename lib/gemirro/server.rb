@@ -39,7 +39,7 @@ module Gemirro
       set :views, Gemirro::Configuration.views_directory
       set :port, config.server.port
       set :bind, config.server.host
-      set :public_folder, config.destination.gsub(/\/$/, '')
+      set :public_folder, config.destination.gsub(%r{/$}, '')
       set :environment, config.environment
       set :dump_errors, true
       set :raise_errors, true
@@ -154,8 +154,8 @@ module Gemirro
     # @see Gemirro::VersionsFetcher.fetch
     #
     def versions_fetcher
-      @versions_fetcher ||= Gemirro::VersionsFetcher.new(
-                            configuration.source).fetch
+      @versions_fetcher ||= Gemirro::VersionsFetcher
+                            .new(configuration.source).fetch
     end
 
     ##

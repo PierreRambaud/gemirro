@@ -45,7 +45,7 @@ module Gemirro
       end
 
       files.each do |path|
-        file = path.sub(/^#{Regexp.escape @directory}\/?/, '')
+        file = path.sub(%r{^#{Regexp.escape @directory}/?}, '')
         dst_name = File.join @dest_directory, file
 
         if ["#{@specs_index}.gz",
@@ -106,7 +106,7 @@ module Gemirro
       files = build_marshal_gemspecs
 
       files.each do |path|
-        file = path.sub(/^#{Regexp.escape @directory}\/?/, '')
+        file = path.sub(%r{^#{Regexp.escape @directory}/?}, '')
         src_name = File.join @directory, file
         dst_name = File.join @dest_directory, file
         FileUtils.mv(src_name, dst_name)

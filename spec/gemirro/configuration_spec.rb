@@ -68,7 +68,7 @@ module Gemirro
     end
 
     it 'should return ignored gems' do
-      expect(@config.ignored_gems).to eq(Hash.new)
+      expect(@config.ignored_gems).to eq({})
       expect(@config.ignore_gem?('rake', '1.0.0')).to be_falsy
       expect(@config.ignore_gem('rake', '1.0.0')).to eq(['1.0.0'])
       expect(@config.ignored_gems).to eq('rake' => ['1.0.0'])

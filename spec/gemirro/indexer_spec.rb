@@ -97,8 +97,8 @@ module Gemirro
 
       indexer = Indexer.new('/')
 
-      dir.add_directory("#{indexer.directory.gsub(/^\//, '')}/gems")
-      dir.add_directory("#{indexer.directory.gsub(/^\//, '')}/quick")
+      dir.add_directory("#{indexer.directory.gsub(%r{^/}, '')}/gems")
+      dir.add_directory("#{indexer.directory.gsub(%r{^/}, '')}/quick")
       MirrorFile.new('/specs.4.8').write('')
       MirrorFile.new("#{indexer.directory}/gems/gemirro-0.1.0.gem").write('')
       MirrorFile.new('gems/gemirro-0.1.0.gem').write('')
