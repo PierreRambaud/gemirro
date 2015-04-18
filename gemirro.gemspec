@@ -18,16 +18,16 @@ Gem::Specification.new do |s|
   s.required_ruby_version = '>= 1.9.2'
 
   s.add_dependency 'slop', '~>3.6'
-  s.add_dependency 'httpclient', '~>2.4'
-  s.add_dependency 'confstruct', '~>0.2'
+  s.add_dependency 'httpclient', '~>2.6'
+  s.add_dependency 'confstruct', '~>1.0'
   s.add_dependency 'builder', '~>3.2'
   s.add_dependency 'sinatra', '~>1.4'
   s.add_dependency 'thin', '~>1.6'
 
-  s.add_development_dependency 'rake', '~>10.0'
+  s.add_development_dependency 'rake', '~>10.4'
   s.add_development_dependency 'rack-test', '~>0.6'
-  s.add_development_dependency 'rspec', '~>3.0'
+  s.add_development_dependency 'rspec', '~>3.2'
   s.add_development_dependency 'simplecov', '~>0.9'
-  s.add_development_dependency 'rubocop', '~>0.28'
-  s.add_development_dependency 'fakefs', '~>0.6.4'
+  s.add_development_dependency 'rubocop', '~>0.30'
+  s.add_development_dependency 'fakefs', '~>0.6.7'
 end

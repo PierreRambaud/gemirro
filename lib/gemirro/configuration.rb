@@ -5,12 +5,13 @@ module Gemirro
   # @return [Gemirro::Configuration]
   #
   def self.configuration
-    @configuration ||= Configuration.new do
-      server do
-        access_log '/tmp/gemirro.access.log'
-        error_log '/tmp/gemirro.error.log'
-      end
-    end
+    default_config = {
+      server: {
+        access_log: '/tmp/gemirro.access.log',
+        error_log: '/tmp/gemirro.access.log'
+      }
+    }
+    @configuration ||= Configuration.new(default_config)
   end
 
   ##
