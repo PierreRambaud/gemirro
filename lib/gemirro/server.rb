@@ -82,6 +82,26 @@ module Gemirro
     end
 
     ##
+    # Return gem dependencies as binary
+    #
+    # @return [nil]
+    #
+    get '/api/v1/dependencies' do
+      content_type 'application/octet-stream'
+      query_gems.any? ? Marshal.dump(query_gems_list) : 200
+    end
+
+    ##
+    # Return gem dependencies as json
+    #
+    # @return [nil]
+    #
+    get '/api/v1/dependencies.json' do
+      content_type 'application/json'
+      query_gems.any? ? JSON.dump(query_gems_list) : {}
+    end
+
+    ##
     # Try to get all request and download files
     # if files aren't found.
     #
@@ -167,6 +187,15 @@ module Gemirro
     end
 
     ##
+    # Return all gems pass to query
+    #
+    # @return [Array]
+    #
+    def query_gems
+      params[:gems].to_s.split(',')
+    end
+
+    ##
     # @see Gemirro::Configuration#logger
     # @return [Logger]
     #
@@ -189,6 +218,54 @@ module Gemirro
       end.inject(:|)
 
       GemVersionCollection.new(gems)
+    end
+
+    ##
+    # Return gems list from query params
+    #
+    # @return [Array]
+    #
+    def query_gems_list
+      query_gems.flat_map do |query_gem|
+        gem_dependencies(query_gem)
+      end
+    end
+
+    ##
+    # List of versions and dependencies of each version
+    # from a gem name.
+    #
+    # @return [Array]
+    #
+    def gem_dependencies(gem_name)
+      gems = gems_collection
+      gem_collection = gems.find_by_name(gem_name)
+      return '' if gem_collection.nil?
+
+      gem_collection = gem_collection.map do |gem|
+        [gem, spec_for(gem.name, gem.number, gem.platform)]
+      end
+
+      gem_collection.reject! do |_, spec|
+        spec.nil?
+      end
+
+      gem_collection.map do |gem, spec|
+        dependencies = spec.dependencies.select do |d|
+          d.type == :runtime
+        end
+
+        dependencies.map! do |d|
+          [d.name.is_a?(Array) ? d.name.first : d.name, d.requirement.to_s]
+        end
+
+        {
+          name: gem.name,
+          number: gem.number,
+          platform: gem.platform,
+          dependencies: dependencies
+        }
+      end
     end
 
     ##
