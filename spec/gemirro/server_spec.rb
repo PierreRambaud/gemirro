@@ -177,9 +177,8 @@ module Gemirro
       it 'should retrieve empty json when gem was not found' do
         get '/api/v1/dependencies.json?gems=gemirro'
         expect(last_response.headers['Content-Type'])
-          .to eq('application/json')
-        expect(last_response.body).to eq('[""]')
-        expect(last_response).to be_ok
+          .to eq('text/html;charset=utf-8')
+        expect(last_response).to_not be_ok
       end
 
       it 'should retrieve empty json when gem was not found' do

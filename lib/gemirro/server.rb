@@ -54,6 +54,7 @@ module Gemirro
     # @return [nil]
     #
     not_found do
+      content_type 'text/html'
       erb(:not_found)
     end
 
@@ -88,7 +89,9 @@ module Gemirro
     #
     get '/api/v1/dependencies' do
       content_type 'application/octet-stream'
-      query_gems.any? ? Marshal.dump(query_gems_list) : 200
+      return 200 unless query_gems.any?
+      return Marshal.dump(query_gems_list) if query_gems_list.any?
+      404
     end
 
     ##
@@ -98,7 +101,9 @@ module Gemirro
     #
     get '/api/v1/dependencies.json' do
       content_type 'application/json'
-      query_gems.any? ? JSON.dump(query_gems_list) : {}
+      return {} unless query_gems.any?
+      return JSON.dump(query_gems_list) if query_gems_list.any?
+      404
     end
 
     ##
@@ -226,9 +231,13 @@ module Gemirro
     # @return [Array]
     #
     def query_gems_list
-      query_gems.flat_map do |query_gem|
+      gems = query_gems.flat_map do |query_gem|
         gem_dependencies(query_gem)
       end
+      gems = gems.select do |g|
+        !g.empty?
+      end
+      gems
     end
 
     ##
