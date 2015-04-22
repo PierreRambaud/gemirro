@@ -89,9 +89,7 @@ module Gemirro
     #
     get '/api/v1/dependencies' do
       content_type 'application/octet-stream'
-      return 200 unless query_gems.any?
-      return Marshal.dump(query_gems_list) if query_gems_list.any?
-      404
+      query_gems.any? ? Marshal.dump(query_gems_list) : 200
     end
 
     ##
@@ -101,9 +99,7 @@ module Gemirro
     #
     get '/api/v1/dependencies.json' do
       content_type 'application/json'
-      return {} unless query_gems.any?
-      return JSON.dump(query_gems_list) if query_gems_list.any?
-      404
+      query_gems.any? ? JSON.dump(query_gems_list) : {}
     end
 
     ##
@@ -116,7 +112,7 @@ module Gemirro
       resource = "#{settings.public_folder}#{path}"
 
       # Try to download gem
-      fetch_gem(resource)
+      fetch_gem(resource) unless File.exist?(resource)
       # If not found again, return a 404
       return not_found unless File.exist?(resource)
 
@@ -211,10 +207,11 @@ module Gemirro
     ##
     # Generate Gems collection from Marshal dump
     #
+    # @param [TrueClass|FalseClass] orig Fetch orig files
     # @return [Gemirro::GemVersionCollection]
     #
-    def gems_collection
-      gems = specs_files_paths.map do |specs_file_path|
+    def gems_collection(orig = true)
+      gems = specs_files_paths(orig).map do |specs_file_path|
         if File.exist?(specs_file_path)
           Marshal.load(Zlib::GzipReader.open(specs_file_path).read)
         else
@@ -247,7 +244,7 @@ module Gemirro
     # @return [Array]
     #
     def gem_dependencies(gem_name)
-      gems = gems_collection
+      gems = gems_collection(false)
       gem_collection = gems.find_by_name(gem_name)
       return '' if gem_collection.nil?
 
@@ -280,13 +277,17 @@ module Gemirro
     ##
     # Return specs fils paths
     #
+    # @param [TrueClass|FalseClass] orig Fetch orig files
     # @return [Array]
     #
-    def specs_files_paths
+    def specs_files_paths(orig = true)
       marshal_version = Gemirro::Configuration.marshal_version
       specs_file_types.map do |specs_file_type|
         File.join(settings.public_folder,
-                  [specs_file_type, marshal_version, 'gz.orig'].join('.'))
+                  [specs_file_type,
+                   marshal_version,
+                   'gz' + (orig ? '.orig' : '')
+                  ].join('.'))
       end
     end
 
@@ -310,11 +311,13 @@ module Gemirro
       def spec_for(gemname, version, platform = 'ruby')
         filename = [gemname, version]
         filename.push(platform) if platform != 'ruby'
+        gemspec_path = File.join('quick',
+                                 Gemirro::Configuration.marshal_identifier,
+                                 "#{filename.join('-')}.gemspec.rz")
         spec_file = File.join(settings.public_folder,
-                              'quick',
-                              Gemirro::Configuration.marshal_identifier,
-                              "#{filename.join('-')}.gemspec.rz")
+                              gemspec_path)
 
+        fetch_gem(gemspec_path) unless File.exist?(spec_file)
         File.open(spec_file, 'r') do |uz_file|
           uz_file.binmode
           Marshal.load(::Gem.inflate(uz_file.read))
