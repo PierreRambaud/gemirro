@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
 # Gemirro Version
 module Gemirro
-  VERSION = '0.8.1'
+  VERSION = '0.9.0'
 end
