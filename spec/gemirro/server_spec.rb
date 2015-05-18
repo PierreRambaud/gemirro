@@ -21,6 +21,7 @@ RSpec.configure do |c|
 end
 
 # Server tests
+# rubocop:disable Metrics/ModuleLength
 module Gemirro
   describe 'Gemirro::Server' do
     include FakeFS::SpecHelpers
