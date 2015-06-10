@@ -24,6 +24,59 @@ module Gemirro
                   :only_origin)
 
     ##
+    # Create an indexer that will index the gems in +directory+.
+    #
+    # @param [String] directory Destination directory
+    # @param [Hash] options Indexer options
+    # @return [Array]
+    ##
+    def initialize(directory, options = {})
+      require 'fileutils'
+      require 'tmpdir'
+      require 'zlib'
+
+      unless defined?(Builder::XChar)
+        fail 'Gem::Indexer requires that the XML Builder ' \
+        'library be installed:' \
+        "\n\tgem install builder"
+      end
+
+      options = { build_modern: true }.merge options
+
+      @build_modern = options[:build_modern]
+
+      @dest_directory = directory
+      @directory = File.join(Dir.tmpdir,
+                             "gem_generate_index_#{rand(1_000_000_000)}")
+
+      marshal_name = "Marshal.#{::Gem.marshal_version}"
+
+      @master_index = File.join @directory, 'yaml'
+      @marshal_index = File.join @directory, marshal_name
+
+      @quick_dir = File.join @directory, 'quick'
+      @quick_marshal_dir = File.join @quick_dir, marshal_name
+      @quick_marshal_dir_base = File.join 'quick', marshal_name # FIX: UGH
+
+      @quick_index = File.join @quick_dir, 'index'
+      @latest_index = File.join @quick_dir, 'latest_index'
+
+      @specs_index = File.join @directory, "specs.#{::Gem.marshal_version}"
+      @latest_specs_index =
+        File.join(@directory, "latest_specs.#{::Gem.marshal_version}")
+      @prerelease_specs_index =
+        File.join(@directory, "prerelease_specs.#{::Gem.marshal_version}")
+      @dest_specs_index =
+        File.join(@dest_directory, "specs.#{::Gem.marshal_version}")
+      @dest_latest_specs_index =
+        File.join(@dest_directory, "latest_specs.#{::Gem.marshal_version}")
+      @dest_prerelease_specs_index =
+        File.join(@dest_directory, "prerelease_specs.#{::Gem.marshal_version}")
+
+      @files = []
+    end
+
+    ##
     # Generate indicies on the destination directory
     #
     # @return [Array]
