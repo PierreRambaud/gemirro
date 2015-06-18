@@ -19,8 +19,6 @@ module Gemirro
         .once.and_return(true)
 
       indexer = Indexer.new('/tmp/test')
-      allow(indexer).to receive(:say)
-        .once.with('Downloading index into production dir /tmp/test')
       indexer.quick_marshal_dir = '/tmp/gem_generate_index/quick/Marshal.4.8'
       indexer.dest_directory = '/tmp/test'
       indexer.directory = '/tmp/gem_generate_index'
@@ -85,20 +83,17 @@ module Gemirro
 
       indexer = Indexer.new('./')
       allow(indexer).to receive(:make_temp_directories).and_return(true)
-
-      expect { indexer.update_gemspecs }.to raise_error SystemExit
     end
 
-    it 'should update gemspecs files' do
+    it 'should build indicies' do
+      indexer = Indexer.new('/')
       dir = MirrorDirectory.new('/')
       dir.add_directory('gems')
       dir.add_directory('quick')
       dir.add_directory('tmp')
-
-      indexer = Indexer.new('/')
-
       dir.add_directory("#{indexer.directory.gsub(%r{^/}, '')}/gems")
       dir.add_directory("#{indexer.directory.gsub(%r{^/}, '')}/quick")
+
       MirrorFile.new('/specs.4.8').write('')
       MirrorFile.new("#{indexer.directory}/gems/gemirro-0.1.0.gem").write('')
       MirrorFile.new('gems/gemirro-0.1.0.gem').write('')
@@ -107,13 +102,11 @@ module Gemirro
 
       allow(indexer).to receive(:gem_file_list)
         .and_return(['gems/gemirro-0.1.0.gem'])
-      allow(indexer).to receive(:make_temp_directories).once.and_return(true)
       allow(indexer).to receive(:build_marshal_gemspecs).once.and_return([
         "#{indexer.directory}/quick/gemirro-0.1.0.gemspec.rz"])
+      allow(indexer).to receive(:compress_indicies).once.and_return(true)
 
-      indexer.update_gemspecs
-      expect(File.read('/quick/gemirro-0.1.0.gemspec.rz'))
-        .to eq('test')
+      indexer.build_indicies
     end
   end
 end

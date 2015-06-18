@@ -83,7 +83,8 @@ module Gemirro
     #
     def install_indicies
       verbose = ::Gem.configuration.really_verbose
-      say "Downloading index into production dir #{@dest_directory}" if verbose
+      Gemirro.configuration.logger
+        .debug("Downloading index into production dir #{@dest_directory}")
 
       files = @files
       files.delete @quick_marshal_dir if files.include? @quick_dir
@@ -139,32 +140,14 @@ module Gemirro
       resp.body
     end
 
-    def update_gemspecs
-      make_temp_directories
-
-      specs_mtime = File.stat(@dest_specs_index).mtime
-      newest_mtime = Time.at 0
-
-      updated_gems = gem_file_list.select do |gem|
-        gem_mtime = File.stat(gem).mtime
-        newest_mtime = gem_mtime if gem_mtime > newest_mtime
-        gem_mtime >= specs_mtime
-      end
-
-      terminate_interaction(0) if updated_gems.empty?
-
-      specs = map_gems_to_specs updated_gems
+    def build_indicies
       ::Gem::Specification.dirs = []
-      ::Gem::Specification.add_specs(*specs)
-      files = build_marshal_gemspecs
+      ::Gem::Specification.all = *map_gems_to_specs(gem_file_list)
 
-      files.each do |path|
-        file = path.sub(%r{^#{Regexp.escape @directory}/?}, '')
-        src_name = File.join @directory, file
-        dst_name = File.join @dest_directory, file
-        FileUtils.mv(src_name, dst_name)
-        File.utime newest_mtime, newest_mtime, dst_name
-      end
+      build_marshal_gemspecs
+      build_modern_indicies if @build_modern
+
+      compress_indicies
     end
   end
 end
