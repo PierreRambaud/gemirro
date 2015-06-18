@@ -14,12 +14,8 @@ module Gemirro
   class Server < Sinatra::Base
     attr_accessor :versions_fetcher, :gems_fetcher
 
+    Logger.class_eval { alias_method :write, :'<<' }
     access_logger = Logger.new(Gemirro.configuration.server.access_log)
-                    .tap do |logger|
-      ::Logger.class_eval { alias_method :write, :'<<' }
-      logger.level = ::Logger::INFO
-    end
-
     error_logger = File.new(Gemirro.configuration.server.error_log, 'a+')
     error_logger.sync = true
 
@@ -137,17 +133,19 @@ module Gemirro
       gem_name, gem_version = result.captures
       return unless gem_name && gem_version
 
-      logger.info("Try to download #{gem_name} with version #{gem_version}")
-
       begin
+        gem = Gemirro::Gem.new(gem_name, gem_version)
+        return if gems_fetcher.gem_exists?(gem.filename(gem_version))
+
+        logger.info("Try to download #{gem_name} with version #{gem_version}")
         gems_fetcher.source.gems.clear
         gems_fetcher.source.gems.push(Gemirro::Gem.new(gem_name, gem_version))
         gems_fetcher.fetch
+
+        update_indexes
       rescue StandardError => e
         logger.error(e.message)
       end
-
-      update_indexes
     end
 
     ##
