@@ -130,7 +130,7 @@ module Gemirro
     def fetch_gem(resource)
       name = File.basename(resource)
       # rubocop:disable Metrics/LineLength
-      regexp = /^(.*)-(\d+(?:\.\d+){2,4}.*?)(?:-x86-(?:(?:mswin|mingw)(?:32|64))*?)?\.gem(?:spec\.rz)?$/
+      regexp = /^(.*)-(\d+(?:\.\d+){2,4}.*)(?:-x86-(?:(?:mswin|mingw)(?:32|64))*?)?\.gem(?:spec\.rz)?$/
       # rubocop:enable Metrics/LineLength
       result = name.match(regexp)
       return unless result
