@@ -14,8 +14,13 @@ module Gemirro
   class Server < Sinatra::Base
     attr_accessor :versions_fetcher, :gems_fetcher
 
-    Logger.class_eval { alias_method :write, :'<<' }
-    access_logger = Logger.new(Gemirro.configuration.server.access_log)
+    # rubocop:disable Metrics/LineLength
+    access_logger = Logger.new(Gemirro.configuration.server.access_log).tap do |logger|
+      ::Logger.class_eval { alias_method :write, :'<<' }
+      logger.level = ::Logger::INFO
+    end
+    # rubocop:enable Metrics/LineLength
+
     error_logger = File.new(Gemirro.configuration.server.error_log, 'a+')
     error_logger.sync = true
 
@@ -125,7 +130,7 @@ module Gemirro
     def fetch_gem(resource)
       name = File.basename(resource)
       # rubocop:disable Metrics/LineLength
-      regexp = /^(.*)-(\d+(?:\.\d+){,4})(-x86-((mswin|mingw)(32|64))*)\.gem(?:spec\.rz)?$/
+      regexp = /^(.*)-(\d+(?:\.\d+){,4})(-x86-((mswin|mingw)(32|64))*)?\.gem(?:spec\.rz)?$/
       # rubocop:enable Metrics/LineLength
       result = name.match(regexp)
       return unless result
@@ -139,7 +144,7 @@ module Gemirro
 
         logger.info("Try to download #{gem_name} with version #{gem_version}")
         gems_fetcher.source.gems.clear
-        gems_fetcher.source.gems.push(Gemirro::Gem.new(gem_name, gem_version))
+        gems_fetcher.source.gems.push(gem)
         gems_fetcher.fetch
 
         update_indexes

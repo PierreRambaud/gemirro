@@ -123,8 +123,9 @@ module Gemirro
         versions_fetcher = Gemirro::VersionsFetcher.new(source)
         allow(versions_fetcher).to receive(:fetch).once.and_return(true)
 
-        gems_fetcher = Gemirro::VersionsFetcher.new(source)
+        gems_fetcher = Gemirro::GemsFetcher.new(source, versions_fetcher)
         allow(gems_fetcher).to receive(:fetch).once.and_return(true)
+        allow(gems_fetcher).to receive(:gem_exists?).once.and_return(true)
 
         Struct.new('GemIndexer')
         gem_indexer = Struct::GemIndexer.new
