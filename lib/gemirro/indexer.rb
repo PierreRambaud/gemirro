@@ -149,5 +149,44 @@ module Gemirro
 
       compress_indicies
     end
+
+    def map_gems_to_specs(gems)
+      gems.map do |gemfile|
+        if File.size(gemfile) == 0
+          Gemirro.configuration.logger
+            .warn("Skipping zero-length gem: #{gemfile}")
+          next
+        end
+
+        begin
+          spec = ::Gem::Package.new(gemfile).spec
+          spec.loaded_from = gemfile
+
+          # HACK: fuck this shit - borks all tests that use pl1
+          if File.basename(gemfile, '.gem') != spec.original_name
+            exp = spec.full_name
+            exp << " (#{spec.original_name})" if
+              spec.original_name != spec.full_name
+            msg = "Skipping misnamed gem: #{gemfile} should be named #{exp}"
+            Gemirro.configuration.logger.warn(msg)
+            next
+          end
+
+          abbreviate spec
+          sanitize spec
+
+          spec
+        rescue SignalException
+          msg = 'Received signal, exiting'
+          Gemirro.configuration.logger.error(msg)
+          raise
+        rescue StandardError => e
+          msg = ["Unable to process #{gemfile}",
+                 "#{e.message} (#{e.class})",
+                 "\t#{e.backtrace.join "\n\t"}"].join("\n")
+          Gemirro.configuration.logger.error(msg)
+        end
+      end.compact
+    end
   end
 end
