@@ -133,6 +133,12 @@ module Gemirro
       end
     end
 
+    ##
+    # Download file from source
+    #
+    # @param [String] file File path
+    # @return [String]
+    #
     def download_from_source(file)
       source_host = Gemirro.configuration.source.host
       resp = Http.get("#{source_host}/#{File.basename(file)}")
@@ -140,6 +146,11 @@ module Gemirro
       resp.body
     end
 
+    ##
+    # Build indicies
+    #
+    # @return [Array]
+    #
     def build_indicies
       ::Gem::Specification.dirs = []
       ::Gem::Specification.all = *map_gems_to_specs(gem_file_list)
@@ -150,6 +161,12 @@ module Gemirro
       compress_indicies
     end
 
+    ##
+    # Map gems file to specs
+    #
+    # @param [Array] gems Gems list
+    # @return [Array]
+    #
     def map_gems_to_specs(gems)
       gems.map do |gemfile|
         if File.size(gemfile) == 0
