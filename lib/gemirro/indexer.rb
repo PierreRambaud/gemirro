@@ -152,8 +152,10 @@ module Gemirro
     # @return [Array]
     #
     def build_indicies
+      specs = *map_gems_to_specs(gem_file_list)
+      specs.reject! { |s| s.class != ::Gem::Specification }
       ::Gem::Specification.dirs = []
-      ::Gem::Specification.all = *map_gems_to_specs(gem_file_list)
+      ::Gem::Specification.all = specs
 
       build_marshal_gemspecs
       build_modern_indicies if @build_modern
