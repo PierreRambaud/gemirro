@@ -170,7 +170,10 @@ module Gemirro
     # @return [Array]
     #
     def map_gems_to_specs(gems)
-      gems.map do |gemfile|
+      gems.map.with_index do |gemfile, index|
+        Gemirro.configuration.logger
+          .info("[#{index}/#{gems.size}]: Processing #{gemfile.split('/')[-1]}")
+
         if File.size(gemfile) == 0
           Gemirro.configuration.logger
             .warn("Skipping zero-length gem: #{gemfile}")
