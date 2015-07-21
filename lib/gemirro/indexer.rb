@@ -203,7 +203,7 @@ module Gemirro
           msg = ["Unable to process #{gemfile}",
                  "#{e.message} (#{e.class})",
                  "\t#{e.backtrace.join "\n\t"}"].join("\n")
-          Gemirro.configuration.logger.error(msg)
+          Gemirro.configuration.logger.debug(msg)
         end
       end.compact
     end
