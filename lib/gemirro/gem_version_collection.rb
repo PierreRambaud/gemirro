@@ -72,6 +72,11 @@ module Gemirro
         @grouped = @gems.group_by(&:name).map do |name, collection|
           [name, GemVersionCollection.new(collection)]
         end
+
+        @grouped.reject! do |name, _collection|
+          name.nil?
+        end
+
         @grouped.sort_by! do |name, _collection|
           name.downcase
         end
