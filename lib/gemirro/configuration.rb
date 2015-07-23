@@ -9,7 +9,9 @@ module Gemirro
       server: {
         access_log: '/tmp/gemirro.access.log',
         error_log: '/tmp/gemirro.access.log'
-      }
+      },
+
+      update_on_fetch: true
     }
     @configuration ||= Configuration.new(default_config)
   end

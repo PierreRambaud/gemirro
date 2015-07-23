@@ -147,7 +147,7 @@ module Gemirro
         gems_fetcher.source.gems.push(gem)
         gems_fetcher.fetch
 
-        update_indexes
+        update_indexes if configuration.update_on_fetch
       rescue StandardError => e
         logger.error(e.message)
       end
