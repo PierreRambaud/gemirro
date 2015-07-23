@@ -171,8 +171,10 @@ module Gemirro
     #
     def map_gems_to_specs(gems)
       gems.map.with_index do |gemfile, index|
+        # rubocop:disable Metrics/LineLength
         Gemirro.configuration.logger
-          .info("[#{index}/#{gems.size}]: Processing #{gemfile.split('/')[-1]}")
+          .info("[#{index + 1}/#{gems.size}]: Processing #{gemfile.split('/')[-1]}")
+        # rubocop:enable Metrics/LineLength
 
         if File.size(gemfile) == 0
           Gemirro.configuration.logger
