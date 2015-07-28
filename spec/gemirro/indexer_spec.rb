@@ -108,10 +108,10 @@ module Gemirro
                "#{indexer.directory}/gems/gemirro-0.0.1.gem")
       FakeFS::FileSystem
         .clone("#{fixtures_dir}/gems/gemirro-0.0.1.gem",
-               'gems/gemirro-0.0.1.gem')
+               '/gems/gemirro-0.0.1.gem')
       FakeFS::FileSystem
         .clone("#{fixtures_dir}/gems/gemirro-0.0.1.gem",
-               'gems/gemirral-0.0.1.gem') # Skipping misnamed
+               '/gems/gemirral-0.0.1.gem') # Skipping misnamed
       FakeFS::FileSystem
         .clone("#{fixtures_dir}/quick/gemirro-0.0.1.gemspec.rz",
                "#{indexer.directory}/quick/gemirro-0.0.1.gemspec.rz")
