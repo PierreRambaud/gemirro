@@ -5,6 +5,7 @@ Gemirro::CLI.options.command 'index' do
   separator "\nOptions:\n"
 
   on :c=, :config=, 'Path to the configuration file'
+  on :u, :update, 'Update only'
 
   run do |opts, _args|
     Gemirro::CLI.load_configuration(opts[:c])
@@ -19,6 +20,7 @@ Gemirro::CLI.options.command 'index' do
     indexer.ui = Gem::SilentUI.new
 
     config.logger.info('Generating indexes')
-    indexer.generate_index
+    indexer.generate_index if opts[:u].nil?
+    indexer.update_index unless opts[:u].nil?
   end
 end

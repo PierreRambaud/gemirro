@@ -82,8 +82,7 @@ module Gemirro
     # @return [Array]
     #
     def install_indicies
-      verbose = ::Gem.configuration.really_verbose
-      Gemirro.configuration.logger
+      logger
         .debug("Downloading index into production dir #{@dest_directory}")
 
       files = @files
@@ -100,29 +99,14 @@ module Gemirro
 
       files.each do |path|
         file = path.sub(%r{^#{Regexp.escape @directory}/?}, '')
-        dst_name = File.join @dest_directory, file
+        src_name = File.join(@directory, file)
+        dst_name = File.join(@dest_directory, file)
 
         if ["#{@specs_index}.gz",
             "#{@latest_specs_index}.gz",
             "#{@prerelease_specs_index}.gz"].include?(path)
-
-          content = Marshal.load(Zlib::GzipReader.open(path).read)
-          Zlib::GzipWriter.open("#{dst_name}.orig") do |io|
-            io.write(Marshal.dump(content))
-          end
-
-          unless @only_origin
-            source_content = download_from_source(file)
-            next if source_content.nil?
-            source_content = Marshal.load(Zlib::GzipReader
-                                            .new(StringIO
-                                                   .new(source_content)).read)
-            new_content = source_content.concat(content).uniq
-
-            Zlib::GzipWriter.open(dst_name) do |io|
-              io.write(Marshal.dump(new_content))
-            end
-          end
+          res = build_zlib_file(file, src_name, dst_name, true)
+          next unless res
         else
           source_content = download_from_source(file)
           next if source_content.nil?
@@ -141,6 +125,7 @@ module Gemirro
     #
     def download_from_source(file)
       source_host = Gemirro.configuration.source.host
+      logger.info("Download from source: #{file}")
       resp = Http.get("#{source_host}/#{File.basename(file)}")
       return unless resp.code == 200
       resp.body
@@ -172,13 +157,11 @@ module Gemirro
     def map_gems_to_specs(gems)
       gems.map.with_index do |gemfile, index|
         # rubocop:disable Metrics/LineLength
-        Gemirro.configuration.logger
-          .info("[#{index + 1}/#{gems.size}]: Processing #{gemfile.split('/')[-1]}")
+        logger.info("[#{index + 1}/#{gems.size}]: Processing #{gemfile.split('/')[-1]}")
         # rubocop:enable Metrics/LineLength
 
         if File.size(gemfile) == 0
-          Gemirro.configuration.logger
-            .warn("Skipping zero-length gem: #{gemfile}")
+          logger.warn("Skipping zero-length gem: #{gemfile}")
           next
         end
 
@@ -192,7 +175,7 @@ module Gemirro
             exp << " (#{spec.original_name})" if
               spec.original_name != spec.full_name
             msg = "Skipping misnamed gem: #{gemfile} should be named #{exp}"
-            Gemirro.configuration.logger.warn(msg)
+            logger.warn(msg)
             next
           end
 
@@ -202,15 +185,121 @@ module Gemirro
           spec
         rescue SignalException
           msg = 'Received signal, exiting'
-          Gemirro.configuration.logger.error(msg)
+          logger.error(msg)
           raise
         rescue StandardError => e
           msg = ["Unable to process #{gemfile}",
                  "#{e.message} (#{e.class})",
                  "\t#{e.backtrace.join "\n\t"}"].join("\n")
-          Gemirro.configuration.logger.debug(msg)
+          logger.debug(msg)
         end
       end.compact
+    end
+
+    def update_index
+      make_temp_directories
+
+      specs_mtime = File.stat(@dest_specs_index).mtime
+      newest_mtime = Time.at(0)
+
+      updated_gems = gem_file_list.select do |gem|
+        gem_mtime = File.stat(gem).mtime
+        newest_mtime = gem_mtime if gem_mtime > newest_mtime
+        gem_mtime > specs_mtime
+      end
+
+      if updated_gems.empty?
+        logger.info('No new gems')
+        terminate_interaction(0)
+      end
+
+      specs = map_gems_to_specs(updated_gems)
+      prerelease, released = specs.partition { |s| s.version.prerelease? }
+
+      ::Gem::Specification.dirs = []
+      ::Gem::Specification.all = *specs
+      files = build_marshal_gemspecs
+
+      ::Gem.time('Updated indexes') do
+        update_specs_index(released, @dest_specs_index, @specs_index)
+        update_specs_index(released,
+                           @dest_latest_specs_index,
+                           @latest_specs_index)
+        update_specs_index(prerelease,
+                           @dest_prerelease_specs_index,
+                           @prerelease_specs_index)
+      end
+
+      compress_indicies
+
+      logger.info("Updating production dir #{@dest_directory}") if verbose
+      files << @specs_index
+      files << "#{@specs_index}.gz"
+      files << @latest_specs_index
+      files << "#{@latest_specs_index}.gz"
+      files << @prerelease_specs_index
+      files << "#{@prerelease_specs_index}.gz"
+
+      files.each do |path|
+        file = path.sub(%r{^#{Regexp.escape @directory}/?}, '')
+        src_name = File.join(@directory, file)
+        dst_name = File.join(@dest_directory, file)
+
+        if ["#{@specs_index}.gz",
+            "#{@latest_specs_index}.gz",
+            "#{@prerelease_specs_index}.gz"].include?(path)
+          res = build_zlib_file(file, src_name, dst_name)
+          next unless res
+        else
+          FileUtils.mv(src_name,
+                       dst_name,
+                       verbose: verbose,
+                       force: true)
+        end
+
+        File.utime(newest_mtime, newest_mtime, dst_name)
+      end
+    end
+
+    def build_zlib_file(file, src_name, dst_name, from_source = false)
+      content = Marshal.load(Zlib::GzipReader.open(src_name).read)
+      create_zlib_file("#{dst_name}.orig", content)
+
+      return false if @only_origin
+
+      if from_source
+        source_content = download_from_source(file)
+        source_content = Marshal.load(Zlib::GzipReader
+                                        .new(StringIO
+                                               .new(source_content)).read)
+      else
+        source_content = Marshal.load(Zlib::GzipReader.open(dst_name).read)
+      end
+
+      return false if source_content.nil?
+      new_content = source_content.concat(content).uniq
+      create_zlib_file(dst_name, new_content)
+    end
+
+    def create_zlib_file(dst_name, content)
+      temp_file = Tempfile.new('gemirro')
+
+      Zlib::GzipWriter.open(temp_file.path) do |io|
+        io.write(Marshal.dump(content))
+      end
+
+      FileUtils.mv(temp_file.path,
+                   dst_name,
+                   verbose: verbose,
+                   force: true)
+    end
+
+    def verbose
+      @verbose ||= ::Gem.configuration.really_verbose
+    end
+
+    def logger
+      Gemirro.configuration.logger
     end
   end
 end

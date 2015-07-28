@@ -164,7 +164,7 @@ module Gemirro
       indexer.ui = ::Gem::SilentUI.new
 
       configuration.logger.info('Generating indexes')
-      indexer.generate_index
+      indexer.update_index
     rescue SystemExit => e
       configuration.logger.info(e.message)
     end

@@ -21,7 +21,6 @@ RSpec.configure do |c|
 end
 
 # Server tests
-# rubocop:disable Metrics/ModuleLength
 module Gemirro
   describe 'Gemirro::Server' do
     include FakeFS::SpecHelpers
@@ -131,7 +130,7 @@ module Gemirro
         gem_indexer = Struct::GemIndexer.new
         allow(gem_indexer).to receive(:only_origin=).once.and_return(true)
         allow(gem_indexer).to receive(:ui=).once.and_return(true)
-        allow(gem_indexer).to receive(:generate_index).once.and_return(true)
+        allow(gem_indexer).to receive(:update_index).once.and_return(true)
 
         allow(Gemirro.configuration).to receive(:source)
           .twice.and_return(source)
@@ -171,7 +170,7 @@ module Gemirro
         gem_indexer = Struct::GemIndexer.new
         allow(gem_indexer).to receive(:only_origin=).once.and_return(true)
         allow(gem_indexer).to receive(:ui=).once.and_return(true)
-        allow(gem_indexer).to receive(:generate_index)
+        allow(gem_indexer).to receive(:update_index)
           .once.and_raise(SystemExit)
 
         allow(Gemirro.configuration).to receive(:source)

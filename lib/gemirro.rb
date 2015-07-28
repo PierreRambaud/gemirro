@@ -11,6 +11,7 @@ require 'httpclient'
 require 'logger'
 require 'stringio'
 require 'json'
+require 'tempfile'
 
 unless $LOAD_PATH.include?(File.expand_path('../', __FILE__))
   $LOAD_PATH.unshift(File.expand_path('../', __FILE__))

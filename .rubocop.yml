@@ -1,12 +1,16 @@
 AllCops:
   Include:
     - '**/Gemfile'
-    - lib/**/*
-    - spec/**/*
+    - lib/**/*.rb
+    - spec/**/*.rb
     - gemirro.gemspec
   Exclude:
     - files/**/*
     - templates/**/*
+ModuleLength:
+  Exclude:
+    - lib/**/*
+    - spec/**/*
 MethodLength:
   Exclude:
     - lib/**/*

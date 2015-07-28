@@ -41,6 +41,7 @@ Once all the Gems have been downloaded you'll need to generate an index of all t
 
 ```bash
 $ gemirro index
+$ gemirro index --update # Or only update new files
 ```
 
 Last, launch the server, and all requests will check if gems are detected, and download them if necessary and generate index immediately.
