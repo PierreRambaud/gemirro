@@ -3,4 +3,4 @@ coverage
 Gemfile.lock
 pkg
 .ruby-version
-*.gem
+/*.gem
