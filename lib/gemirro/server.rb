@@ -26,7 +26,7 @@ module Gemirro
 
     before do
       env['rack.errors'] = error_logger
-      Gemirro.configuration.logger = env['rack.logger']
+      Gemirro.configuration.logger = access_logger
     end
 
     ##
