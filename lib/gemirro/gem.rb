@@ -11,7 +11,8 @@ module Gemirro
   #  @return [Gem::Requirement]
   #
   class Gem
-    attr_reader :name, :requirement
+    attr_reader :name, :requirement, :platform
+    attr_accessor :gemspec
 
     ##
     # Returns a `Gem::Version` instance based on the specified requirement.
@@ -27,15 +28,16 @@ module Gemirro
     # @param [String] name
     # @param [Gem::Requirement|String] requirement
     #
-    def initialize(name, requirement = nil)
+    def initialize(name, requirement = nil, platform = 'ruby')
       requirement ||= ::Gem::Requirement.default
 
       if requirement.is_a?(String)
         requirement = ::Gem::Requirement.new(requirement)
       end
 
-      @name        = name
+      @name = name
       @requirement = requirement
+      @platform = platform
     end
 
     ##
@@ -56,15 +58,34 @@ module Gemirro
       version && !version.segments.reject { |s| s == 0 }.empty?
     end
 
+    def gemspec?
+      @gemspec == true
+    end
+
     ##
-    # Returns the filename of the Gemfile.
+    # Returns the filename of the gem file.
     #
     # @param [String] gem_version
     # @return [String]
     #
     def filename(gem_version = nil)
       gem_version ||= version.to_s
-      "#{name}-#{gem_version}.gem"
+      n = [name, gem_version]
+      n.push(@platform) if @platform != 'ruby'
+      "#{n.join('-')}.gem"
+    end
+
+    ##
+    # Returns the filename of the gemspec file.
+    #
+    # @param [String] gem_version
+    # @return [String]
+    #
+    def gemspec_filename(gem_version = nil)
+      gem_version ||= version.to_s
+      n = [name, gem_version]
+      n.push(@platform) if @platform != 'ruby'
+      "#{n.join('-')}.gemspec.rz"
     end
   end
 end

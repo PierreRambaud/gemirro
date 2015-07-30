@@ -25,8 +25,8 @@ module Gemirro
     error_logger.sync = true
 
     before do
-      Gemirro.configuration.logger = access_logger
       env['rack.errors'] = error_logger
+      Gemirro.configuration.logger = env['rack.logger']
     end
 
     ##
@@ -130,17 +130,22 @@ module Gemirro
     def fetch_gem(resource)
       name = File.basename(resource)
       # rubocop:disable Metrics/LineLength
-      regexp = /^(.*)-(\d+(?:\.\d+){2,4}.*?)(?:-x86-(?:(?:mswin|mingw)(?:32|64)).*?)?\.gem(?:spec\.rz)?$/
+      regexp = /^(.*)-(\d+(?:\.\d+){2,4}.*?)(?:-x86-(?:(?:mswin|mingw)(?:32|64)).*?)?\.(gem(?:spec\.rz)?)$/
       # rubocop:enable Metrics/LineLength
       result = name.match(regexp)
       return unless result
 
-      gem_name, gem_version = result.captures
+      gem_name, gem_version, gem_type = result.captures
       return unless gem_name && gem_version
 
       begin
         gem = Gemirro::Gem.new(gem_name, gem_version)
-        return if gems_fetcher.gem_exists?(gem.filename(gem_version))
+        gem.gemspec = true if gem_type == 'gemspec.rz'
+
+        # rubocop:disable Metrics/LineLength
+        return if gems_fetcher.gem_exists?(gem.filename(gem_version)) && gem_type == 'gem'
+        return if gems_fetcher.gemspec_exists?(gem.gemspec_filename(gem_version)) && gem_type == 'gemspec.rz'
+        # rubocop:enable Metrics/LineLength
 
         logger.info("Try to download #{gem_name} with version #{gem_version}")
         gems_fetcher.source.gems.clear
@@ -149,7 +154,7 @@ module Gemirro
 
         update_indexes if configuration.update_on_fetch
       rescue StandardError => e
-        logger.error(e.message)
+        logger.error(e)
       end
     end
 
@@ -314,11 +319,10 @@ module Gemirro
       # @return [::Gem::Specification]
       #
       def spec_for(gemname, version, platform = 'ruby')
-        filename = [gemname, version]
-        filename.push(platform) if platform != 'ruby'
+        gem = Gem.new(gemname, version.to_s, platform)
         gemspec_path = File.join('quick',
                                  Gemirro::Configuration.marshal_identifier,
-                                 "#{filename.join('-')}.gemspec.rz")
+                                 gem.gemspec_filename)
         spec_file = File.join(settings.public_folder,
                               gemspec_path)
 

@@ -13,8 +13,9 @@ module Gemirro
 
     before(:each) do
       @source = Source.new('RubyGems', 'https://rubygems.org')
-      @versions_file = VersionsFile.new(['0.0.1'])
+      @versions_file = VersionsFile.new(['0.0.1', '0.0.2'])
       @fetcher = GemsFetcher.new(@source, @versions_file)
+      Gemirro.configuration.ignored_gems.clear
     end
 
     it 'should be initialized' do
@@ -34,19 +35,25 @@ module Gemirro
       @fetcher.configuration.destination = './'
       expect(@fetcher.gem_exists?('test')).to be_falsy
       MirrorDirectory.new('./').add_directory('gems')
+      MirrorDirectory.new('./').add_directory('quick/Marshal.4.8')
       MirrorFile.new('gems/test').write('content')
       expect(@fetcher.gem_exists?('test')).to be_truthy
     end
 
     it 'should ignore gem' do
+      allow(@fetcher.logger).to receive(:info)
+        .once.with('Fetching gemirro-0.0.1.gem')
       expect(@fetcher.ignore_gem?('gemirro', '0.0.1')).to be_falsy
       @fetcher.configuration.ignore_gem('gemirro', '0.0.1')
       expect(@fetcher.ignore_gem?('gemirro', '0.0.1')).to be_truthy
     end
 
     it 'should log error when fetch gem failed' do
+      allow(@fetcher.logger).to receive(:info)
+        .once.with('Fetching gemirro-0.0.1.gem')
       gem = Gem.new('gemirro')
       version = ::Gem::Version.new('0.0.1')
+      @fetcher.configuration.ignore_gem('gemirro', '0.0.1')
       allow(@source).to receive(:fetch_gem)
         .once.with('gemirro', version).and_raise(ArgumentError)
       allow(@fetcher.logger).to receive(:error)
@@ -59,12 +66,44 @@ module Gemirro
     end
 
     it 'should fetch gem' do
+      allow(@fetcher.logger).to receive(:info)
+        .once.with('Fetching gemirro-0.0.1.gem')
+      MirrorDirectory.new('./').add_directory('gems')
       gem = Gem.new('gemirro')
       version = ::Gem::Version.new('0.0.1')
       allow(@source).to receive(:fetch_gem)
         .once.with('gemirro', version).and_return('gemirro')
 
       expect(@fetcher.fetch_gem(gem, version)).to eq('gemirro')
+    end
+
+    it 'should fetch gemspec' do
+      allow(@fetcher.logger).to receive(:info)
+        .once.with('Fetching gemirro-0.0.1.gemspec.rz')
+      MirrorDirectory.new('./').add_directory('quick/Marshal.4.8')
+      gem = Gem.new('gemirro')
+      gem.gemspec = true
+      version = ::Gem::Version.new('0.0.1')
+      allow(@source).to receive(:fetch_gemspec)
+        .once.with('gemirro', version).and_return('gemirro')
+
+      expect(@fetcher.fetch_gemspec(gem, version)).to eq('gemirro')
+    end
+
+    it 'should not fetch gemspec if file exists' do
+      allow(@fetcher.logger).to receive(:info)
+        .once.with('Fetching gemirro-0.0.1.gemspec.rz')
+      allow(@fetcher).to receive(:gemspec_exists?)
+        .once.with('gemirro-0.0.1.gemspec.rz')
+        .and_return(true)
+      allow(@fetcher.logger).to receive(:debug)
+        .once.with('Skipping gemirro-0.0.1.gemspec.rz')
+
+      gem = Gem.new('gemirro')
+      gem.gemspec = true
+      version = ::Gem::Version.new('0.0.1')
+
+      expect(@fetcher.fetch_gemspec(gem, version)).to be_nil
     end
 
     it 'should retrieve versions for specific gem' do
@@ -75,6 +114,7 @@ module Gemirro
     end
 
     it 'should fetch all gems and log debug if gem is not satisfied' do
+      MirrorDirectory.new('./').add_directory('gems')
       gem = Gem.new('gemirro', '0.0.1')
       allow(gem.requirement).to receive(:satisfied_by?)
         .once.with(nil).and_return(false)
@@ -87,18 +127,21 @@ module Gemirro
     it 'should fetch all gems' do
       gem = Gem.new('gemirro', '0.0.2')
       @fetcher.source.gems << gem
-      allow(@fetcher).to receive(:versions_for).once.and_return(['0.0.2'])
-      allow(gem.requirement).to receive(:satisfied_by?)
-        .once.with('0.0.2').and_return(true)
+      gemspec = Gem.new('gemirro', '0.0.1')
+      gemspec.gemspec = true
+      @fetcher.source.gems << gemspec
+
+      allow(@fetcher).to receive(:fetch_gemspec)
+        .once.with(gemspec, nil).and_return('gemfile')
       allow(@fetcher).to receive(:fetch_gem)
-        .once.with(gem, '0.0.2').and_return('gemfile')
-      allow(@fetcher.configuration).to receive(:ignore_gem)
-        .once.with('gemirro', '0.0.2')
-      allow(@fetcher.logger).to receive(:info)
-        .once.with('Fetching gemirro-0.0.2.gem')
-      allow(@fetcher.configuration.mirror_directory).to receive(:add_file)
+        .once.with(gem, nil).and_return('gemfile')
+
+      allow(@fetcher.configuration.mirror_gems_directory).to receive(:add_file)
         .once.with('gemirro-0.0.2.gem', 'gemfile')
-      expect(@fetcher.fetch).to eq([gem])
+      allow(@fetcher.configuration.mirror_gemspecs_directory)
+        .to receive(:add_file)
+        .once.with('gemirro-0.0.1.gemspec.rz', 'gemfile')
+      expect(@fetcher.fetch).to eq([gem, gemspec])
     end
   end
 end

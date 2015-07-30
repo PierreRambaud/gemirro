@@ -27,19 +27,15 @@ module Gemirro
     def fetch
       @source.gems.each do |gem|
         versions_for(gem).each do |version|
-          filename  = gem.filename(version)
-          satisfied = gem.requirement.satisfied_by?(version)
-          name      = gem.name
-
-          if gem_exists?(filename) || ignore_gem?(name, version) || !satisfied
-            logger.debug("Skipping #{filename}")
-            next
+          if gem.gemspec?
+            gemfile = fetch_gemspec(gem, version)
+            configuration.mirror_gemspecs_directory
+              .add_file(gem.gemspec_filename(version), gemfile) if gemfile
+          else
+            gemfile = fetch_gem(gem, version)
+            configuration.mirror_gems_directory
+              .add_file(gem.filename(version), gemfile) if gemfile
           end
-
-          configuration.ignore_gem(gem.name, version)
-          logger.info("Fetching #{filename}")
-          gemfile = fetch_gem(gem, version)
-          configuration.mirror_directory.add_file(filename, gemfile) if gemfile
         end
       end
     end
@@ -69,19 +65,62 @@ module Gemirro
     end
 
     ##
-    # Tries to download the Gemfile for the specified Gem and version.
+    # Tries to download gemspec from a given name and version
+    #
+    # @param [Gemirro::Gem] gem
+    # @param [Gem::Version] version
+    # @return [String]
+    #
+    def fetch_gemspec(gem, version)
+      filename  = gem.gemspec_filename(version)
+      satisfied = gem.requirement.satisfied_by?(version)
+
+      if gemspec_exists?(filename) || !satisfied
+        logger.debug("Skipping #{filename}")
+        return
+      end
+
+      logger.info("Fetching #{filename}")
+      fetch_from_source(gem, version, true)
+    end
+
+    ##
+    # Tries to download the gem file from a given nam and version
     #
     # @param [Gemirro::Gem] gem
     # @param [Gem::Version] version
     # @return [String]
     #
     def fetch_gem(gem, version)
-      data  = nil
       filename = gem.filename(version)
+      satisfied = gem.requirement.satisfied_by?(version)
+      name = gem.name
 
+      if gem_exists?(filename) || ignore_gem?(name, version) || !satisfied
+        logger.debug("Skipping #{filename}")
+        return
+      end
+
+      configuration.ignore_gem(gem.name, version)
+      logger.info("Fetching #{filename}")
+
+      fetch_from_source(gem, version)
+    end
+
+    ##
+    #
+    #
+    # @param [Gemirro::Gem] gem
+    # @param [Gem::Version] version
+    # @return [String]
+    #
+    def fetch_from_source(gem, version, gemspec = false)
+      data  = nil
       begin
-        data = @source.fetch_gem(gem.name, version)
+        data = @source.fetch_gem(gem.name, version) unless gemspec
+        data = @source.fetch_gemspec(gem.name, version) if gemspec
       rescue => e
+        filename = gem.filename(version)
         logger.error("Failed to retrieve #{filename}: #{e.message}")
         logger.debug("Adding #{filename} to the list of ignored Gems")
 
@@ -113,7 +152,17 @@ module Gemirro
     # @return [TrueClass|FalseClass]
     #
     def gem_exists?(filename)
-      configuration.mirror_directory.file_exists?(filename)
+      configuration.mirror_gems_directory.file_exists?(filename)
+    end
+
+    ##
+    # Checks if a given Gemspec has already been downloaded.
+    #
+    # @param [String] filename
+    # @return [TrueClass|FalseClass]
+    #
+    def gemspec_exists?(filename)
+      configuration.mirror_gemspecs_directory.file_exists?(filename)
     end
 
     ##

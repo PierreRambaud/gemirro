@@ -46,6 +46,18 @@ module Gemirro
     end
 
     ##
+    # Fetches the `.gemspec.rz` file of a given Gem and version.
+    #
+    # @param [String] name
+    # @param [String] version
+    # @return [String]
+    #
+    def fetch_gemspec(name, version)
+      marshal = Gemirro::Configuration.marshal_identifier
+      Http.get(host + "/quick/#{marshal}/#{name}-#{version}.gemspec.rz").body
+    end
+
+    ##
     # Adds a new Gem to the source.
     #
     # @param [String] name

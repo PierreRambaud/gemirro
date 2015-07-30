@@ -21,7 +21,7 @@ module Gemirro
   # destination directory, source, ignored Gems, etc.
   #
   class Configuration < Confstruct::Configuration
-    attr_reader :mirror_directory
+    attr_reader :mirror_gems_directory, :mirror_gemspecs_directory
     attr_accessor :source, :ignored_gems, :logger
 
     ##
@@ -93,8 +93,8 @@ module Gemirro
     #
     # @return [Gemirro::MirrorDirectory]
     #
-    def mirror_directory
-      @mirror_directory ||= MirrorDirectory.new(gems_directory)
+    def mirror_gems_directory
+      @mirror_gems_directory ||= MirrorDirectory.new(gems_directory)
     end
 
     ##
@@ -103,7 +103,25 @@ module Gemirro
     # @return [String]
     #
     def gems_directory
-      File.join(destination, 'gems')
+      File.join(destination.to_s, 'gems')
+    end
+
+    ##
+    # Return mirror directory
+    #
+    # @return [Gemirro::MirrorDirectory]
+    #
+    def mirror_gemspecs_directory
+      @mirror_gemspecs_directory ||= MirrorDirectory.new(gemspecs_directory)
+    end
+
+    ##
+    # Returns gems directory
+    #
+    # @return [String]
+    #
+    def gemspecs_directory
+      File.join(destination.to_s, 'quick', self.class.marshal_identifier)
     end
 
     ##

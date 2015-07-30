@@ -1,6 +1,7 @@
-.project
-coverage
-Gemfile.lock
-pkg
-.ruby-version
+/.project
+/coverage
+/Gemfile.lock
+/pkg
+/.ruby-version
 /*.gem
+/.bundle

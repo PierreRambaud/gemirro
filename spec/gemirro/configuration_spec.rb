@@ -58,8 +58,8 @@ module Gemirro
 
     it 'return mirror directory' do
       allow(@config).to receive(:gems_directory).once.and_return('/tmp')
-      expect(@config.mirror_directory).to be_a(MirrorDirectory)
-      expect(@config.mirror_directory.path).to eq('/tmp')
+      expect(@config.mirror_gems_directory).to be_a(MirrorDirectory)
+      expect(@config.mirror_gems_directory.path).to eq('/tmp')
     end
 
     it 'should return gems directory' do
