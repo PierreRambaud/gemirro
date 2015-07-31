@@ -4,13 +4,13 @@ require File.expand_path('../lib/gemirro/version', __FILE__)
 Gem::Specification.new do |s|
   s.name        = 'gemirro'
   s.version     = Gemirro::VERSION
-  s.date        = '2014-08-19'
+  s.date        = Date.today.to_s
   s.authors     = ['Pierre Rambaud']
   s.email       = 'pierre.rambaud86@gmail.com'
   s.license     = 'GPL-3.0'
-  s.summary     = 'Gem for easily creating your own RubyGems mirror.'
+  s.summary     = 'Gem for easily creating your own gems mirror.'
   s.homepage    = 'https://github.com/PierreRambaud/gemirro'
-  s.description = 'Create your own gem mirror with a simple TCPServer.'
+  s.description = 'Create your own gems mirror.'
   s.executables = ['gemirro']
 
   s.files = File.read(File.expand_path('../MANIFEST', __FILE__)).split("\n")
