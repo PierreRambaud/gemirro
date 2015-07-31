@@ -15,13 +15,20 @@ module Gemirro
     ##
     # Reads the versions file from the specified String.
     #
-    # @param [String] content
+    # @param [String] spec_content
+    # @param [String] prerelease_content
     # @return [Gemirro::VersionsFile]
     #
-    def self.load(content)
-      buffer   = StringIO.new(content)
-      reader   = Zlib::GzipReader.new(buffer)
-      instance = new(Marshal.load(reader.read))
+    def self.load(spec_content, prerelease_content)
+      buffer = StringIO.new(spec_content)
+      reader = Zlib::GzipReader.new(buffer)
+      versions = Marshal.load(reader.read)
+
+      buffer = StringIO.new(prerelease_content)
+      reader = Zlib::GzipReader.new(buffer)
+      versions.concat(Marshal.load(reader.read))
+
+      instance = new(versions)
 
       reader.close
 

@@ -18,7 +18,8 @@ module Gemirro
       allow(Gemirro.configuration.logger).to receive(:info)
         .once.with("Updating #{@source.name} (#{@source.host})")
       allow(@source).to receive(:fetch_versions).once.and_return([])
-      allow(VersionsFile).to receive(:load).with([])
+      allow(@source).to receive(:fetch_prerelease_versions).once.and_return([])
+      allow(VersionsFile).to receive(:load).with([], [])
       expect(@fetcher.fetch).to be_nil
     end
   end

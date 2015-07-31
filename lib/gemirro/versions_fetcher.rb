@@ -25,7 +25,7 @@ module Gemirro
         "Updating #{source.name} (#{source.host})"
       )
 
-      VersionsFile.load(source.fetch_versions)
+      VersionsFile.load(source.fetch_versions, source.fetch_prerelease_versions)
     end
   end
 end

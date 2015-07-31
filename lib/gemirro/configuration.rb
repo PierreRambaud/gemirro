@@ -80,6 +80,16 @@ module Gemirro
     end
 
     ##
+    # Returns the name of the file that contains an index
+    # of all the prerelease versions.
+    #
+    # @return [String]
+    #
+    def self.prerelease_versions_file
+      "prerelease_specs.#{marshal_version}.gz"
+    end
+
+    ##
     # Returns a String containing the Marshal version.
     #
     # @return [String]

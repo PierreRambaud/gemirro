@@ -26,25 +26,36 @@ module Gemirro
     end
 
     it 'should load versions file' do
-      wio = StringIO.new('w')
-      w_gz = Zlib::GzipWriter.new(wio)
+      spec = StringIO.new('w')
+      w_gz = Zlib::GzipWriter.new(spec)
       w_gz.write(Marshal.dump([
         ['gemirro', '0.0.1'],
         ['gemirro', '0.0.2']
       ]))
       w_gz.close
+      prerelease = StringIO.new('w')
+      w_gz = Zlib::GzipWriter.new(prerelease)
+      w_gz.write(Marshal.dump([
+        ['gemirro', '0.0.1.alpha1'],
+        ['gemirro', '0.0.2.alpha2']
+      ]))
+      w_gz.close
 
-      result = VersionsFile.load(wio.string)
+      result = VersionsFile.load(spec.string, prerelease.string)
       expect(result).to be_a(VersionsFile)
 
       expect(result.versions).to eq([
         ['gemirro', '0.0.1'],
-        ['gemirro', '0.0.2']
+        ['gemirro', '0.0.2'],
+        ['gemirro', '0.0.1.alpha1'],
+        ['gemirro', '0.0.2.alpha2']
       ])
       expect(result.versions_hash).to eq(
         'gemirro' => [
           ['gemirro', '0.0.1'],
-          ['gemirro', '0.0.2']
+          ['gemirro', '0.0.2'],
+          ['gemirro', '0.0.1.alpha1'],
+          ['gemirro', '0.0.2.alpha2']
         ]
       )
     end
