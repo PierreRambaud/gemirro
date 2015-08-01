@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+require 'date'
 require File.expand_path('../lib/gemirro/version', __FILE__)
 
 Gem::Specification.new do |s|
