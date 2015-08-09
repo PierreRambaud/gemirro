@@ -164,7 +164,7 @@ module Gemirro
     # @return [Indexer]
     #
     def update_indexes
-      indexer    = Gemirro::Indexer.new(configuration.destination)
+      indexer = Gemirro::Indexer.new(configuration.destination)
       indexer.only_origin = true
       indexer.ui = ::Gem::SilentUI.new
 

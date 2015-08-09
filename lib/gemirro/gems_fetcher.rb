@@ -115,7 +115,7 @@ module Gemirro
     # @return [String]
     #
     def fetch_from_source(gem, version, gemspec = false)
-      data  = nil
+      data = nil
       begin
         data = @source.fetch_gem(gem.name, version) unless gemspec
         data = @source.fetch_gemspec(gem.name, version) if gemspec
