@@ -13,6 +13,7 @@ module Gemirro
   #
   class Server < Sinatra::Base
     attr_accessor :versions_fetcher, :gems_fetcher
+    attr_reader :gems_orig_collection, :gems_source_collection
 
     # rubocop:disable Metrics/LineLength
     access_logger = Logger.new(Gemirro.configuration.server.access_log).tap do |logger|
@@ -221,7 +222,15 @@ module Gemirro
     # @return [Gemirro::GemVersionCollection]
     #
     def gems_collection(orig = true)
-      gems = specs_files_paths(orig).map do |specs_file_path|
+      if orig && !@gems_orig_collection.nil?
+        return @gems_orig_collection
+      end
+
+      if !orig && !@gems_source_collection.nil?
+        return @gems_source_collection
+      end
+
+      gems = specs_files_paths(orig).pmap do |specs_file_path|
         if File.exist?(specs_file_path)
           Marshal.load(Zlib::GzipReader.open(specs_file_path).read)
         else
@@ -229,7 +238,11 @@ module Gemirro
         end
       end.inject(:|)
 
-      GemVersionCollection.new(gems)
+      collection = GemVersionCollection.new(gems)
+      @gems_source_collection = collection unless orig
+      @gems_orig_collection = collection if orig
+
+      collection
     end
 
     ##
@@ -258,7 +271,7 @@ module Gemirro
       gem_collection = gems.find_by_name(gem_name)
       return '' if gem_collection.nil?
 
-      gem_collection = gem_collection.map do |gem|
+      gem_collection = gem_collection.pmap do |gem|
         [gem, spec_for(gem.name, gem.number, gem.platform)]
       end
 
@@ -266,7 +279,7 @@ module Gemirro
         spec.nil?
       end
 
-      gem_collection.map do |gem, spec|
+      gem_collection.pmap do |gem, spec|
         dependencies = spec.dependencies.select do |d|
           d.type == :runtime
         end
@@ -292,7 +305,7 @@ module Gemirro
     #
     def specs_files_paths(orig = true)
       marshal_version = Gemirro::Configuration.marshal_version
-      specs_file_types.map do |specs_file_type|
+      specs_file_types.pmap do |specs_file_type|
         File.join(settings.public_folder,
                   [specs_file_type,
                    marshal_version,

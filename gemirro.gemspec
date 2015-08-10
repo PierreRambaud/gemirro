@@ -24,6 +24,7 @@ Gem::Specification.new do |s|
   s.add_dependency 'builder', '~>3.2'
   s.add_dependency 'sinatra', '~>1.4'
   s.add_dependency 'thin', '~>1.6'
+  s.add_dependency 'pmap', '~>1.0'
 
   s.add_development_dependency 'rake', '~>10.4'
   s.add_development_dependency 'rack-test', '~>0.6'
