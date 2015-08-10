@@ -21,11 +21,25 @@ module Gemirro
     # @return [Gemirro::VersionsFile]
     #
     def fetch
-      Gemirro.configuration.logger.info(
-        "Updating #{source.name} (#{source.host})"
-      )
+      VersionsFile.load(read_gzip(Configuration.versions_file),
+                        read_gzip(Configuration.prerelease_versions_file, true))
+    end
 
-      VersionsFile.load(source.fetch_versions, source.fetch_prerelease_versions)
+    ##
+    # Read file if exists otherwise download its from source
+    #
+    # @param [String] file name
+    # @param [TrueClass|FalseClass] prerelease Is prerelease or not
+    #
+    def read_gzip(file, prerelease = false)
+      destination = Gemirro.configuration.destination
+      file_dst = File.join(destination, file)
+      unless File.exist?(file_dst)
+        File.write(file_dst, @source.fetch_versions) unless prerelease
+        File.write(file_dst, @source.fetch_prerelease_versions) if prerelease
+      end
+
+      File.read(file_dst)
     end
   end
 end

@@ -48,15 +48,9 @@ module Gemirro
     # @return [Array]
     #
     def versions_for(gem)
-      available       = @versions_file.versions_for(gem.name)
-      versions        = gem.version? ? [gem.version] : available
-      available_names = available.map(&:to_s)
-
-      # Get rid of invalid versions. Due to Gem::Version having a custom ==
-      # method, which treats "3.4" the same as "3.4.0" we'll have to compare
-      # the versions as String instances.
-      versions = versions.select do |version|
-        available_names.include?(version.to_s)
+      available = @versions_file.versions_for(gem.name)
+      versions = available.select do |v|
+        gem.requirement.satisfied_by?(v)
       end
 
       versions = [available.last] if versions.empty?

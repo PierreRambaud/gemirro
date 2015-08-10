@@ -8,6 +8,7 @@ module Gemirro
   describe 'Source' do
     before(:each) do
       @source = Source.new('RubyGems', 'https://rubygems.org')
+      allow(@source.logger).to receive(:info)
     end
 
     it 'should be initialized' do

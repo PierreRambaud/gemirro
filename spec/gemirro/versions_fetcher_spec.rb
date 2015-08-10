@@ -5,6 +5,8 @@ require 'gemirro/versions_fetcher'
 # VersionsFetcher tests
 module Gemirro
   describe 'VersionsFetcher' do
+    include FakeFS::SpecHelpers
+
     before(:each) do
       @source = Source.new('RubyGems', 'https://rubygems.org')
       @fetcher = VersionsFetcher.new(@source)
@@ -15,11 +17,11 @@ module Gemirro
     end
 
     it 'should fetch versions' do
-      allow(Gemirro.configuration.logger).to receive(:info)
-        .once.with("Updating #{@source.name} (#{@source.host})")
       allow(@source).to receive(:fetch_versions).once.and_return([])
       allow(@source).to receive(:fetch_prerelease_versions).once.and_return([])
-      allow(VersionsFile).to receive(:load).with([], [])
+      allow(VersionsFile).to receive(:load).with('nothing', 'nothing')
+      allow(File).to receive(:write).twice
+      allow(File).to receive(:read).twice.and_return('nothing')
       expect(@fetcher.fetch).to be_nil
     end
   end
