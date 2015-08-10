@@ -222,13 +222,8 @@ module Gemirro
     # @return [Gemirro::GemVersionCollection]
     #
     def gems_collection(orig = true)
-      if orig && !@gems_orig_collection.nil?
-        return @gems_orig_collection
-      end
-
-      if !orig && !@gems_source_collection.nil?
-        return @gems_source_collection
-      end
+      return @gems_orig_collection if orig && !@gems_orig_collection.nil?
+      return @gems_source_collection if !orig && !@gems_source_collection.nil?
 
       gems = specs_files_paths(orig).pmap do |specs_file_path|
         if File.exist?(specs_file_path)
