@@ -15,13 +15,16 @@ module Gemirro
   #  @return [String]
   # @!attribute [r] only_origin
   #  @return [Boolean]
+  # @!attribute [r] updated_gems
+  #  @return [Array]
   #
   class Indexer < ::Gem::Indexer
     attr_accessor(:files,
                   :quick_marshal_dir,
                   :directory,
                   :dest_directory,
-                  :only_origin)
+                  :only_origin,
+                  :updated_gems)
 
     ##
     # Create an indexer that will index the gems in +directory+.
@@ -202,18 +205,18 @@ module Gemirro
       specs_mtime = File.stat(@dest_specs_index).mtime
       newest_mtime = Time.at(0)
 
-      updated_gems = gem_file_list.select do |gem|
+      @updated_gems = gem_file_list.select do |gem|
         gem_mtime = File.stat(gem).mtime
         newest_mtime = gem_mtime if gem_mtime > newest_mtime
         gem_mtime > specs_mtime
       end
 
-      if updated_gems.empty?
+      if @updated_gems.empty?
         logger.info('No new gems')
         terminate_interaction(0)
       end
 
-      specs = map_gems_to_specs(updated_gems)
+      specs = map_gems_to_specs(@updated_gems)
       prerelease, released = specs.partition { |s| s.version.prerelease? }
 
       ::Gem::Specification.dirs = []

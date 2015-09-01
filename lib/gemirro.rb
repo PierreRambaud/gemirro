@@ -20,6 +20,7 @@ end
 
 require 'gemirro/version'
 require 'gemirro/configuration'
+require 'gemirro/cache'
 require 'gemirro/gem'
 require 'gemirro/gem_version'
 require 'gemirro/gem_version_collection'

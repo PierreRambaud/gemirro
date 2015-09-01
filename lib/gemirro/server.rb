@@ -122,6 +122,16 @@ module Gemirro
     end
 
     ##
+    # Cache class to store marshal and data into files
+    #
+    # @return [Gemirro::Cache]
+    #
+    def cache
+      @cache ||= Gemirro::Cache
+                 .new(File.join(configuration.destination, '_cache'))
+    end
+
+    ##
     # Try to fetch gem and download its if it's possible, and
     # build and install indicies.
     #
@@ -171,6 +181,9 @@ module Gemirro
 
       configuration.logger.info('Generating indexes')
       indexer.update_index
+      indexer.updated_gems.each do |gem|
+        cache.flush_key(gem.name)
+      end
     rescue SystemExit => e
       configuration.logger.info(e.message)
     end
@@ -225,13 +238,12 @@ module Gemirro
       return @gems_orig_collection if orig && !@gems_orig_collection.nil?
       return @gems_source_collection if !orig && !@gems_source_collection.nil?
 
-      gems = specs_files_paths(orig).pmap do |specs_file_path|
-        if File.exist?(specs_file_path)
-          Marshal.load(Zlib::GzipReader.open(specs_file_path).read)
-        else
-          []
-        end
-      end.inject(:|)
+      gems = []
+      specs_files_paths(orig).pmap do |specs_file_path|
+        # rubocop:disable Metrics/LineLength
+        gems.concat(Marshal.load(Zlib::GzipReader.open(specs_file_path).read)) if File.exist?(specs_file_path)
+        # rubocop:enable Metrics/LineLength
+      end
 
       collection = GemVersionCollection.new(gems)
       @gems_source_collection = collection unless orig
@@ -246,9 +258,11 @@ module Gemirro
     # @return [Array]
     #
     def query_gems_list
-      gems = query_gems.flat_map do |query_gem|
+      gems_collection(false) # load collection
+      gems = query_gems.pmap do |query_gem|
         gem_dependencies(query_gem)
       end
+      gems.flatten!
       gems = gems.select do |g|
         !g.empty?
       end
@@ -262,33 +276,33 @@ module Gemirro
     # @return [Array]
     #
     def gem_dependencies(gem_name)
-      gems = gems_collection(false)
-      gem_collection = gems.find_by_name(gem_name)
-      return '' if gem_collection.nil?
+      cache.cache(gem_name) do
+        gems = gems_collection(false)
+        gem_collection = gems.find_by_name(gem_name)
+        return '' if gem_collection.nil?
 
-      gem_collection = gem_collection.pmap do |gem|
-        [gem, spec_for(gem.name, gem.number, gem.platform)]
-      end
-
-      gem_collection.reject! do |_, spec|
-        spec.nil?
-      end
-
-      gem_collection.pmap do |gem, spec|
-        dependencies = spec.dependencies.select do |d|
-          d.type == :runtime
+        gem_collection = gem_collection.pmap do |gem|
+          [gem, spec_for(gem.name, gem.number, gem.platform)]
         end
-
-        dependencies.map! do |d|
-          [d.name.is_a?(Array) ? d.name.first : d.name, d.requirement.to_s]
+        gem_collection.reject! do |_, spec|
+          spec.nil?
         end
+        gem_collection.pmap do |gem, spec|
+          dependencies = spec.dependencies.select do |d|
+            d.type == :runtime
+          end
 
-        {
-          name: gem.name,
-          number: gem.number,
-          platform: gem.platform,
-          dependencies: dependencies
-        }
+          dependencies = dependencies.pmap do |d|
+            [d.name.is_a?(Array) ? d.name.first : d.name, d.requirement.to_s]
+          end
+
+          {
+            name: gem.name,
+            number: gem.number,
+            platform: gem.platform,
+            dependencies: dependencies
+          }
+        end
       end
     end
 

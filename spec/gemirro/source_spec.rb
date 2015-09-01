@@ -26,6 +26,15 @@ module Gemirro
       expect(@source.fetch_versions).to be_truthy
     end
 
+    it 'should fetch prereleases versions' do
+      Struct.new('FetchPrereleaseVersions', :body)
+      result = Struct::FetchPrereleaseVersions.new(true)
+      allow(Http).to receive(:get).once.with(
+        "https://rubygems.org/#{Configuration.prerelease_versions_file}"
+      ).and_return(result)
+      expect(@source.fetch_prerelease_versions).to be_truthy
+    end
+
     it 'should fetch gem' do
       Struct.new('FetchGem', :body)
       result = Struct::FetchGem.new(true)

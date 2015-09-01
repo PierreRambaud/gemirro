@@ -2,6 +2,7 @@
 require 'rack/test'
 require 'json'
 require 'pmap'
+require 'gemirro/cache'
 require 'gemirro/mirror_directory'
 require 'gemirro/mirror_file'
 require 'gemirro/gem_version_collection'

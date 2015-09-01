@@ -26,9 +26,7 @@ module Gemirro
         end
       end
 
-      @gems.sort_by! do |object|
-        object.version
-      end
+      @gems.sort_by!(&:version)
     end
 
     ##
