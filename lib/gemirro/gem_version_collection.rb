@@ -25,6 +25,10 @@ module Gemirro
           GemVersion.new(*object)
         end
       end
+
+      @gems.sort_by! do |object|
+        object.version
+      end
     end
 
     ##
