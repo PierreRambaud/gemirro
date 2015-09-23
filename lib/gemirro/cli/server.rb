@@ -28,7 +28,9 @@ Gemirro::CLI.options.command 'server' do
       abort
     end
 
-    @pid_file = File.join(config.destination, '..', 'gemirro.pid')
+    @pid_file = File.expand_path(File.join(config.destination,
+                                           '..',
+                                           'gemirro.pid'))
     require 'gemirro/server'
   end
 
@@ -56,7 +58,6 @@ Gemirro::CLI.options.command 'server' do
     end
   rescue Errno::ENOENT
     puts "Error: PID File not found #{@pid_file}"
-    exit!
   end
 
   def start
@@ -79,6 +80,8 @@ Gemirro::CLI.options.command 'server' do
 
   def stop
     process_pid = pid
+    return if process_pid.nil?
+
     begin
       Process.kill('TERM', process_pid)
       Timeout.timeout(30) { sleep 0.1 while running?(process_pid) }

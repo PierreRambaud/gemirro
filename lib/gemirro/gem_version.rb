@@ -11,10 +11,12 @@ module Gemirro
   #  @return [Integer]
   # @!attribute [r] platform
   #  @return [String]
+  # @!attribute [r] version
+  #  @return [Gem::Version]
   #
   class GemVersion
     include Comparable
-    attr_reader :name, :number, :platform
+    attr_reader :name, :number, :platform, :version
 
     ##
     # @param [String] name
@@ -42,7 +44,7 @@ module Gemirro
     # @return [Gem::Version]
     #
     def version
-      ::Gem::Version.create(number)
+      @version ||= ::Gem::Version.create(number)
     end
 
     ##

@@ -9,9 +9,11 @@ module Gemirro
   #  @return [String]
   # @!attribute [r] requirement
   #  @return [Gem::Requirement]
+  # @!attribute [r] version
+  #  @return [Gem::Version]
   #
   class Gem
-    attr_reader :name, :requirement, :platform
+    attr_reader :name, :requirement, :platform, :version
     attr_accessor :gemspec
 
     ##

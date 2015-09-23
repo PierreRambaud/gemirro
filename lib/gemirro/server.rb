@@ -12,8 +12,14 @@ module Gemirro
   #  @return [Gemirro::GemsFetcher]
   #
   class Server < Sinatra::Base
+    # rubocop:disable Metrics/LineLength
+    URI_REGEXP = /^(.*)-(\d+(?:\.\d+){2,4}.*?)(?:-x86-(?:(?:mswin|mingw)(?:32|64)).*?)?\.(gem(?:spec\.rz)?)$/
+    GEMSPEC_TYPE = 'gemspec.rz'
+    GEM_TYPE = 'gem'
+    # rubocop:enable Metrics/LineLength
+
     attr_accessor :versions_fetcher, :gems_fetcher
-    attr_reader :gems_orig_collection, :gems_source_collection
+    attr_reader :gems_orig_collection, :gems_source_collection, :stored_gems
 
     # rubocop:disable Metrics/LineLength
     access_logger = Logger.new(Gemirro.configuration.server.access_log).tap do |logger|
@@ -140,22 +146,19 @@ module Gemirro
     #
     def fetch_gem(resource)
       name = File.basename(resource)
-      # rubocop:disable Metrics/LineLength
-      regexp = /^(.*)-(\d+(?:\.\d+){2,4}.*?)(?:-x86-(?:(?:mswin|mingw)(?:32|64)).*?)?\.(gem(?:spec\.rz)?)$/
-      # rubocop:enable Metrics/LineLength
-      result = name.match(regexp)
+      result = name.match(URI_REGEXP)
       return unless result
 
       gem_name, gem_version, gem_type = result.captures
       return unless gem_name && gem_version
 
       begin
-        gem = Gemirro::Gem.new(gem_name, gem_version)
-        gem.gemspec = true if gem_type == 'gemspec.rz'
+        gem = stored_gem(gem_name, gem_version)
+        gem.gemspec = true if gem_type == GEMSPEC_TYPE
 
         # rubocop:disable Metrics/LineLength
-        return if gems_fetcher.gem_exists?(gem.filename(gem_version)) && gem_type == 'gem'
-        return if gems_fetcher.gemspec_exists?(gem.gemspec_filename(gem_version)) && gem_type == 'gemspec.rz'
+        return if gems_fetcher.gem_exists?(gem.filename(gem_version)) && gem_type == GEM_TYPE
+        return if gems_fetcher.gemspec_exists?(gem.gemspec_filename(gem_version)) && gem_type == GEMSPEC_TYPE
         # rubocop:enable Metrics/LineLength
 
         logger.info("Try to download #{gem_name} with version #{gem_version}")
@@ -332,6 +335,23 @@ module Gemirro
       [:specs, :prerelease_specs]
     end
 
+    ##
+    # Try to cache gem classes
+    #
+    # @param [String] gem_name Gem name
+    # @return [Gem]
+    #
+    def stored_gem(gem_name, gem_version, platform = 'ruby')
+      @stored_gems ||= {}
+      # rubocop:disable Metrics/LineLength
+      @stored_gems[gem_name] = {} unless @stored_gems.key?(gem_name)
+      @stored_gems[gem_name][gem_version] = {} unless @stored_gems[gem_name].key?(gem_version)
+      @stored_gems[gem_name][gem_version][platform] ||= Gem.new(gem_name, gem_version, platform) unless @stored_gems[gem_name][gem_version].key?(platform)
+      # rubocop:enable Metrics/LineLength
+
+      @stored_gems[gem_name][gem_version][platform]
+    end
+
     helpers do
       ##
       # Return gem specification from gemname and version
@@ -341,7 +361,7 @@ module Gemirro
       # @return [::Gem::Specification]
       #
       def spec_for(gemname, version, platform = 'ruby')
-        gem = Gem.new(gemname, version.to_s, platform)
+        gem = stored_gem(gemname, version.to_s, platform)
         gemspec_path = File.join('quick',
                                  Gemirro::Configuration.marshal_identifier,
                                  gem.gemspec_filename)
