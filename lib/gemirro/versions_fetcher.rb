@@ -21,8 +21,8 @@ module Gemirro
     # @return [Gemirro::VersionsFile]
     #
     def fetch
-      VersionsFile.load(read_gzip(Configuration.versions_file),
-                        read_gzip(Configuration.prerelease_versions_file, true))
+      VersionsFile.load(read_file(Configuration.versions_file),
+                        read_file(Configuration.prerelease_versions_file, true))
     end
 
     ##
@@ -31,7 +31,7 @@ module Gemirro
     # @param [String] file name
     # @param [TrueClass|FalseClass] prerelease Is prerelease or not
     #
-    def read_gzip(file, prerelease = false)
+    def read_file(file, prerelease = false)
       destination = Gemirro.configuration.destination
       file_dst = File.join(destination, file)
       unless File.exist?(file_dst)

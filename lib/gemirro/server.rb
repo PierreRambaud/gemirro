@@ -134,7 +134,7 @@ module Gemirro
     #
     def cache
       @cache ||= Gemirro::Cache
-                 .new(File.join(configuration.destination, '_cache'))
+                 .new(File.join(configuration.destination, '.cache'))
     end
 
     ##
