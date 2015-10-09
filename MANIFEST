@@ -9,6 +9,7 @@ Rakefile
 bin/gemirro
 gemirro.gemspec
 lib/gemirro.rb
+lib/gemirro/cache.rb
 lib/gemirro/cli.rb
 lib/gemirro/cli/index.rb
 lib/gemirro/cli/init.rb
