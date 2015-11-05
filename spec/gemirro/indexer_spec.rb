@@ -52,7 +52,8 @@ module Gemirro
         '/tmp/gem_generate_index/specs.4.8.gz',
         '/tmp/gem_generate_index/something.4.8.gz'
       ]
-
+      allow(FileUtils).to receive(:mkdir_p).and_return(true)
+      allow(FileUtils).to receive(:rm_f).and_return(true)
       allow(FileUtils).to receive(:mkdir_p)
         .once.with('/tmp/test/quick', verbose: true)
       allow(FileUtils).to receive(:rm_rf)

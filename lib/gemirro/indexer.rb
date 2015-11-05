@@ -25,6 +25,7 @@ module Gemirro
                   :dest_directory,
                   :only_origin,
                   :updated_gems)
+    attr_reader :cache
 
     ##
     # Create an indexer that will index the gems in +directory+.
@@ -295,6 +296,17 @@ module Gemirro
                    dst_name,
                    verbose: verbose,
                    force: true)
+      cache.flush_key(File.basename(dst_name))
+    end
+
+    ##
+    # Cache class to store marshal and data into files
+    #
+    # @return [Gemirro::Cache]
+    #
+    def cache
+      @cache ||= Gemirro::Cache
+                 .new(File.join(Gemirro.configuration.destination, '.cache'))
     end
 
     def verbose

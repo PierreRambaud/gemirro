@@ -19,7 +19,10 @@ module Gemirro
     # rubocop:enable Metrics/LineLength
 
     attr_accessor :versions_fetcher, :gems_fetcher
-    attr_reader :gems_orig_collection, :gems_source_collection, :stored_gems
+    attr_reader(:gems_orig_collection,
+                :gems_source_collection,
+                :stored_gems,
+                :cache)
 
     # rubocop:disable Metrics/LineLength
     access_logger = Logger.new(Gemirro.configuration.server.access_log).tap do |logger|
@@ -243,9 +246,11 @@ module Gemirro
 
       gems = []
       specs_files_paths(orig).pmap do |specs_file_path|
-        # rubocop:disable Metrics/LineLength
-        gems.concat(Marshal.load(Zlib::GzipReader.open(specs_file_path).read)) if File.exist?(specs_file_path)
-        # rubocop:enable Metrics/LineLength
+        cache.cache(File.basename(specs_file_path)) do
+          # rubocop:disable Metrics/LineLength
+          gems.concat(Marshal.load(Zlib::GzipReader.open(specs_file_path).read)) if File.exist?(specs_file_path)
+          # rubocop:enable Metrics/LineLength
+        end
       end
 
       collection = GemVersionCollection.new(gems)
