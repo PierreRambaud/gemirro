@@ -30,6 +30,7 @@ module Gemirro
     def self.load_configuration(config_file)
       config_file ||= Configuration.default_configuration_file
       config_file   = File.expand_path(config_file, Dir.pwd)
+      config_file += '/config.rb' unless config_file.end_with?('config.rb')
 
       unless File.file?(config_file)
         abort "The configuration file #{config_file} does not exist"
