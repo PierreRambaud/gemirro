@@ -13,7 +13,7 @@ module Gemirro
   #
   class Server < Sinatra::Base
     # rubocop:disable Metrics/LineLength
-    URI_REGEXP = /^(.*)-(\d+(?:\.\d+){2,4}.*?)(?:-x86-(?:(?:mswin|mingw)(?:32|64)).*?)?\.(gem(?:spec\.rz)?)$/
+    URI_REGEXP = /^(.*)-(\d+(?:\.\d+){1,4}.*?)(?:-x86-(?:(?:mswin|mingw)(?:32|64)).*?)?\.(gem(?:spec\.rz)?)$/
     GEMSPEC_TYPE = 'gemspec.rz'
     GEM_TYPE = 'gem'
     # rubocop:enable Metrics/LineLength
@@ -282,6 +282,7 @@ module Gemirro
       cache.cache(gem_name) do
         gems = gems_collection(false)
         gem_collection = gems.find_by_name(gem_name)
+
         return '' if gem_collection.nil?
 
         gem_collection = gem_collection.pmap do |gem|
@@ -290,6 +291,7 @@ module Gemirro
         gem_collection.reject! do |_, spec|
           spec.nil?
         end
+
         gem_collection.pmap do |gem, spec|
           dependencies = spec.dependencies.select do |d|
             d.type == :runtime
@@ -367,7 +369,6 @@ module Gemirro
                                  gem.gemspec_filename)
         spec_file = File.join(settings.public_folder,
                               gemspec_path)
-
         fetch_gem(gemspec_path) unless File.exist?(spec_file)
         File.open(spec_file, 'r') do |uz_file|
           uz_file.binmode
