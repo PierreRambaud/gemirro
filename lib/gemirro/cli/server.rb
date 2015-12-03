@@ -110,7 +110,7 @@ Gemirro::CLI.options.command 'server' do
   end
 
   def running?(process_id)
-    Process.getpgid(process_id) != -1
+    Process.getpgid(process_id.to_i) != -1
   rescue Errno::ESRCH
     false
   end
