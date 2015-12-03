@@ -246,11 +246,11 @@ module Gemirro
 
       gems = []
       specs_files_paths(orig).pmap do |specs_file_path|
-        cache.cache(File.basename(specs_file_path)) do
-          # rubocop:disable Metrics/LineLength
-          gems.concat(Marshal.load(Zlib::GzipReader.open(specs_file_path).read)) if File.exist?(specs_file_path)
-          # rubocop:enable Metrics/LineLength
+        next unless File.exist?(specs_file_path)
+        spec_gems = cache.cache(File.basename(specs_file_path)) do
+          Marshal.load(Zlib::GzipReader.open(specs_file_path).read)
         end
+        gems.concat(spec_gems)
       end
 
       collection = GemVersionCollection.new(gems)
