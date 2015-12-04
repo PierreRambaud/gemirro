@@ -15,6 +15,7 @@ module Gemirro
   class Gem
     attr_reader :name, :requirement, :platform, :version
     attr_accessor :gemspec
+    ONLY_LATEST = [:latest, :newest]
 
     ##
     # Returns a `Gem::Version` instance based on the specified requirement.
@@ -60,6 +61,20 @@ module Gemirro
       version && !version.segments.reject { |s| s == 0 }.empty?
     end
 
+    ##
+    # Define if version exists
+    #
+    # @return [TrueClass|FalseClass]
+    #
+    def only_latest?
+      @requirement.is_a?(Symbol) && ONLY_LATEST.include?(@requirement)
+    end
+
+    ##
+    # Is gemspec
+    #
+    # @return [TrueClass|FalseClass]
+    #
     def gemspec?
       @gemspec == true
     end

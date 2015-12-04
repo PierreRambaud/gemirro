@@ -49,6 +49,8 @@ module Gemirro
     #
     def versions_for(gem)
       available = @versions_file.versions_for(gem.name)
+      return [available.last] if gem.only_latest?
+
       versions = available.select do |v|
         gem.requirement.satisfied_by?(v)
       end
@@ -67,7 +69,11 @@ module Gemirro
     #
     def fetch_gemspec(gem, version)
       filename  = gem.gemspec_filename(version)
-      satisfied = gem.requirement.satisfied_by?(version)
+      satisfied = if gem.only_latest?
+                    true
+                  else
+                    gem.requirement.satisfied_by?(version)
+                  end
 
       if gemspec_exists?(filename) || !satisfied
         logger.debug("Skipping #{filename}")
@@ -87,7 +93,11 @@ module Gemirro
     #
     def fetch_gem(gem, version)
       filename = gem.filename(version)
-      satisfied = gem.requirement.satisfied_by?(version)
+      satisfied = if gem.only_latest?
+                    true
+                  else
+                    gem.requirement.satisfied_by?(version)
+                  end
       name = gem.name
 
       if gem_exists?(filename) || ignore_gem?(name, version) || !satisfied
