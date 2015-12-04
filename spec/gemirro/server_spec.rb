@@ -3,6 +3,7 @@ require 'rack/test'
 require 'json'
 require 'pmap'
 require 'gemirro/cache'
+require 'gemirro/utils'
 require 'gemirro/mirror_directory'
 require 'gemirro/mirror_file'
 require 'gemirro/gem_version_collection'
@@ -33,6 +34,7 @@ module Gemirro
       MirrorDirectory.new('/').add_directory('tmp')
       MirrorFile.new('/var/www/gemirro/test').write('content')
       Gemirro.configuration.destination = '/var/www/gemirro'
+      Utils.instance_eval('@cache = nil')
       FakeFS::FileSystem.clone(Gemirro::Configuration.views_directory)
     end
 
@@ -255,11 +257,12 @@ module Gemirro
 
         gem = Gemirro::GemVersion.new('volay', '0.1.0', 'ruby')
         collection = Gemirro::GemVersionCollection.new([gem])
-        allow_any_instance_of(Gemirro::Server).to receive(:gems_collection)
+        allow(Utils).to receive(:gems_collection)
           .and_return(collection)
         get '/api/v1/dependencies.json?gems=volay'
         expect(last_response.headers['Content-Type'])
           .to eq('application/json')
+
         expect(last_response.body).to match(/"name":"volay"/)
         expect(last_response).to be_ok
       end

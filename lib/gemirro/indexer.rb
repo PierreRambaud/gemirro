@@ -25,7 +25,6 @@ module Gemirro
                   :dest_directory,
                   :only_origin,
                   :updated_gems)
-    attr_reader :cache
 
     ##
     # Create an indexer that will index the gems in +directory+.
@@ -86,7 +85,7 @@ module Gemirro
     # @return [Array]
     #
     def install_indicies
-      logger
+      Utils.logger
         .debug("Downloading index into production dir #{@dest_directory}")
 
       files = @files
@@ -129,7 +128,7 @@ module Gemirro
     #
     def download_from_source(file)
       source_host = Gemirro.configuration.source.host
-      logger.info("Download from source: #{file}")
+      Utils.logger.info("Download from source: #{file}")
       resp = Http.get("#{source_host}/#{File.basename(file)}")
       return unless resp.code == 200
       resp.body
@@ -161,11 +160,11 @@ module Gemirro
     def map_gems_to_specs(gems)
       gems.map.with_index do |gemfile, index|
         # rubocop:disable Metrics/LineLength
-        logger.info("[#{index + 1}/#{gems.size}]: Processing #{gemfile.split('/')[-1]}")
+        Utils.logger.info("[#{index + 1}/#{gems.size}]: Processing #{gemfile.split('/')[-1]}")
         # rubocop:enable Metrics/LineLength
 
         if File.size(gemfile) == 0
-          logger.warn("Skipping zero-length gem: #{gemfile}")
+          Utils.logger.warn("Skipping zero-length gem: #{gemfile}")
           next
         end
 
@@ -179,7 +178,7 @@ module Gemirro
             exp << " (#{spec.original_name})" if
               spec.original_name != spec.full_name
             msg = "Skipping misnamed gem: #{gemfile} should be named #{exp}"
-            logger.warn(msg)
+            Utils.logger.warn(msg)
             next
           end
 
@@ -189,13 +188,13 @@ module Gemirro
           spec
         rescue SignalException
           msg = 'Received signal, exiting'
-          logger.error(msg)
+          Utils.logger.error(msg)
           raise
         rescue StandardError => e
           msg = ["Unable to process #{gemfile}",
                  "#{e.message} (#{e.class})",
                  "\t#{e.backtrace.join "\n\t"}"].join("\n")
-          logger.debug(msg)
+          Utils.logger.debug(msg)
         end
       end.compact
     end
@@ -213,7 +212,7 @@ module Gemirro
       end
 
       if @updated_gems.empty?
-        logger.info('No new gems')
+        Utils.logger.info('No new gems')
         terminate_interaction(0)
       end
 
@@ -236,7 +235,7 @@ module Gemirro
 
       compress_indicies
 
-      logger.info("Updating production dir #{@dest_directory}") if verbose
+      Utils.logger.info("Updating production dir #{@dest_directory}") if verbose
       files << @specs_index
       files << "#{@specs_index}.gz"
       files << @latest_specs_index
@@ -296,25 +295,11 @@ module Gemirro
                    dst_name,
                    verbose: verbose,
                    force: true)
-      cache.flush_key(File.basename(dst_name))
-    end
-
-    ##
-    # Cache class to store marshal and data into files
-    #
-    # @return [Gemirro::Cache]
-    #
-    def cache
-      @cache ||= Gemirro::Cache
-                 .new(File.join(Gemirro.configuration.destination, '.cache'))
+      Utils.cache.flush_key(File.basename(dst_name))
     end
 
     def verbose
       @verbose ||= ::Gem.configuration.really_verbose
-    end
-
-    def logger
-      Gemirro.configuration.logger
     end
   end
 end

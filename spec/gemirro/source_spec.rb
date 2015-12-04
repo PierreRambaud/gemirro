@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 require 'spec_helper'
 require 'gemirro/http'
+require 'gemirro/utils'
 require 'gemirro/source'
 
 # Source tests
@@ -8,7 +9,7 @@ module Gemirro
   describe 'Source' do
     before(:each) do
       @source = Source.new('RubyGems', 'https://rubygems.org')
-      allow(@source.logger).to receive(:info)
+      allow(Utils.logger).to receive(:info)
     end
 
     it 'should be initialized' do

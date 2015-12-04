@@ -29,11 +29,11 @@ module Gemirro
         versions_for(gem).each do |version|
           if gem.gemspec?
             gemfile = fetch_gemspec(gem, version)
-            configuration.mirror_gemspecs_directory
+            Utils.configuration.mirror_gemspecs_directory
               .add_file(gem.gemspec_filename(version), gemfile) if gemfile
           else
             gemfile = fetch_gem(gem, version)
-            configuration.mirror_gems_directory
+            Utils.configuration.mirror_gems_directory
               .add_file(gem.filename(version), gemfile) if gemfile
           end
         end
@@ -76,11 +76,11 @@ module Gemirro
                   end
 
       if gemspec_exists?(filename) || !satisfied
-        logger.debug("Skipping #{filename}")
+        Utils.logger.debug("Skipping #{filename}")
         return
       end
 
-      logger.info("Fetching #{filename}")
+      Utils.logger.info("Fetching #{filename}")
       fetch_from_source(gem, version, true)
     end
 
@@ -101,12 +101,12 @@ module Gemirro
       name = gem.name
 
       if gem_exists?(filename) || ignore_gem?(name, version) || !satisfied
-        logger.debug("Skipping #{filename}")
+        Utils.logger.debug("Skipping #{filename}")
         return
       end
 
-      configuration.ignore_gem(gem.name, version)
-      logger.info("Fetching #{filename}")
+      Utils.configuration.ignore_gem(gem.name, version)
+      Utils.logger.info("Fetching #{filename}")
 
       fetch_from_source(gem, version)
     end
@@ -125,28 +125,13 @@ module Gemirro
         data = @source.fetch_gemspec(gem.name, version) if gemspec
       rescue => e
         filename = gem.filename(version)
-        logger.error("Failed to retrieve #{filename}: #{e.message}")
-        logger.debug("Adding #{filename} to the list of ignored Gems")
+        Utils.logger.error("Failed to retrieve #{filename}: #{e.message}")
+        Utils.logger.debug("Adding #{filename} to the list of ignored Gems")
 
-        configuration.ignore_gem(gem.name, version)
+        Utils.configuration.ignore_gem(gem.name, version)
       end
 
       data
-    end
-
-    ##
-    # @see Gemirro::Configuration#logger
-    # @return [Logger]
-    #
-    def logger
-      configuration.logger
-    end
-
-    ##
-    # @see Gemirro.configuration
-    #
-    def configuration
-      Gemirro.configuration
     end
 
     ##
@@ -156,7 +141,7 @@ module Gemirro
     # @return [TrueClass|FalseClass]
     #
     def gem_exists?(filename)
-      configuration.mirror_gems_directory.file_exists?(filename)
+      Utils.configuration.mirror_gems_directory.file_exists?(filename)
     end
 
     ##
@@ -166,14 +151,14 @@ module Gemirro
     # @return [TrueClass|FalseClass]
     #
     def gemspec_exists?(filename)
-      configuration.mirror_gemspecs_directory.file_exists?(filename)
+      Utils.configuration.mirror_gemspecs_directory.file_exists?(filename)
     end
 
     ##
     # @see Gemirro::Configuration#ignore_gem?
     #
     def ignore_gem?(*args)
-      configuration.ignore_gem?(*args)
+      Utils.configuration.ignore_gem?(*args)
     end
   end
 end

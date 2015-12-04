@@ -19,9 +19,7 @@ module Gemirro
     # rubocop:enable Metrics/LineLength
 
     attr_accessor :versions_fetcher, :gems_fetcher
-    attr_reader(:gems_orig_collection,
-                :gems_source_collection,
-                :stored_gems,
+    attr_reader(:stored_gems,
                 :cache)
 
     # rubocop:disable Metrics/LineLength
@@ -75,7 +73,7 @@ module Gemirro
     # @return [nil]
     #
     get('/gem/:gemname') do
-      gems = gems_collection
+      gems = Utils.gems_collection
       @gem = gems.find_by_name(params[:gemname])
       return not_found if @gem.nil?
 
@@ -89,7 +87,7 @@ module Gemirro
     # @return [nil]
     #
     get('/') do
-      @gems = gems_collection
+      @gems = Utils.gems_collection
       erb(:index)
     end
 
@@ -131,16 +129,6 @@ module Gemirro
     end
 
     ##
-    # Cache class to store marshal and data into files
-    #
-    # @return [Gemirro::Cache]
-    #
-    def cache
-      @cache ||= Gemirro::Cache
-                 .new(File.join(configuration.destination, '.cache'))
-    end
-
-    ##
     # Try to fetch gem and download its if it's possible, and
     # build and install indicies.
     #
@@ -164,14 +152,15 @@ module Gemirro
         return if gems_fetcher.gemspec_exists?(gem.gemspec_filename(gem_version)) && gem_type == GEMSPEC_TYPE
         # rubocop:enable Metrics/LineLength
 
-        logger.info("Try to download #{gem_name} with version #{gem_version}")
+        Utils.logger
+          .info("Try to download #{gem_name} with version #{gem_version}")
         gems_fetcher.source.gems.clear
         gems_fetcher.source.gems.push(gem)
         gems_fetcher.fetch
 
         update_indexes if configuration.update_on_fetch
       rescue StandardError => e
-        logger.error(e)
+        Utils.logger.error(e)
       end
     end
 
@@ -185,13 +174,13 @@ module Gemirro
       indexer.only_origin = true
       indexer.ui = ::Gem::SilentUI.new
 
-      configuration.logger.info('Generating indexes')
+      Utils.logger.info('Generating indexes')
       indexer.update_index
       indexer.updated_gems.peach do |gem|
-        cache.flush_key(gem.name)
+        Utils.cache.flush_key(gem.name)
       end
     rescue SystemExit => e
-      configuration.logger.info(e.message)
+      Utils.logger.info(e.message)
     end
 
     ##
@@ -227,49 +216,16 @@ module Gemirro
     end
 
     ##
-    # @see Gemirro::Configuration#logger
-    # @return [Logger]
-    #
-    def logger
-      configuration.logger
-    end
-
-    ##
-    # Generate Gems collection from Marshal dump
-    #
-    # @param [TrueClass|FalseClass] orig Fetch orig files
-    # @return [Gemirro::GemVersionCollection]
-    #
-    def gems_collection(orig = true)
-      return @gems_orig_collection if orig && !@gems_orig_collection.nil?
-      return @gems_source_collection if !orig && !@gems_source_collection.nil?
-
-      gems = []
-      specs_files_paths(orig).pmap do |specs_file_path|
-        next unless File.exist?(specs_file_path)
-        spec_gems = cache.cache(File.basename(specs_file_path)) do
-          Marshal.load(Zlib::GzipReader.open(specs_file_path).read)
-        end
-        gems.concat(spec_gems)
-      end
-
-      collection = GemVersionCollection.new(gems)
-      @gems_source_collection = collection unless orig
-      @gems_orig_collection = collection if orig
-
-      collection
-    end
-
-    ##
     # Return gems list from query params
     #
     # @return [Array]
     #
     def query_gems_list
-      gems_collection(false) # load collection
+      Utils.gems_collection(false) # load collection
       gems = query_gems.pmap do |query_gem|
         gem_dependencies(query_gem)
       end
+
       gems.flatten!
       gems = gems.select do |g|
         !g.empty?
@@ -284,8 +240,8 @@ module Gemirro
     # @return [Array]
     #
     def gem_dependencies(gem_name)
-      cache.cache(gem_name) do
-        gems = gems_collection(false)
+      Utils.cache.cache(gem_name) do
+        gems = Utils.gems_collection(false)
         gem_collection = gems.find_by_name(gem_name)
 
         return '' if gem_collection.nil?
@@ -314,32 +270,6 @@ module Gemirro
           }
         end
       end
-    end
-
-    ##
-    # Return specs fils paths
-    #
-    # @param [TrueClass|FalseClass] orig Fetch orig files
-    # @return [Array]
-    #
-    def specs_files_paths(orig = true)
-      marshal_version = Gemirro::Configuration.marshal_version
-      specs_file_types.pmap do |specs_file_type|
-        File.join(settings.public_folder,
-                  [specs_file_type,
-                   marshal_version,
-                   'gz' + (orig ? '.orig' : '')
-                  ].join('.'))
-      end
-    end
-
-    ##
-    # Return specs fils types
-    #
-    # @return [Array]
-    #
-    def specs_file_types
-      [:specs, :prerelease_specs]
     end
 
     ##

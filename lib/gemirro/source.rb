@@ -26,20 +26,12 @@ module Gemirro
     end
 
     ##
-    # @see Gemirro::Configuration#logger
-    # @return [Logger]
-    #
-    def logger
-      Gemirro.configuration.logger
-    end
-
-    ##
     # Fetches a list of all the available Gems and their versions.
     #
     # @return [String]
     #
     def fetch_versions
-      logger.info(
+      Utils.logger.info(
         "Fetching #{Configuration.versions_file} on #{@name} (#{@host})"
       )
 
@@ -52,7 +44,7 @@ module Gemirro
     # @return [String]
     #
     def fetch_prerelease_versions
-      logger.info(
+      Utils.logger.info(
         "Fetching #{Configuration.prerelease_versions_file}" \
         " on #{@name} (#{@host})"
       )
@@ -67,7 +59,7 @@ module Gemirro
     # @return [String]
     #
     def fetch_gem(name, version)
-      logger.info(
+      Utils.logger.info(
         "Fetching gem #{name}, #{version} on #{@name} (#{@host})"
       )
       Http.get(host + "/gems/#{name}-#{version}.gem").body
@@ -81,7 +73,7 @@ module Gemirro
     # @return [String]
     #
     def fetch_gemspec(name, version)
-      logger.info(
+      Utils.logger.info(
         "Fetching gemspec #{name}, #{version} on #{@name} (#{@host})"
       )
       marshal = Gemirro::Configuration.marshal_identifier

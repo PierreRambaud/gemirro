@@ -30,6 +30,6 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'rack-test', '~>0.6'
   s.add_development_dependency 'rspec', '~>3.2'
   s.add_development_dependency 'simplecov', '~>0.9'
-  s.add_development_dependency 'rubocop', '~>0.30'
+  s.add_development_dependency 'rubocop', '~>0.35'
   s.add_development_dependency 'fakefs', '~>0.6.7'
 end
