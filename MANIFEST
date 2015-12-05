@@ -13,6 +13,7 @@ lib/gemirro/cache.rb
 lib/gemirro/cli.rb
 lib/gemirro/cli/index.rb
 lib/gemirro/cli/init.rb
+lib/gemirro/cli/list.rb
 lib/gemirro/cli/server.rb
 lib/gemirro/cli/update.rb
 lib/gemirro/configuration.rb
@@ -26,11 +27,13 @@ lib/gemirro/mirror_directory.rb
 lib/gemirro/mirror_file.rb
 lib/gemirro/server.rb
 lib/gemirro/source.rb
+lib/gemirro/utils.rb
 lib/gemirro/version.rb
 lib/gemirro/versions_fetcher.rb
 lib/gemirro/versions_file.rb
 spec/fixtures/gems/gemirro-0.0.1.gem
 spec/fixtures/quick/gemirro-0.0.1.gemspec.rz
+spec/gemirro/cache_spec.rb
 spec/gemirro/cli_spec.rb
 spec/gemirro/configuration_spec.rb
 spec/gemirro/gem_spec.rb
