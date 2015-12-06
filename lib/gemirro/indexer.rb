@@ -140,6 +140,8 @@ module Gemirro
     # @return [Array]
     #
     def build_indicies
+      return if ::Gem::VERSION >= '2.5.0'
+
       specs = *map_gems_to_specs(gem_file_list)
       specs.reject! { |s| s.class != ::Gem::Specification }
       ::Gem::Specification.dirs = []
