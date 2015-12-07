@@ -6,44 +6,35 @@ module Gemirro
   ##
   # Launch Sinatra server to easily download gems.
   #
-  # @!attribute [r] versions_fetcher
-  #  @return [VersionsFetcher]
-  # @!attribute [r] gems_fetcher
-  #  @return [Gemirro::GemsFetcher]
-  #
   class Server < Sinatra::Base
     # rubocop:disable Metrics/LineLength
     URI_REGEXP = /^(.*)-(\d+(?:\.\d+){1,4}.*?)(?:-x86-(?:(?:mswin|mingw)(?:32|64)).*?)?\.(gem(?:spec\.rz)?)$/
     GEMSPEC_TYPE = 'gemspec.rz'
     GEM_TYPE = 'gem'
-    # rubocop:enable Metrics/LineLength
 
-    attr_accessor :versions_fetcher, :gems_fetcher
-    attr_reader(:stored_gems,
-                :cache)
-
-    # rubocop:disable Metrics/LineLength
-    access_logger = Logger.new(Gemirro.configuration.server.access_log).tap do |logger|
+    access_logger = Logger.new(Utils.configuration.server.access_log).tap do |logger|
       ::Logger.class_eval { alias_method :write, :'<<' }
       logger.level = ::Logger::INFO
     end
     # rubocop:enable Metrics/LineLength
 
-    error_logger = File.new(Gemirro.configuration.server.error_log, 'a+')
+    error_logger = File.new(Utils.configuration.server.error_log, 'a+')
     error_logger.sync = true
 
     before do
       env['rack.errors'] = error_logger
-      Gemirro.configuration.logger = access_logger
+      Utils.configuration.logger = access_logger
     end
 
     ##
     # Configure server
     #
     configure do
-      config = Gemirro.configuration
+      config = Utils.configuration
       config.server.host = 'localhost' if config.server.host.nil?
       config.server.port = '2000' if config.server.port.nil?
+
+      set :static, true
 
       set :views, Gemirro::Configuration.views_directory
       set :port, config.server.port
@@ -74,10 +65,10 @@ module Gemirro
     #
     get('/gem/:gemname') do
       gems = Utils.gems_collection
-      @gem = gems.find_by_name(params[:gemname])
-      return not_found if @gem.nil?
+      gem = gems.find_by_name(params[:gemname])
+      return not_found if gem.nil?
 
-      erb(:gem)
+      erb(:gem, {}, gem: gem)
     end
 
     ##
@@ -87,8 +78,7 @@ module Gemirro
     # @return [nil]
     #
     get('/') do
-      @gems = Utils.gems_collection
-      erb(:index)
+      erb(:index, {}, gems: Utils.gems_collection)
     end
 
     ##
@@ -144,21 +134,21 @@ module Gemirro
       return unless gem_name && gem_version
 
       begin
-        gem = stored_gem(gem_name, gem_version)
+        gem = Utils.stored_gem(gem_name, gem_version)
         gem.gemspec = true if gem_type == GEMSPEC_TYPE
 
         # rubocop:disable Metrics/LineLength
-        return if gems_fetcher.gem_exists?(gem.filename(gem_version)) && gem_type == GEM_TYPE
-        return if gems_fetcher.gemspec_exists?(gem.gemspec_filename(gem_version)) && gem_type == GEMSPEC_TYPE
+        return if Utils.gems_fetcher.gem_exists?(gem.filename(gem_version)) && gem_type == GEM_TYPE
+        return if Utils.gems_fetcher.gemspec_exists?(gem.gemspec_filename(gem_version)) && gem_type == GEMSPEC_TYPE
         # rubocop:enable Metrics/LineLength
 
         Utils.logger
           .info("Try to download #{gem_name} with version #{gem_version}")
-        gems_fetcher.source.gems.clear
-        gems_fetcher.source.gems.push(gem)
-        gems_fetcher.fetch
+        Utils.gems_fetcher.source.gems.clear
+        Utils.gems_fetcher.source.gems.push(gem)
+        Utils.gems_fetcher.fetch
 
-        update_indexes if configuration.update_on_fetch
+        update_indexes if Utils.configuration.update_on_fetch
       rescue StandardError => e
         Utils.logger.error(e)
       end
@@ -170,7 +160,7 @@ module Gemirro
     # @return [Indexer]
     #
     def update_indexes
-      indexer = Gemirro::Indexer.new(configuration.destination)
+      indexer = Gemirro::Indexer.new(Utils.configuration.destination)
       indexer.only_origin = true
       indexer.ui = ::Gem::SilentUI.new
 
@@ -181,29 +171,6 @@ module Gemirro
       end
     rescue SystemExit => e
       Utils.logger.info(e.message)
-    end
-
-    ##
-    # @see Gemirro.configuration
-    #
-    def configuration
-      Gemirro.configuration
-    end
-
-    ##
-    # @see Gemirro::VersionsFetcher.fetch
-    #
-    def versions_fetcher
-      @versions_fetcher ||= Gemirro::VersionsFetcher
-                            .new(configuration.source).fetch
-    end
-
-    ##
-    # @return [Gemirro::GemsFetcher]
-    #
-    def gems_fetcher
-      @gems_fetcher ||= Gemirro::GemsFetcher.new(
-        configuration.source, versions_fetcher)
     end
 
     ##
@@ -272,23 +239,6 @@ module Gemirro
       end
     end
 
-    ##
-    # Try to cache gem classes
-    #
-    # @param [String] gem_name Gem name
-    # @return [Gem]
-    #
-    def stored_gem(gem_name, gem_version, platform = 'ruby')
-      @stored_gems ||= {}
-      # rubocop:disable Metrics/LineLength
-      @stored_gems[gem_name] = {} unless @stored_gems.key?(gem_name)
-      @stored_gems[gem_name][gem_version] = {} unless @stored_gems[gem_name].key?(gem_version)
-      @stored_gems[gem_name][gem_version][platform] ||= Gem.new(gem_name, gem_version, platform) unless @stored_gems[gem_name][gem_version].key?(platform)
-      # rubocop:enable Metrics/LineLength
-
-      @stored_gems[gem_name][gem_version][platform]
-    end
-
     helpers do
       ##
       # Return gem specification from gemname and version
@@ -298,7 +248,7 @@ module Gemirro
       # @return [::Gem::Specification]
       #
       def spec_for(gemname, version, platform = 'ruby')
-        gem = stored_gem(gemname, version.to_s, platform)
+        gem = Utils.stored_gem(gemname, version.to_s, platform)
         gemspec_path = File.join('quick',
                                  Gemirro::Configuration.marshal_identifier,
                                  gem.gemspec_filename)

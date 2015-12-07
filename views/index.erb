@@ -6,9 +6,9 @@
 </div>
 
 <div class="col-lg-12">
-  <% if @gems.any? %>
+  <% if gems.any? %>
     <div class="col-lg-6 center-block pull-none">
-      <% @gems.by_name do |name, versions| %>
+      <% gems.by_name do |name, versions| %>
         <div class="panel panel-info">
           <div class="panel-heading">
             <a href="<%= url("gem/#{name}") %>">

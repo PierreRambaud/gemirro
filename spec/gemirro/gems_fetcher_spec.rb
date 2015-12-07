@@ -64,7 +64,19 @@ module Gemirro
       gem = Gem.new('gemirro')
       version = ::Gem::Version.new('0.0.1')
       allow(@source).to receive(:fetch_gem)
-        .once.with('gemirro', version).and_return('gemirro')
+        .with('gemirro', version).and_return('gemirro')
+
+      expect(@fetcher.fetch_gem(gem, version)).to eq('gemirro')
+    end
+
+    it 'should fetch latest gem' do
+      allow(Utils.logger).to receive(:info)
+        .once.with('Fetching gemirro-0.0.1.gem')
+      MirrorDirectory.new('./').add_directory('gems')
+      gem = Gem.new('gemirro', :latest)
+      version = ::Gem::Version.new('0.0.1')
+      allow(@source).to receive(:fetch_gem)
+        .with('gemirro', version).and_return('gemirro')
 
       expect(@fetcher.fetch_gem(gem, version)).to eq('gemirro')
     end
@@ -74,6 +86,19 @@ module Gemirro
         .once.with('Fetching gemirro-0.0.1.gemspec.rz')
       MirrorDirectory.new('./').add_directory('quick/Marshal.4.8')
       gem = Gem.new('gemirro')
+      gem.gemspec = true
+      version = ::Gem::Version.new('0.0.1')
+      allow(@source).to receive(:fetch_gemspec)
+        .once.with('gemirro', version).and_return('gemirro')
+
+      expect(@fetcher.fetch_gemspec(gem, version)).to eq('gemirro')
+    end
+
+    it 'should fetch latest gemspec' do
+      allow(Utils.logger).to receive(:info)
+        .once.with('Fetching gemirro-0.0.1.gemspec.rz')
+      MirrorDirectory.new('./').add_directory('quick/Marshal.4.8')
+      gem = Gem.new('gemirro', :latest)
       gem.gemspec = true
       version = ::Gem::Version.new('0.0.1')
       allow(@source).to receive(:fetch_gemspec)

@@ -35,6 +35,8 @@ module Gemirro
       MirrorFile.new('/var/www/gemirro/test').write('content')
       Gemirro.configuration.destination = '/var/www/gemirro'
       Utils.instance_eval('@cache = nil')
+      Utils.instance_eval('@gems_orig_collection = nil')
+      Utils.instance_eval('@gems_source_collection = nil')
       FakeFS::FileSystem.clone(Gemirro::Configuration.views_directory)
     end
 
