@@ -34,7 +34,7 @@ module Gemirro
         .to eq('bad')
     end
 
-    it 'should install indicies' do
+    it 'should install indices' do
       dir = MirrorDirectory.new('/tmp')
       dir.add_directory('test')
       dir.add_directory('gem_generate_index/quick/Marshal.4.8')
@@ -89,12 +89,12 @@ module Gemirro
         .with('/tmp/gem_generate_index/specs.4.8.gz')
         .and_return(gzip_reader)
 
-      files = indexer.install_indicies
+      files = indexer.install_indices
       expect(files).to eq(['/tmp/gem_generate_index/specs.4.8.gz',
                            '/tmp/gem_generate_index/something.4.8.gz'])
     end
 
-    it 'should build indicies' do
+    it 'should build indices' do
       indexer = Indexer.new('/')
       dir = MirrorDirectory.new('/')
       dir.add_directory('gems')
@@ -129,8 +129,9 @@ module Gemirro
       allow(indexer).to receive(:build_marshal_gemspecs).once.and_return([
         "#{indexer.directory}/quick/gemirro-0.0.1.gemspec.rz"])
       allow(indexer).to receive(:compress_indicies).once.and_return(true)
+      allow(indexer).to receive(:compress_indices).once.and_return(true)
 
-      indexer.build_indicies
+      indexer.build_indices
     end
 
     it 'should update index and exit ruby gems' do
@@ -169,6 +170,7 @@ module Gemirro
       allow(indexer).to receive(:make_temp_directories)
       allow(indexer).to receive(:update_specs_index)
       allow(indexer).to receive(:compress_indicies)
+      allow(indexer).to receive(:compress_indices)
       allow(indexer).to receive(:build_zlib_file)
       allow(indexer).to receive(:build_marshal_gemspecs).once.and_return([
         "#{indexer.directory}/quick/gemirro-0.0.1.gemspec.rz"])

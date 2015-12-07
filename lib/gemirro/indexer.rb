@@ -80,6 +80,13 @@ module Gemirro
     end
 
     ##
+    # Generate indices on the destination directory
+    #
+    def install_indices
+      install_indicies
+    end
+
+    ##
     # Generate indicies on the destination directory
     #
     # @return [Array]
@@ -135,22 +142,34 @@ module Gemirro
     end
 
     ##
+    # Build indices
+    #
+    # @return [Array]
+    #
+    def build_indices
+      build_indicies
+    end
+
+    ##
     # Build indicies
     #
     # @return [Array]
     #
     def build_indicies
-      return if ::Gem::VERSION >= '2.5.0'
-
       specs = *map_gems_to_specs(gem_file_list)
       specs.reject! { |s| s.class != ::Gem::Specification }
       ::Gem::Specification.dirs = []
       ::Gem::Specification.all = specs
 
-      build_marshal_gemspecs
-      build_modern_indicies if @build_modern
-
-      compress_indicies
+      if ::Gem::VERSION >= '2.5.0'
+        build_marshal_gemspecs specs
+        build_modern_indices specs if @build_modern
+        compress_indices
+      else
+        build_marshal_gemspecs
+        build_modern_indicies if @build_modern
+        compress_indicies
+      end
     end
 
     ##
@@ -223,7 +242,11 @@ module Gemirro
 
       ::Gem::Specification.dirs = []
       ::Gem::Specification.all = *specs
-      files = build_marshal_gemspecs
+      if ::Gem::VERSION >= '2.5.0'
+        files = build_marshal_gemspecs specs
+      else
+        files = build_marshal_gemspecs
+      end
 
       ::Gem.time('Updated indexes') do
         update_specs_index(released, @dest_specs_index, @specs_index)
@@ -235,7 +258,11 @@ module Gemirro
                            @prerelease_specs_index)
       end
 
-      compress_indicies
+      if ::Gem::VERSION >= '2.5.0'
+        compress_indices
+      else
+        compress_indicies
+      end
 
       Utils.logger.info("Updating production dir #{@dest_directory}") if verbose
       files << @specs_index
