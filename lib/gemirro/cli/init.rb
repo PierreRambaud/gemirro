@@ -3,6 +3,7 @@ Gemirro::CLI.options.command 'init' do
   banner 'Usage: gemirro init [DIRECTORY] [OPTIONS]'
   description 'Sets up a new mirror'
   separator "\nOptions:\n"
+
   on :force, 'Force overwrite'
 
   run do |opts, args|

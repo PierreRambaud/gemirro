@@ -57,6 +57,26 @@ $ gemirro server --stop
 
 If you want to use a custom configuration file not located in the current directory, use the `-c` or `--config` option.
 
+### Available commands
+
+```
+Usage: gemirro [COMMAND] [OPTIONS]
+
+Options:
+
+    -v, --version      Shows the current version
+    -h, --help         Display this help message.
+
+Available commands:
+
+  index    Retrieve specs list from source.
+  init     Sets up a new mirror
+  list     List available gems.
+  server   Manage web server
+  update   Updates the list of Gems
+
+See `<command> --help` for more information on a specific command.
+```
 
 ## Apache configuration
 

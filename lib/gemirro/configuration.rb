@@ -24,6 +24,15 @@ module Gemirro
     attr_reader :mirror_gems_directory, :mirror_gemspecs_directory
     attr_accessor :source, :ignored_gems, :logger
 
+    LOGGER_LEVEL = {
+      'debug' =>  Logger::DEBUG,
+      'warning' => Logger::WARN,
+      'info' => Logger::INFO,
+      'unknown' => Logger::UNKNOWN,
+      'error' => Logger::ERROR,
+      'fatal' => Logger::FATAL
+    }
+
     ##
     # Returns the logger
     #
@@ -31,6 +40,18 @@ module Gemirro
     #
     def logger
       @logger ||= Logger.new(STDOUT)
+    end
+
+    ##
+    # Set log level
+    #
+    # @param [string]
+    #
+    # @return [Logger]
+    #
+    def logger_level=(level)
+      logger.level = LOGGER_LEVEL[level] if LOGGER_LEVEL.key?(level)
+      logger
     end
 
     ##

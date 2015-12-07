@@ -203,8 +203,13 @@ module Gemirro
             next
           end
 
-          abbreviate spec
-          sanitize spec
+          if ::Gem::VERSION >= '2.5.0'
+            spec.abbreviate
+            spec.sanitize
+          else
+            abbreviate spec
+            sanitize spec
+          end
 
           spec
         rescue SignalException

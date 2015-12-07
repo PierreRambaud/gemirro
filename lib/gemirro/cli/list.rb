@@ -5,10 +5,12 @@ Gemirro::CLI.options.command 'list' do
   separator "\nOptions:\n"
 
   on :c=, :config=, 'Path to the configuration file'
+  on :l=, :log_level=, 'Set logger level'
 
   run do |opts, _args|
     Gemirro::CLI.load_configuration(opts[:c])
     config = Gemirro.configuration
+    config.logger_level = opts[:l] if opts[:l]
 
     unless File.directory?(config.destination)
       config.logger.error("The directory #{config.destination} does not exist")
