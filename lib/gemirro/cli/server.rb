@@ -106,10 +106,12 @@ Gemirro::CLI.options.command 'server' do
       puts "#{$PROGRAM_NAME} is running"
     else
       puts "#{$PROGRAM_NAME} is not running"
+      abort
     end
   end
 
   def running?(process_id)
+    return false if process_id.nil?
     Process.getpgid(process_id.to_i) != -1
   rescue Errno::ESRCH
     false
