@@ -190,7 +190,13 @@ module Gemirro
         end
 
         begin
-          spec = ::Gem::Package.new(gemfile).spec
+          if ::Gem::Package.respond_to? :open
+            spec = ::Gem::Package
+                   .open(File.open(gemfile, 'rb'), 'r', &:metadata)
+          else
+            spec = ::Gem::Package.new(gemfile).spec
+          end
+
           spec.loaded_from = gemfile
 
           # HACK: fuck this shit - borks all tests that use pl1
