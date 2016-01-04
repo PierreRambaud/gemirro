@@ -16,8 +16,7 @@ module Gemirro
     attr_reader(:cache,
                 :versions_fetcher,
                 :gems_fetcher,
-                :gems_orig_collection,
-                :gems_source_collection,
+                :gems_collection,
                 :stored_gems)
     ##
     # Cache class to store marshal and data into files
@@ -36,21 +35,32 @@ module Gemirro
     # @return [Gemirro::GemVersionCollection]
     #
     def self.gems_collection(orig = true)
-      return @gems_orig_collection if orig && !@gems_orig_collection.nil?
-      return @gems_source_collection if !orig && !@gems_source_collection.nil?
+      @gems_collection = {} if @gems_collection.nil?
+
+      is_orig = orig ? 1 : 0
+      data = @gems_collection[is_orig]
+      data = { files: {}, values: nil } if data.nil?
+
+      file_paths = specs_files_paths(orig)
+      has_file_changed = false
+      file_paths.pmap do |file_path|
+        next if data[:files].key?(file_path) &&
+                data[:files][file_path] == File.mtime(file_path)
+        has_file_changed = true
+      end
+
+      # Return result if no file changed
+      return @gems_collection[is_orig][:values] unless has_file_changed
 
       gems = []
-      specs_files_paths(orig).pmap do |specs_file_path|
-        next unless File.exist?(specs_file_path)
-        spec_gems = cache.cache(File.basename(specs_file_path)) do
-          Marshal.load(Zlib::GzipReader.open(specs_file_path).read)
-        end
-        gems.concat(spec_gems)
+      file_paths.pmap do |file_path|
+        next unless File.exist?(file_path)
+        gems.concat(Marshal.load(Zlib::GzipReader.open(file_path).read))
+        data[:files][file_path] = File.mtime(file_path)
       end
 
       collection = GemVersionCollection.new(gems)
-      @gems_source_collection = collection unless orig
-      @gems_orig_collection = collection if orig
+      data[:values] = collection
 
       collection
     end
