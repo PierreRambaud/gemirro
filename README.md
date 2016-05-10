@@ -94,8 +94,8 @@ Create your VirtualHost and replace following `http://localhost:2000` with your 
   ServerName mirror.gemirro
   ProxyPreserveHost On
   ProxyRequests off
-  ProxyPass / http://localhost:2000
-  ProxyPassReverse / http://localhost:2000
+  ProxyPass / http://localhost:2000/
+  ProxyPassReverse / http://localhost:2000/
 </VirtualHost>
 ```
 
