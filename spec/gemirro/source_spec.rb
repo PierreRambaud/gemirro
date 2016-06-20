@@ -39,16 +39,16 @@ module Gemirro
     it 'should fetch gem' do
       Struct.new('FetchGem', :body)
       result = Struct::FetchGem.new(true)
-      allow(Http).to receive(:get).once.with(
-        'https://rubygems.org/gems/gemirro-0.0.1.gem').and_return(result)
+      allow(Http).to receive(:get).once
+        .with('https://rubygems.org/gems/gemirro-0.0.1.gem').and_return(result)
       expect(@source.fetch_gem('gemirro', '0.0.1')).to be_truthy
     end
 
     it 'should fetch gemspec' do
       Struct.new('FetchGemspec', :body)
       result = Struct::FetchGemspec.new(true)
-      allow(Http).to receive(:get).once.with(
-        'https://rubygems.org/quick/Marshal.4.8/gemirro-0.0.1.gemspec.rz').and_return(result)
+      allow(Http).to receive(:get).once
+        .with('https://rubygems.org/quick/Marshal.4.8/gemirro-0.0.1.gemspec.rz').and_return(result)
       expect(@source.fetch_gemspec('gemirro', '0.0.1')).to be_truthy
     end
 

@@ -126,8 +126,10 @@ module Gemirro
                      'gems/gemirro-0.0.2.gem',
                      'gems/gemirro-0.0.3.gem',
                      'gems/gemirral-0.0.1.gem'])
-      allow(indexer).to receive(:build_marshal_gemspecs).once.and_return([
-        "#{indexer.directory}/quick/gemirro-0.0.1.gemspec.rz"])
+
+      allow(indexer).to receive(:build_marshal_gemspecs).once
+        .and_return(["#{indexer.directory}/quick/gemirro-0.0.1.gemspec.rz"])
+
       allow(indexer).to receive(:compress_indicies).once.and_return(true)
       allow(indexer).to receive(:compress_indices).once.and_return(true)
 
@@ -172,8 +174,9 @@ module Gemirro
       allow(indexer).to receive(:compress_indicies)
       allow(indexer).to receive(:compress_indices)
       allow(indexer).to receive(:build_zlib_file)
-      allow(indexer).to receive(:build_marshal_gemspecs).once.and_return([
-        "#{indexer.directory}/quick/gemirro-0.0.1.gemspec.rz"])
+      # rubocop:disable Metrics/LineLength
+      allow(indexer).to receive(:build_marshal_gemspecs).once.and_return(["#{indexer.directory}/quick/gemirro-0.0.1.gemspec.rz"])
+      # rubocop:enable Metrics/LineLength
 
       allow(Marshal).to receive(:load).and_return(['content'])
       allow(Marshal).to receive(:dump).and_return(['content'])

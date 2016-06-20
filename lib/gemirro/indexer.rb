@@ -39,7 +39,7 @@ module Gemirro
       require 'zlib'
 
       unless defined?(Builder::XChar)
-        fail 'Gem::Indexer requires that the XML Builder ' \
+        raise 'Gem::Indexer requires that the XML Builder ' \
         'library be installed:' \
         "\n\tgem install builder"
       end
@@ -93,7 +93,7 @@ module Gemirro
     #
     def install_indicies
       Utils.logger
-        .debug("Downloading index into production dir #{@dest_directory}")
+           .debug("Downloading index into production dir #{@dest_directory}")
 
       files = @files
       files.delete @quick_marshal_dir if files.include? @quick_dir
@@ -253,11 +253,11 @@ module Gemirro
 
       ::Gem::Specification.dirs = []
       ::Gem::Specification.all = *specs
-      if ::Gem::VERSION >= '2.5.0'
-        files = build_marshal_gemspecs specs
-      else
-        files = build_marshal_gemspecs
-      end
+      files = if ::Gem::VERSION >= '2.5.0'
+                build_marshal_gemspecs specs
+              else
+                build_marshal_gemspecs
+              end
 
       ::Gem.time('Updated indexes') do
         update_specs_index(released, @dest_specs_index, @specs_index)

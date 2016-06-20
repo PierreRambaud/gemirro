@@ -30,11 +30,11 @@ module Gemirro
           if gem.gemspec?
             gemfile = fetch_gemspec(gem, version)
             Utils.configuration.mirror_gemspecs_directory
-              .add_file(gem.gemspec_filename(version), gemfile) if gemfile
+                 .add_file(gem.gemspec_filename(version), gemfile) if gemfile
           else
             gemfile = fetch_gem(gem, version)
             Utils.configuration.mirror_gems_directory
-              .add_file(gem.filename(version), gemfile) if gemfile
+                 .add_file(gem.filename(version), gemfile) if gemfile
           end
         end
       end

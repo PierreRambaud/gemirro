@@ -77,8 +77,7 @@ module Gemirro
         File.join(configuration.destination,
                   [specs_file_type,
                    marshal_version,
-                   'gz' + (orig ? '.orig' : '')
-                  ].join('.'))
+                   'gz' + (orig ? '.orig' : '')].join('.'))
       end
     end
 
@@ -118,8 +117,8 @@ module Gemirro
     # @return [Gemirro::GemsFetcher]
     #
     def self.gems_fetcher
-      @gems_fetcher ||= Gemirro::GemsFetcher.new(
-        configuration.source, versions_fetcher)
+      @gems_fetcher ||= Gemirro::GemsFetcher
+                        .new(configuration.source, versions_fetcher)
     end
 
     ##

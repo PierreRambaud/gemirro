@@ -9,8 +9,8 @@ module Gemirro
   class Server < Sinatra::Base
     # rubocop:disable Metrics/LineLength
     URI_REGEXP = /^(.*)-(\d+(?:\.\d+){1,4}.*?)(?:-x86-(?:(?:mswin|mingw)(?:32|64)).*?)?\.(gem(?:spec\.rz)?)$/
-    GEMSPEC_TYPE = 'gemspec.rz'
-    GEM_TYPE = 'gem'
+    GEMSPEC_TYPE = 'gemspec.rz'.freeze
+    GEM_TYPE = 'gem'.freeze
 
     access_logger = Logger.new(Utils.configuration.server.access_log).tap do |logger|
       ::Logger.class_eval { alias_method :write, :'<<' }
@@ -143,7 +143,7 @@ module Gemirro
         # rubocop:enable Metrics/LineLength
 
         Utils.logger
-          .info("Try to download #{gem_name} with version #{gem_version}")
+             .info("Try to download #{gem_name} with version #{gem_version}")
         Utils.gems_fetcher.source.gems.clear
         Utils.gems_fetcher.source.gems.push(gem)
         Utils.gems_fetcher.fetch

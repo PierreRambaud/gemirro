@@ -11,7 +11,7 @@ module Gemirro
       strict: true,
       help: true,
       banner: 'Usage: gemirro [COMMAND] [OPTIONS]'
-    }
+    }.freeze
 
     ##
     # @return [Slop]

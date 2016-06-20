@@ -43,7 +43,7 @@ Gemirro::CLI.options.command 'server' do
 
   def create_pid
     File.open(@pid_file, 'w') do |f|
-      f.write("#{Process.pid}")
+      f.write(Process.pid.to_s)
     end
   rescue Errno::EACCES
     STDOUT.reopen @orig_stdout

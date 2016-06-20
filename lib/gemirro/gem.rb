@@ -15,7 +15,7 @@ module Gemirro
   class Gem
     attr_reader :name, :requirement, :platform, :version
     attr_accessor :gemspec
-    ONLY_LATEST = [:latest, :newest]
+    ONLY_LATEST = [:latest, :newest].freeze
 
     ##
     # Returns a `Gem::Version` instance based on the specified requirement.

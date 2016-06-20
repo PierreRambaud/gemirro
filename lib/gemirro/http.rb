@@ -21,7 +21,7 @@ module Gemirro
       response = client.get(url, follow_redirect: true)
 
       unless HTTP::Status.successful?(response.status)
-        fail HTTPClient::BadResponseError, response.reason
+        raise HTTPClient::BadResponseError, response.reason
       end
 
       response

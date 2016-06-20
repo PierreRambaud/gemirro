@@ -25,13 +25,13 @@ module Gemirro
     attr_accessor :source, :ignored_gems, :logger
 
     LOGGER_LEVEL = {
-      'debug' =>  Logger::DEBUG,
+      'debug' => Logger::DEBUG,
       'warning' => Logger::WARN,
       'info' => Logger::INFO,
       'unknown' => Logger::UNKNOWN,
       'error' => Logger::ERROR,
       'fatal' => Logger::FATAL
-    }
+    }.freeze
 
     ##
     # Returns the logger
