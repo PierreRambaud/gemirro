@@ -80,7 +80,7 @@ See `<command> --help` for more information on a specific command.
 
 ## Apache configuration
 
-You must active the apache `proxy` module.
+You must activate the apache `proxy` module.
 
 ```bash
 $ sudo a2enmod proxy
