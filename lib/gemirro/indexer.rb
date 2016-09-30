@@ -184,7 +184,7 @@ module Gemirro
         Utils.logger.info("[#{index + 1}/#{gems.size}]: Processing #{gemfile.split('/')[-1]}")
         # rubocop:enable Metrics/LineLength
 
-        if File.size(gemfile) == 0
+        if File.size(gemfile).zero?
           Utils.logger.warn("Skipping zero-length gem: #{gemfile}")
           next
         end
@@ -205,6 +205,13 @@ module Gemirro
             exp << " (#{spec.original_name})" if
               spec.original_name != spec.full_name
             msg = "Skipping misnamed gem: #{gemfile} should be named #{exp}"
+            Utils.logger.warn(msg)
+            next
+          end
+
+          version = spec.version.version
+          unless version =~ /^\d+\.\d+\.\d+.*/
+            msg = "Skipping gem #{spec.full_name} - invalid version #{version}"
             Utils.logger.warn(msg)
             next
           end
