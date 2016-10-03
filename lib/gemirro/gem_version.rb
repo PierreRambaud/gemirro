@@ -55,8 +55,8 @@ module Gemirro
     def <=>(other)
       sort = other.name <=> @name
       sort = version <=> other.version if sort.zero?
-      sort = (other.ruby? && !ruby?) ? 1 : -1 if sort.zero? &&
-                                                 ruby? != other.ruby?
+      sort = other.ruby? && !ruby? ? 1 : -1 if sort.zero? &&
+                                               ruby? != other.ruby?
       sort = other.platform <=> @platform if sort.zero?
 
       sort

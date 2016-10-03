@@ -58,7 +58,7 @@ module Gemirro
     # @return [TrueClass|FalseClass]
     #
     def version?
-      version && !version.segments.reject { |s| s == 0 }.empty?
+      version && !version.segments.reject(&:zero?).empty?
     end
 
     ##
