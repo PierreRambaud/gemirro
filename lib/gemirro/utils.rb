@@ -128,6 +128,7 @@ module Gemirro
     # @return [Gem]
     #
     def self.stored_gem(gem_name, gem_version, platform = 'ruby')
+      platform = 'ruby' if platform.nil?
       @stored_gems ||= {}
       # rubocop:disable Metrics/LineLength
       @stored_gems[gem_name] = {} unless @stored_gems.key?(gem_name)

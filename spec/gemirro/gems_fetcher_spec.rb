@@ -64,7 +64,7 @@ module Gemirro
       gem = Gem.new('gemirro')
       version = ::Gem::Version.new('0.0.1')
       allow(@source).to receive(:fetch_gem)
-        .with('gemirro', version).and_return('gemirro')
+        .with('gemirro-0.0.1.gem').and_return('gemirro')
 
       expect(@fetcher.fetch_gem(gem, version)).to eq('gemirro')
     end
@@ -76,7 +76,7 @@ module Gemirro
       gem = Gem.new('gemirro', :latest)
       version = ::Gem::Version.new('0.0.1')
       allow(@source).to receive(:fetch_gem)
-        .with('gemirro', version).and_return('gemirro')
+        .with('gemirro-0.0.1.gem').and_return('gemirro')
 
       expect(@fetcher.fetch_gem(gem, version)).to eq('gemirro')
     end
@@ -89,7 +89,7 @@ module Gemirro
       gem.gemspec = true
       version = ::Gem::Version.new('0.0.1')
       allow(@source).to receive(:fetch_gemspec)
-        .once.with('gemirro', version).and_return('gemirro')
+        .once.with('gemirro-0.0.1.gemspec.rz').and_return('gemirro')
 
       expect(@fetcher.fetch_gemspec(gem, version)).to eq('gemirro')
     end
@@ -102,7 +102,7 @@ module Gemirro
       gem.gemspec = true
       version = ::Gem::Version.new('0.0.1')
       allow(@source).to receive(:fetch_gemspec)
-        .once.with('gemirro', version).and_return('gemirro')
+        .once.with('gemirro-0.0.1.gemspec.rz').and_return('gemirro')
 
       expect(@fetcher.fetch_gemspec(gem, version)).to eq('gemirro')
     end

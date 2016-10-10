@@ -8,7 +8,7 @@ module Gemirro
   #
   class Server < Sinatra::Base
     # rubocop:disable Metrics/LineLength
-    URI_REGEXP = /^(.*)-(\d+(?:\.\d+){1,4}.*?)(?:-x86-(?:(?:mswin|mingw)(?:32|64)).*?)?\.(gem(?:spec\.rz)?)$/
+    URI_REGEXP = /^(.*)-(\d+(?:\.\d+){1,4}.*?)(?:-(x86-(?:(?:mswin|mingw)(?:32|64)).*?|java))?\.(gem(?:spec\.rz)?)$/
     GEMSPEC_TYPE = 'gemspec.rz'.freeze
     GEM_TYPE = 'gem'.freeze
 
@@ -130,11 +130,11 @@ module Gemirro
       result = name.match(URI_REGEXP)
       return unless result
 
-      gem_name, gem_version, gem_type = result.captures
+      gem_name, gem_version, gem_platform, gem_type = result.captures
       return unless gem_name && gem_version
 
       begin
-        gem = Utils.stored_gem(gem_name, gem_version)
+        gem = Utils.stored_gem(gem_name, gem_version, gem_platform)
         gem.gemspec = true if gem_type == GEMSPEC_TYPE
 
         # rubocop:disable Metrics/LineLength

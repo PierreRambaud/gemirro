@@ -58,26 +58,25 @@ module Gemirro
     # @param [String] version
     # @return [String]
     #
-    def fetch_gem(name, version)
+    def fetch_gem(filename)
       Utils.logger.info(
-        "Fetching gem #{name}, #{version} on #{@name} (#{@host})"
+        "Fetching gem #{filename} on #{@host}"
       )
-      Http.get(host + "/gems/#{name}-#{version}.gem").body
+      Http.get(host + "/gems/#{filename}").body
     end
 
     ##
     # Fetches the `.gemspec.rz` file of a given Gem and version.
     #
-    # @param [String] name
-    # @param [String] version
+    # @param [String] filename
     # @return [String]
     #
-    def fetch_gemspec(name, version)
+    def fetch_gemspec(filename)
       Utils.logger.info(
-        "Fetching gemspec #{name}, #{version} on #{@name} (#{@host})"
+        "Fetching gemspec #{filename} on #{@host}"
       )
       marshal = Gemirro::Configuration.marshal_identifier
-      Http.get(host + "/quick/#{marshal}/#{name}-#{version}.gemspec.rz").body
+      Http.get(host + "/quick/#{marshal}/#{filename}").body
     end
 
     ##

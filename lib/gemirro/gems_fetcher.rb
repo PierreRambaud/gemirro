@@ -68,7 +68,8 @@ module Gemirro
     # @return [String]
     #
     def fetch_gemspec(gem, version)
-      filename  = gem.gemspec_filename(version)
+      filename = gem.gemspec_filename(version)
+      puts filename.inspect
       satisfied = if gem.only_latest?
                     true
                   else
@@ -81,7 +82,7 @@ module Gemirro
       end
 
       Utils.logger.info("Fetching #{filename}")
-      fetch_from_source(gem, version, true)
+      fetch_from_source(filename, gem, version, true)
     end
 
     ##
@@ -108,21 +109,21 @@ module Gemirro
       Utils.configuration.ignore_gem(gem.name, version)
       Utils.logger.info("Fetching #{filename}")
 
-      fetch_from_source(gem, version)
+      fetch_from_source(filename, gem, version)
     end
 
     ##
     #
-    #
+    # @param [String] filename
     # @param [Gemirro::Gem] gem
     # @param [Gem::Version] version
     # @return [String]
     #
-    def fetch_from_source(gem, version, gemspec = false)
+    def fetch_from_source(filename, gem, version, gemspec = false)
       data = nil
       begin
-        data = @source.fetch_gem(gem.name, version) unless gemspec
-        data = @source.fetch_gemspec(gem.name, version) if gemspec
+        data = @source.fetch_gem(filename) unless gemspec
+        data = @source.fetch_gemspec(filename) if gemspec
       rescue => e
         filename = gem.filename(version)
         Utils.logger.error("Failed to retrieve #{filename}: #{e.message}")
