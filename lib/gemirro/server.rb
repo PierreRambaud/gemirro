@@ -111,7 +111,8 @@ module Gemirro
       resource = "#{settings.public_folder}#{path}"
 
       # Try to download gem
-      fetch_gem(resource) unless File.exist?(resource)
+      fetch_gem(resource) unless File.exist?(resource) &&
+                                 Utils.configuration.fetch_gem
       # If not found again, return a 404
       return not_found unless File.exist?(resource)
 
@@ -255,10 +256,13 @@ module Gemirro
         spec_file = File.join(settings.public_folder,
                               gemspec_path)
         fetch_gem(gemspec_path) unless File.exist?(spec_file)
+
+        return unless File.exist?(spec_file)
+
         File.open(spec_file, 'r') do |uz_file|
           uz_file.binmode
           Marshal.load(::Gem.inflate(uz_file.read))
-        end if File.exist?(spec_file)
+        end
       end
     end
   end

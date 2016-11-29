@@ -11,7 +11,8 @@ module Gemirro
         error_log: '/tmp/gemirro.access.log'
       },
 
-      update_on_fetch: true
+      update_on_fetch: true,
+      fetch_gem: true
     }
     @configuration ||= Configuration.new(default_config)
   end

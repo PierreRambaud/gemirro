@@ -29,12 +29,16 @@ module Gemirro
         versions_for(gem).each do |version|
           if gem.gemspec?
             gemfile = fetch_gemspec(gem, version)
-            Utils.configuration.mirror_gemspecs_directory
-                 .add_file(gem.gemspec_filename(version), gemfile) if gemfile
+            if gemfile
+              Utils.configuration.mirror_gemspecs_directory
+                   .add_file(gem.gemspec_filename(version), gemfile)
+            end
           else
             gemfile = fetch_gem(gem, version)
-            Utils.configuration.mirror_gems_directory
-                 .add_file(gem.filename(version), gemfile) if gemfile
+            if gemfile
+              Utils.configuration.mirror_gems_directory
+                   .add_file(gem.filename(version), gemfile)
+            end
           end
         end
       end

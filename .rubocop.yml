@@ -29,3 +29,7 @@ Metrics/PerceivedComplexity:
 Metrics/AbcSize:
   Exclude:
     - lib/**/*
+Metrics/BlockLength:
+  Exclude:
+    - lib/**/*
+    - spec/**/*
