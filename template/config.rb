@@ -25,7 +25,6 @@ Gemirro.configuration.configure do
   #
   # update_on_fetch false
 
-
   # If you don't want to fetch gem if file does not exists when
   # running gemirro server.
   #
