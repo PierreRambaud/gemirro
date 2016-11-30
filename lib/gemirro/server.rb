@@ -111,8 +111,7 @@ module Gemirro
       resource = "#{settings.public_folder}#{path}"
 
       # Try to download gem
-      fetch_gem(resource) unless File.exist?(resource) &&
-                                 Utils.configuration.fetch_gem
+      fetch_gem(resource) unless File.exist?(resource)
       # If not found again, return a 404
       return not_found unless File.exist?(resource)
 
@@ -127,6 +126,7 @@ module Gemirro
     # @return [Indexer]
     #
     def fetch_gem(resource)
+      return unless Utils.configuration.fetch_gem
       name = File.basename(resource)
       result = name.match(URI_REGEXP)
       return unless result
