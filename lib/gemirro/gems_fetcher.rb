@@ -73,7 +73,6 @@ module Gemirro
     #
     def fetch_gemspec(gem, version)
       filename = gem.gemspec_filename(version)
-      puts filename.inspect
       satisfied = if gem.only_latest?
                     true
                   else
