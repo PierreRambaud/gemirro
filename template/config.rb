@@ -30,7 +30,7 @@ Gemirro.configuration.configure do
   #
   # fetch_gem false
 
-  # You must define a source wich where gems will be downloaded.
+  # You must define a source which where gems will be downloaded.
   # All gem in the block will be downloaded with the update command.
   # Other gems will be downloaded with the server.
   define_source 'rubygems', 'http://rubygems.org' do
