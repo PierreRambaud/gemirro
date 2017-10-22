@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 require 'rack/test'
 require 'json'
-require 'pmap'
+require 'parallel'
 require 'gemirro/cache'
 require 'gemirro/utils'
 require 'gemirro/mirror_directory'

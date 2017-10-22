@@ -190,7 +190,7 @@ module Gemirro
     #
     def query_gems_list
       Utils.gems_collection(false) # load collection
-      gems = query_gems.pmap do |query_gem|
+      gems = Parallel.map(query_gems) do |query_gem|
         gem_dependencies(query_gem)
       end
 
@@ -214,19 +214,19 @@ module Gemirro
 
         return '' if gem_collection.nil?
 
-        gem_collection = gem_collection.pmap do |gem|
+        gem_collection = Parallel.map(gem_collection) do |gem|
           [gem, spec_for(gem.name, gem.number, gem.platform)]
         end
         gem_collection.reject! do |_, spec|
           spec.nil?
         end
 
-        gem_collection.pmap do |gem, spec|
+        Parallel.map(gem_collection) do |gem, spec|
           dependencies = spec.dependencies.select do |d|
             d.type == :runtime
           end
 
-          dependencies = dependencies.pmap do |d|
+          dependencies = Parallel.map(dependencies) do |d|
             [d.name.is_a?(Array) ? d.name.first : d.name, d.requirement.to_s]
           end
 
