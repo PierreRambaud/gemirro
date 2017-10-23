@@ -43,7 +43,7 @@ module Gemirro
 
       file_paths = specs_files_paths(orig)
       has_file_changed = false
-      file_paths.pmap do |file_path|
+      Parallel.map(file_paths) do |file_path|
         next if data[:files].key?(file_path) &&
                 data[:files][file_path] == File.mtime(file_path)
         has_file_changed = true
@@ -53,7 +53,7 @@ module Gemirro
       return @gems_collection[is_orig][:values] unless has_file_changed
 
       gems = []
-      file_paths.pmap do |file_path|
+      Parallel.map(file_paths) do |file_path|
         next unless File.exist?(file_path)
         gems.concat(Marshal.load(Zlib::GzipReader.open(file_path).read))
         data[:files][file_path] = File.mtime(file_path)
@@ -73,7 +73,7 @@ module Gemirro
     #
     def self.specs_files_paths(orig = true)
       marshal_version = Gemirro::Configuration.marshal_version
-      specs_file_types.pmap do |specs_file_type|
+      Parallel.map(specs_file_types) do |specs_file_type|
         File.join(configuration.destination,
                   [specs_file_type,
                    marshal_version,

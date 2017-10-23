@@ -11,7 +11,7 @@ require 'httpclient'
 require 'logger'
 require 'stringio'
 require 'json'
-require 'pmap'
+require 'parallel'
 require 'tempfile'
 
 unless $LOAD_PATH.include?(File.expand_path('../', __FILE__))
