@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 module Gemirro
   ##
   # The VersionsFetcher class is used for retrieving the file that contains all

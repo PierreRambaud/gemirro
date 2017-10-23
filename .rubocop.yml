@@ -7,29 +7,24 @@ AllCops:
   Exclude:
     - files/**/*
     - templates/**/*
+Naming/FileName:
+  Exclude:
+    - Rakefile
 ModuleLength:
-  Exclude:
-    - lib/**/*
-    - spec/**/*
+  Enabled: false
 MethodLength:
-  Exclude:
-    - lib/**/*
+  Enabled: false
 ClassLength:
-  Exclude:
-    - lib/**/*
+  Enabled: false
 ParameterLists:
-  Exclude:
-    - lib/**/*
+  Enabled: false
 Metrics/CyclomaticComplexity:
-  Exclude:
-    - lib/**/*
+  Enabled: false
 Metrics/PerceivedComplexity:
-  Exclude:
-    - lib/**/*
+  Enabled: false
 Metrics/AbcSize:
-  Exclude:
-    - lib/**/*
+  Enabled: false
 Metrics/BlockLength:
-  Exclude:
-    - lib/**/*
-    - spec/**/*
+  Enabled: false
+Security/MarshalLoad:
+  Enabled: false

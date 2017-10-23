@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 require 'date'
 require File.expand_path('../lib/gemirro/version', __FILE__)
 
@@ -18,18 +17,18 @@ Gem::Specification.new do |s|
 
   s.required_ruby_version = '>= 1.9.2'
 
-  s.add_dependency 'slop', '~>3.6'
-  s.add_dependency 'httpclient', '~>2.6'
-  s.add_dependency 'confstruct', '~>1.0'
   s.add_dependency 'builder', '~>3.2'
-  s.add_dependency 'sinatra', '~>1.4'
-  s.add_dependency 'thin', '~>1.6'
+  s.add_dependency 'confstruct', '~>1.0'
+  s.add_dependency 'httpclient', '~>2.8'
   s.add_dependency 'parallel', '~>1.12'
+  s.add_dependency 'sinatra', '~>2.0'
+  s.add_dependency 'slop', '~>3.6'
+  s.add_dependency 'thin', '~>1.7'
 
-  s.add_development_dependency 'rake', '~>10.4'
-  s.add_development_dependency 'rack-test', '~>0.6'
-  s.add_development_dependency 'rspec', '~>3.2'
-  s.add_development_dependency 'simplecov', '~>0.9'
-  s.add_development_dependency 'rubocop', '~>0.35'
-  s.add_development_dependency 'fakefs', '~>0.6.7'
+  s.add_development_dependency 'fakefs', '~>0.11'
+  s.add_development_dependency 'rack-test', '~>0.7'
+  s.add_development_dependency 'rake', '~>12.1'
+  s.add_development_dependency 'rspec', '~>3.7'
+  s.add_development_dependency 'rubocop', '~>0.51'
+  s.add_development_dependency 'simplecov', '~>0.15'
 end

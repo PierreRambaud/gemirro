@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 module Gemirro
   ##
   # The Indexer class is responsible for downloading useful file directly
@@ -157,7 +155,7 @@ module Gemirro
     #
     def build_indicies
       specs = *map_gems_to_specs(gem_file_list)
-      specs.reject! { |s| s.class != ::Gem::Specification }
+      specs.select! { |s| s.class == ::Gem::Specification }
       ::Gem::Specification.dirs = []
       ::Gem::Specification.all = specs
 
@@ -190,12 +188,12 @@ module Gemirro
         end
 
         begin
-          if ::Gem::Package.respond_to? :open
-            spec = ::Gem::Package
-                   .open(File.open(gemfile, 'rb'), 'r', &:metadata)
-          else
-            spec = ::Gem::Package.new(gemfile).spec
-          end
+          spec = if ::Gem::Package.respond_to? :open
+                   ::Gem::Package
+                     .open(File.open(gemfile, 'rb'), 'r', &:metadata)
+                 else
+                   ::Gem::Package.new(gemfile).spec
+                 end
 
           spec.loaded_from = gemfile
 

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 Gemirro::CLI.options.command 'server' do
   banner 'Usage: gemirro server [OPTIONS]'
   description 'Manage web server'

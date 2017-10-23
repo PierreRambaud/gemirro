@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Configuration
 module Gemirro
   ##
@@ -22,8 +21,8 @@ module Gemirro
   # destination directory, source, ignored Gems, etc.
   #
   class Configuration < Confstruct::Configuration
-    attr_reader :mirror_gems_directory, :mirror_gemspecs_directory
-    attr_accessor :source, :ignored_gems, :logger
+    attr_accessor :source
+    attr_writer :logger
 
     LOGGER_LEVEL = {
       'debug' => Logger::DEBUG,

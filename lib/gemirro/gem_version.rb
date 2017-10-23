@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 module Gemirro
   ##
   # The Gem class contains data about a Gem such as the name, requirement as
@@ -16,7 +15,7 @@ module Gemirro
   #
   class GemVersion
     include Comparable
-    attr_reader :name, :number, :platform, :version
+    attr_reader :name, :number, :platform
 
     ##
     # @param [String] name

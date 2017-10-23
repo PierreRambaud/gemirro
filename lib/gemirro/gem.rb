@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 module Gemirro
   ##
   # The Gem class contains data about a Gem such as the name, requirement as
@@ -13,9 +12,9 @@ module Gemirro
   #  @return [Gem::Version]
   #
   class Gem
-    attr_reader :name, :requirement, :platform, :version
+    attr_reader :name, :requirement, :platform
     attr_accessor :gemspec
-    ONLY_LATEST = [:latest, :newest].freeze
+    ONLY_LATEST = %i[latest newest].freeze
 
     ##
     # Returns a `Gem::Version` instance based on the specified requirement.

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 require 'rack/test'
 require 'json'
 require 'parallel'
@@ -43,7 +42,8 @@ module Gemirro
     context 'HTML render' do
       it 'should display index page' do
         allow(Logger).to receive(:new).twice.and_return(@fake_logger)
-        allow(@fake_logger).to receive(:tap).and_return(nil)
+        allow(@fake_logger).to receive(:tap)
+          .and_return(nil)
           .and_yield(@fake_logger)
 
         get '/'

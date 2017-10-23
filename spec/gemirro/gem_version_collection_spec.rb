@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 require 'spec_helper'
 require 'gemirro/gem_version_collection'
 require 'gemirro/gem_version'
@@ -28,7 +27,7 @@ module Gemirro
                                                             '0.0.1',
                                                             'ruby')])
       expect(collection.by_name.first[0]).to eq('alumina')
-      values = %w(alumina subzero)
+      values = %w[alumina subzero]
       collection.by_name do |name, _version|
         expect(name).to eq(values.shift)
       end

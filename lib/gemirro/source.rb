@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 module Gemirro
   ##
   # The Source class is used for storing information about an external source

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 module Gemirro
   ##
   # The Utils class is responsible for executing specific traitments
@@ -43,17 +41,17 @@ module Gemirro
 
       file_paths = specs_files_paths(orig)
       has_file_changed = false
-      Parallel.map(file_paths) do |file_path|
+      Parallel.map(file_paths, in_threads: 4) do |file_path|
         next if data[:files].key?(file_path) &&
                 data[:files][file_path] == File.mtime(file_path)
         has_file_changed = true
       end
 
       # Return result if no file changed
-      return @gems_collection[is_orig][:values] unless has_file_changed
+      return data[:values] if !has_file_changed && !data[:values].nil?
 
       gems = []
-      Parallel.map(file_paths) do |file_path|
+      Parallel.map(file_paths, in_threads: 4) do |file_path|
         next unless File.exist?(file_path)
         gems.concat(Marshal.load(Zlib::GzipReader.open(file_path).read))
         data[:files][file_path] = File.mtime(file_path)
@@ -73,7 +71,7 @@ module Gemirro
     #
     def self.specs_files_paths(orig = true)
       marshal_version = Gemirro::Configuration.marshal_version
-      Parallel.map(specs_file_types) do |specs_file_type|
+      Parallel.map(specs_file_types, in_threads: 4) do |specs_file_type|
         File.join(configuration.destination,
                   [specs_file_type,
                    marshal_version,
@@ -87,7 +85,7 @@ module Gemirro
     # @return [Array]
     #
     def self.specs_file_types
-      [:specs, :prerelease_specs]
+      %i[specs prerelease_specs]
     end
 
     ##

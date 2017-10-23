@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 module Gemirro
   ##
   # The Cache class contains all method to store marshal informations

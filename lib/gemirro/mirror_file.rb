@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 module Gemirro
   ##
   # Similar to {Gemirro::MirrorDirectory} the MirrorFile class is used to

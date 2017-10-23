@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 Gemirro::CLI.options.command 'list' do
   banner 'Usage: gemirro list [OPTIONS]'
   description 'List available gems.'

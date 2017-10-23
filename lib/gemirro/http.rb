@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 module Gemirro
   ##
   # The Http class is responsible for executing GET request

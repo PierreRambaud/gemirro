@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 require 'spec_helper'
 require 'rubygems/indexer'
 require 'tempfile'
@@ -127,7 +126,8 @@ module Gemirro
                      'gems/gemirro-0.0.3.gem',
                      'gems/gemirral-0.0.1.gem'])
 
-      allow(indexer).to receive(:build_marshal_gemspecs).once
+      allow(indexer).to receive(:build_marshal_gemspecs)
+        .once
         .and_return(["#{indexer.directory}/quick/gemirro-0.0.1.gemspec.rz"])
 
       allow(indexer).to receive(:compress_indicies).once.and_return(true)

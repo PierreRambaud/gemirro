@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 Gemirro::CLI.options.command 'init' do
   banner 'Usage: gemirro init [DIRECTORY] [OPTIONS]'
   description 'Sets up a new mirror'

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 Gemirro::CLI.options.command 'index' do
   banner 'Usage: gemirro index [OPTIONS]'
   description 'Retrieve specs list from source.'

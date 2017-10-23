@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 module Gemirro
   ##
   # The VersionCollection class contains a collection of ::Gem::Version

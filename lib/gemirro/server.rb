@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 require 'sinatra/base'
 require 'thin'
 
@@ -190,14 +189,12 @@ module Gemirro
     #
     def query_gems_list
       Utils.gems_collection(false) # load collection
-      gems = Parallel.map(query_gems) do |query_gem|
+      gems = Parallel.map(query_gems, in_threads: 4) do |query_gem|
         gem_dependencies(query_gem)
       end
 
       gems.flatten!
-      gems = gems.select do |g|
-        !g.empty?
-      end
+      gems.reject!(&:empty?)
       gems
     end
 
@@ -214,19 +211,19 @@ module Gemirro
 
         return '' if gem_collection.nil?
 
-        gem_collection = Parallel.map(gem_collection) do |gem|
+        gem_collection = Parallel.map(gem_collection, in_threads: 4) do |gem|
           [gem, spec_for(gem.name, gem.number, gem.platform)]
         end
         gem_collection.reject! do |_, spec|
           spec.nil?
         end
 
-        Parallel.map(gem_collection) do |gem, spec|
+        Parallel.map(gem_collection, in_threads: 4) do |gem, spec|
           dependencies = spec.dependencies.select do |d|
             d.type == :runtime
           end
 
-          dependencies = Parallel.map(dependencies) do |d|
+          dependencies = Parallel.map(dependencies, in_threads: 4) do |d|
             [d.name.is_a?(Array) ? d.name.first : d.name, d.requirement.to_s]
           end
 

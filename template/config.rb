@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # This is the main configuration file for your RubyGems mirror. Here you can
 # change settings such as the location to store Gem files in and what source
 # and Gems you'd like to mirror at start.

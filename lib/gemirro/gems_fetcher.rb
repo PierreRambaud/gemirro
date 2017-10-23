@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 module Gemirro
   ##
   # The GemsFetcher class is responsible for downloading Gems from an external
@@ -127,7 +126,7 @@ module Gemirro
       begin
         data = @source.fetch_gem(filename) unless gemspec
         data = @source.fetch_gemspec(filename) if gemspec
-      rescue => e
+      rescue StandardError => e
         filename = gem.filename(version)
         Utils.logger.error("Failed to retrieve #{filename}: #{e.message}")
         Utils.logger.debug("Adding #{filename} to the list of ignored Gems")

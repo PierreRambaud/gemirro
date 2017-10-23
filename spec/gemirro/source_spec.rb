@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 require 'spec_helper'
 require 'gemirro/http'
 require 'gemirro/utils'
