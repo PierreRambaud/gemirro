@@ -10,19 +10,19 @@
       <div class="panel panel-info">
         <div class="panel-heading">
           <a href="<%= url("gem/#{name}") %>">
-            <h2 class="panel-title"><%= name %> <span class="badge pull-right"><%= versions.newest.number %></span></h2>
+            <h2 class="panel-title"><%= escape(name) %> <span class="badge pull-right"><%= escape(versions.newest.number) %></span></h2>
           </a>
         </div>
         <div class="panel-body">
           <% newest_gem = versions.newest %>
           <% if spec = spec_for(name, newest_gem.number, newest_gem.platform) %>
-            <p><%= spec.description %></p>
+            <p><%= escape(spec.description) %></p>
 
             <h3>Dependencies</h3>
             <ul class="list-group">
               <% spec.dependencies.each do |dependency| %>
                 <li class="list-group-item">
-                  <a href="<%= url("gem/#{dependency.name}") %>"><%= [dependency.name, dependency.requirement].join(' ') %></a>
+                  <a href="<%= url("gem/#{dependency.name}") %>"><%= escape([dependency.name, dependency.requirement].join(' ')) %></a>
                 </li>
               <% end %>
             </ul>
@@ -31,7 +31,7 @@
             <ul class="list-group">
               <% spec.authors.each do |author| %>
                 <li class="list-group-item">
-                  <a href="<%= spec.homepage %>"><%= author %></a>
+                  <a href="<%= escape(spec.homepage) %>"><%= escape(author) %></a>
                 </li>
               <% end %>
             </ul>
@@ -42,9 +42,9 @@
           <% versions.each.reverse_each do |version| %>
             <li class="list-group-item clearfix">
               <p class="pull-left">
-                <code>gem install <%= version.name %> -v "<%= version.number %>"</code>
+                <code>gem install <%= escape(version.name) %> -v "<%= escape(version.number) %>"</code>
                 <% unless version.platform =~ /^ruby/i %>
-                  <small class="platform"><%= version.platform %></small>
+                  <small class="platform"><%= escape(version.platform) %></small>
                 <% end %>
               </p>
               <div class="pull-right">

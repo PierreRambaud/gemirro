@@ -261,6 +261,16 @@ module Gemirro
           Marshal.load(::Gem.inflate(uz_file.read))
         end
       end
+
+      ##
+      # Escape string
+      #
+      # @param [String] string
+      # @return [String]
+      #
+      def escape(string)
+        Rack::Utils.escape_html(string)
+      end
     end
   end
 end

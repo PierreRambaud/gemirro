@@ -19,6 +19,7 @@ Gem::Specification.new do |s|
 
   s.add_dependency 'builder', '~>3.2'
   s.add_dependency 'confstruct', '~>1.0'
+  s.add_dependency 'erubis', '~>2.7'
   s.add_dependency 'httpclient', '~>2.8'
   s.add_dependency 'parallel', '~>1.12'
   s.add_dependency 'sinatra', '~>2.0'

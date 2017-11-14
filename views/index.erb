@@ -12,21 +12,21 @@
         <div class="panel panel-info">
           <div class="panel-heading">
             <a href="<%= url("gem/#{name}") %>">
-              <h2 class="panel-title"><%= name %> <span class="badge pull-right"><%= versions.newest.number %></span></h2>
+              <h2 class="panel-title"><%= escape(name) %> <span class="badge pull-right"><%= escape(versions.newest.number) %></span></h2>
             </a>
           </div>
 
           <div class="panel-body">
             <% spec = spec_for(name, versions.newest.number) %>
             <% if spec.is_a?(::Gem::Specification) %>
-              <%= spec.description %>
+              <%= escape(spec.description) %>
             <% end %>
 
             <% versions.reverse_each.first(5).each do |version| %>
               <p>
-                <code>gem install <%= version.name %> <%= "--prerelease" if version.number.to_s.match(/[a-z]/i) %> -v "<%= version.number %>"</code>
+                <code>gem install <%= escape(version.name) %> <%= "--prerelease" if version.number.to_s.match(/[a-z]/i) %> -v "<%= escape(version.number) %>"</code>
                 <% unless version.platform =~ /^ruby/i %>
-                  <small class="platform"><%= version.platform %></small>
+                  <small class="platform"><%= escape(version.platform) %></small>
                 <% end %>
               </p>
             <% end %>
