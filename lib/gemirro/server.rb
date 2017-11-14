@@ -1,5 +1,6 @@
 require 'sinatra/base'
 require 'thin'
+require 'uri'
 
 module Gemirro
   ##
@@ -270,6 +271,16 @@ module Gemirro
       #
       def escape(string)
         Rack::Utils.escape_html(string)
+      end
+
+      ##
+      # Homepage link
+      #
+      # @param [Gem] spec
+      # @return [String]
+      #
+      def homepage(spec)
+        URI.parse(URI.escape(spec.homepage))
       end
     end
   end

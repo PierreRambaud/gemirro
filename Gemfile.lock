@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    gemirro (0.14.0)
+    gemirro (0.15.0)
       builder (~> 3.2)
       confstruct (~> 1.0)
       erubis (~> 2.7)

@@ -31,7 +31,7 @@
             <ul class="list-group">
               <% spec.authors.each do |author| %>
                 <li class="list-group-item">
-                  <a href="<%= escape(spec.homepage) %>"><%= escape(author) %></a>
+                  <a href="<%= homepage(spec) %>"><%= escape(author) %></a>
                 </li>
               <% end %>
             </ul>
