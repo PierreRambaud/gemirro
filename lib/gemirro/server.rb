@@ -1,6 +1,5 @@
 require 'sinatra/base'
 require 'thin'
-require 'CGI'
 
 module Gemirro
   ##
