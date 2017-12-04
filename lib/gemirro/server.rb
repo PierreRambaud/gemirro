@@ -280,7 +280,7 @@ module Gemirro
       # @return [String]
       #
       def homepage(spec)
-        URI.parse(CGI.escape(spec.homepage)) 
+        URI.parse(CGI.escape(spec.homepage))
       end
     end
   end
