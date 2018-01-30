@@ -125,9 +125,10 @@ module Gemirro
     it 'should retrieve versions for specific gem' do
       gem = Gem.new('gemirro', '0.0.2')
       allow(@versions_file).to receive(:versions_for)
-        .once.with('gemirro').and_return([::Gem::Version.new('0.0.1'),
-                                          ::Gem::Version.new('0.0.2')])
-      expect(@fetcher.versions_for(gem)).to eq([::Gem::Version.new('0.0.2')])
+        .once.with('gemirro')
+        .and_return([[::Gem::Version.new('0.0.1'), 'ruby'],
+                     [::Gem::Version.new('0.0.2'), 'ruby']])
+      expect(@fetcher.versions_for(gem)).to eq([[::Gem::Version.new('0.0.2'), 'ruby']])
     end
 
     it 'should fetch all gems and log debug if gem is not satisfied' do

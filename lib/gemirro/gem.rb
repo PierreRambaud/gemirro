@@ -12,8 +12,8 @@ module Gemirro
   #  @return [Gem::Version]
   #
   class Gem
-    attr_reader :name, :requirement, :platform
-    attr_accessor :gemspec
+    attr_reader :name, :requirement
+    attr_accessor :gemspec, :platform
     ONLY_LATEST = %i[latest newest].freeze
 
     ##

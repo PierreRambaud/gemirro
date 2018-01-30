@@ -25,7 +25,9 @@ module Gemirro
     #
     def fetch
       @source.gems.each do |gem|
-        versions_for(gem).each do |version|
+        versions_for(gem).each do |versions|
+          gem.platform = versions[1] if versions
+          version = versions[0] if versions
           if gem.gemspec?
             gemfile = fetch_gemspec(gem, version)
             if gemfile
@@ -55,7 +57,7 @@ module Gemirro
       return [available.last] if gem.only_latest?
 
       versions = available.select do |v|
-        gem.requirement.satisfied_by?(v)
+        gem.requirement.satisfied_by?(v[0])
       end
 
       versions = [available.last] if versions.empty?

@@ -65,7 +65,7 @@ module Gemirro
     # @return [Array]
     #
     def versions_for(gem)
-      versions_hash[gem].map { |version| version[1] }
+      versions_hash[gem].map { |version| [version[1], version[2]] }
     end
   end
 end
