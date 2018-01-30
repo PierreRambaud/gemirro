@@ -1,6 +1,5 @@
 require 'sinatra/base'
 require 'thin'
-require 'uri'
 
 module Gemirro
   ##
@@ -280,7 +279,7 @@ module Gemirro
       # @return [String]
       #
       def homepage(spec)
-        URI.parse(URI.escape(spec.homepage))
+        URI.parse(CGI.escape(spec.homepage))
       end
     end
   end
