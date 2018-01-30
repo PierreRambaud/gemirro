@@ -1,4 +1,5 @@
 AllCops:
+  TargetRubyVersion: 2.2
   Include:
     - '**/Gemfile'
     - lib/**/*.rb
@@ -7,6 +8,8 @@ AllCops:
   Exclude:
     - files/**/*
     - templates/**/*
+    - spec/**/*
+
 Naming/FileName:
   Exclude:
     - Rakefile
