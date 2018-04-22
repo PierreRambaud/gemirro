@@ -168,7 +168,7 @@ module Gemirro
 
       Utils.logger.info('Generating indexes')
       indexer.update_index
-      indexer.updated_gems.peach do |gem|
+      indexer.updated_gems.each do |gem|
         Utils.cache.flush_key(File.basename(gem))
       end
     rescue SystemExit => e
