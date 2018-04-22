@@ -23,7 +23,7 @@ module Gemirro
     # @return [Gem::Version]
     #
     def self.version_for(requirement)
-      ::Gem::Version.new(requirement.requirements.sort.last.last.version)
+      ::Gem::Version.new(requirement.requirements.max.last.version)
     end
 
     ##

@@ -31,3 +31,5 @@ Metrics/BlockLength:
   Enabled: false
 Security/MarshalLoad:
   Enabled: false
+Style/ExpandPathArguments:
+  Enabled: false
