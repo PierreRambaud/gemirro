@@ -7,7 +7,8 @@ module Gemirro
     default_config = {
       server: {
         access_log: '/tmp/gemirro.access.log',
-        error_log: '/tmp/gemirro.access.log'
+        error_log: '/tmp/gemirro.access.log',
+        daemonize: true
       },
 
       update_on_fetch: true,

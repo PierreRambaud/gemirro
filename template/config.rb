@@ -17,6 +17,9 @@ Gemirro.configuration.configure do
   #
   # server.host 'localhost'
   # server.port '2000'
+
+  # If you don't want the server to run daemonized, uncomment the following
+  # server.daemonize false
   server.access_log File.expand_path('../logs/access.log', __FILE__)
   server.error_log File.expand_path('../logs/error.log', __FILE__)
 
