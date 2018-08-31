@@ -70,7 +70,7 @@ Gemirro::CLI.options.command 'server' do
       end
     end
 
-    Process.daemon if Utils.configuration.server.daemonize
+    Process.daemon if Gemirro::Utils.configuration.server.daemonize
     create_pid
     STDOUT.reopen @orig_stdout
     puts "done! (PID is #{pid})\n"
