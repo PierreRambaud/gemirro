@@ -9,6 +9,7 @@ AllCops:
     - files/**/*
     - templates/**/*
     - spec/**/*
+    - vendor/**/*
 
 Naming/FileName:
   Exclude:

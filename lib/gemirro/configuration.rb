@@ -162,7 +162,7 @@ module Gemirro
     # @return [Hash]
     #
     def ignored_gems
-      @ignored_gems ||= Hash.new { |hash, key| hash[key] = [] }
+      @ignored_gems ||= Hash.new { |hash, key| hash[key] = {} }
     end
 
     ##
@@ -171,9 +171,10 @@ module Gemirro
     # @param [String] name
     # @param [String] version
     #
-    def ignore_gem(name, version)
-      ignored_gems[name] ||= []
-      ignored_gems[name] << version
+    def ignore_gem(name, version, platform)
+      ignored_gems[platform] ||= {}
+      ignored_gems[platform][name] ||= []
+      ignored_gems[platform][name] << version
     end
 
     ##
@@ -183,8 +184,12 @@ module Gemirro
     # @param [String] version
     # @return [TrueClass|FalseClass]
     #
-    def ignore_gem?(name, version)
-      ignored_gems[name].include?(version)
+    def ignore_gem?(name, version, platform)
+      if ignored_gems[platform][name]
+        ignored_gems[platform][name].include?(version)
+      else
+        false
+      end
     end
 
     ##

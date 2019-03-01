@@ -105,12 +105,13 @@ module Gemirro
                   end
       name = gem.name
 
-      if gem_exists?(filename) || ignore_gem?(name, version) || !satisfied
+      if gem_exists?(filename) || ignore_gem?(name, version, gem.platform) ||
+         !satisfied
         Utils.logger.debug("Skipping #{filename}")
         return
       end
 
-      Utils.configuration.ignore_gem(gem.name, version)
+      Utils.configuration.ignore_gem(gem.name, version, gem.platform)
       Utils.logger.info("Fetching #{filename}")
 
       fetch_from_source(filename, gem, version)
@@ -133,7 +134,7 @@ module Gemirro
         Utils.logger.error("Failed to retrieve #{filename}: #{e.message}")
         Utils.logger.debug("Adding #{filename} to the list of ignored Gems")
 
-        Utils.configuration.ignore_gem(gem.name, version)
+        Utils.configuration.ignore_gem(gem.name, version, gem.platform)
       end
 
       data

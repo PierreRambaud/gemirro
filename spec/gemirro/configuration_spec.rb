@@ -68,10 +68,10 @@ module Gemirro
 
     it 'should return ignored gems' do
       expect(@config.ignored_gems).to eq({})
-      expect(@config.ignore_gem?('rake', '1.0.0')).to be_falsy
-      expect(@config.ignore_gem('rake', '1.0.0')).to eq(['1.0.0'])
-      expect(@config.ignored_gems).to eq('rake' => ['1.0.0'])
-      expect(@config.ignore_gem?('rake', '1.0.0')).to be_truthy
+      expect(@config.ignore_gem?('rake', '1.0.0', 'ruby')).to be_falsy
+      expect(@config.ignore_gem('rake', '1.0.0', 'ruby')).to eq(['1.0.0'])
+      expect(@config.ignored_gems).to eq('ruby' => {'rake' => ['1.0.0']})
+      expect(@config.ignore_gem?('rake', '1.0.0', 'ruby')).to be_truthy
     end
 
     it 'should add and return source' do
