@@ -34,9 +34,9 @@ module Gemirro
     it 'should ignore gem' do
       allow(Utils.logger).to receive(:info)
         .once.with('Fetching gemirro-0.0.1.gem')
-      expect(@fetcher.ignore_gem?('gemirro', '0.0.1')).to be_falsy
-      Utils.configuration.ignore_gem('gemirro', '0.0.1')
-      expect(@fetcher.ignore_gem?('gemirro', '0.0.1')).to be_truthy
+      expect(@fetcher.ignore_gem?('gemirro', '0.0.1', 'ruby')).to be_falsy
+      Utils.configuration.ignore_gem('gemirro', '0.0.1', 'ruby')
+      expect(@fetcher.ignore_gem?('gemirro', '0.0.1', 'ruby')).to be_truthy
     end
 
     it 'should log error when fetch gem failed' do
@@ -44,7 +44,7 @@ module Gemirro
         .once.with('Fetching gemirro-0.0.1.gem')
       gem = Gem.new('gemirro')
       version = ::Gem::Version.new('0.0.1')
-      Utils.configuration.ignore_gem('gemirro', '0.0.1')
+      Utils.configuration.ignore_gem('gemirro', '0.0.1', 'ruby')
       allow(@source).to receive(:fetch_gem)
         .once.with('gemirro', version).and_raise(ArgumentError)
       allow(Utils.logger).to receive(:error)
@@ -53,7 +53,7 @@ module Gemirro
         .once.with(/Adding (.*) to the list of ignored Gems/)
 
       expect(@fetcher.fetch_gem(gem, version)).to be_nil
-      expect(@fetcher.ignore_gem?('gemirro', '0.0.1')).to be_truthy
+      expect(@fetcher.ignore_gem?('gemirro', '0.0.1', 'ruby')).to be_truthy
     end
 
     it 'should fetch gem' do
