@@ -72,6 +72,7 @@ module Gemirro
       expect(@config.ignore_gem('rake', '1.0.0', 'ruby')).to eq(['1.0.0'])
       expect(@config.ignored_gems).to eq('ruby' => {'rake' => ['1.0.0']})
       expect(@config.ignore_gem?('rake', '1.0.0', 'ruby')).to be_truthy
+      expect(@config.ignore_gem?('rake', '1.0.0', 'java')).to be_falsy
     end
 
     it 'should add and return source' do

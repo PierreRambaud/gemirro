@@ -37,6 +37,7 @@ module Gemirro
       expect(@fetcher.ignore_gem?('gemirro', '0.0.1', 'ruby')).to be_falsy
       Utils.configuration.ignore_gem('gemirro', '0.0.1', 'ruby')
       expect(@fetcher.ignore_gem?('gemirro', '0.0.1', 'ruby')).to be_truthy
+      expect(@fetcher.ignore_gem?('gemirro', '0.0.1', 'java')).to be_falsy
     end
 
     it 'should log error when fetch gem failed' do
