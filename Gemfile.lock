@@ -36,7 +36,7 @@ GEM
       ast (~> 2.4.0)
     powerpack (0.1.1)
     public_suffix (3.0.3)
-    rack (2.0.6)
+    rack (2.0.8)
     rack-protection (2.0.3)
       rack
     rack-test (0.8.3)
