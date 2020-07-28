@@ -29,7 +29,7 @@ GEM
     fakefs (0.14.2)
     hashie (3.6.0)
     httpclient (2.8.3)
-    json (2.1.0)
+    json (2.3.1)
     mustermann (1.0.3)
     parallel (1.12.1)
     parser (2.5.1.0)
