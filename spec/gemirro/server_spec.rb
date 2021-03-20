@@ -166,7 +166,7 @@ module Gemirro
       end
 
       it 'should catch exceptions' do
-        source = Gemirro::Source.new('test', 'http://rubygems.org')
+        source = Gemirro::Source.new('test', 'https://rubygems.org')
 
         versions_fetcher = Gemirro::VersionsFetcher.new(source)
         allow(versions_fetcher).to receive(:fetch).once.and_return(true)
