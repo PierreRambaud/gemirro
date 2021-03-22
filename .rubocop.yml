@@ -1,5 +1,6 @@
 AllCops:
-  TargetRubyVersion: 2.2
+  NewCops: enable
+  TargetRubyVersion: 2.4
   Include:
     - '**/Gemfile'
     - lib/**/*.rb
@@ -14,13 +15,9 @@ AllCops:
 Naming/FileName:
   Exclude:
     - Rakefile
-ModuleLength:
+Layout/MethodLength:
   Enabled: false
-MethodLength:
-  Enabled: false
-ClassLength:
-  Enabled: false
-ParameterLists:
+Layout/ClassLength:
   Enabled: false
 Metrics/CyclomaticComplexity:
   Enabled: false
@@ -33,4 +30,8 @@ Metrics/BlockLength:
 Security/MarshalLoad:
   Enabled: false
 Style/ExpandPathArguments:
+  Enabled: false
+Style/OptionalBooleanParameter:
+  Enabled: false
+Lint/MissingSuper:
   Enabled: false

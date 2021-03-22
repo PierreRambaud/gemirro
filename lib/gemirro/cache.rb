@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Gemirro
   ##
   # The Cache class contains all method to store marshal informations
@@ -102,6 +104,7 @@ module Gemirro
     #
     def write(key_hash, value)
       return value if value.nil? || value.empty?
+
       File.open(key_path(key_hash), 'wb') do |f|
         Marshal.dump(value, f)
       end

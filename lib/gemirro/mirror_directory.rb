@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Gemirro
   ##
   # The MirrorDirectory is used for dealing with files and directories that are

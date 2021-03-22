@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'sinatra/base'
 require 'thin'
 require 'uri'
@@ -8,16 +10,16 @@ module Gemirro
   # Launch Sinatra server to easily download gems.
   #
   class Server < Sinatra::Base
-    # rubocop:disable Metrics/LineLength
-    URI_REGEXP = /^(.*)-(\d+(?:\.\d+){1,4}.*?)(?:-(x86-(?:(?:mswin|mingw)(?:32|64)).*?|java))?\.(gem(?:spec\.rz)?)$/
-    GEMSPEC_TYPE = 'gemspec.rz'.freeze
-    GEM_TYPE = 'gem'.freeze
+    # rubocop:disable Layout/LineLength
+    URI_REGEXP = /^(.*)-(\d+(?:\.\d+){1,4}.*?)(?:-(x86-(?:(?:mswin|mingw)(?:32|64)).*?|java))?\.(gem(?:spec\.rz)?)$/.freeze
+    # rubocop:enable Layout/LineLength
+    GEMSPEC_TYPE = 'gemspec.rz'
+    GEM_TYPE = 'gem'
 
     access_logger = Logger.new(Utils.configuration.server.access_log).tap do |logger|
-      ::Logger.class_eval { alias_method :write, :'<<' }
+      ::Logger.class_eval { alias_method :write, :<< }
       logger.level = ::Logger::INFO
     end
-    # rubocop:enable Metrics/LineLength
 
     error_logger = File.new(Utils.configuration.server.error_log, 'a+')
     error_logger.sync = true
@@ -128,6 +130,7 @@ module Gemirro
     #
     def fetch_gem(resource)
       return unless Utils.configuration.fetch_gem
+
       name = File.basename(resource)
       result = name.match(URI_REGEXP)
       return unless result
@@ -139,10 +142,8 @@ module Gemirro
         gem = Utils.stored_gem(gem_name, gem_version, gem_platform)
         gem.gemspec = true if gem_type == GEMSPEC_TYPE
 
-        # rubocop:disable Metrics/LineLength
         return if Utils.gems_fetcher.gem_exists?(gem.filename(gem_version)) && gem_type == GEM_TYPE
         return if Utils.gems_fetcher.gemspec_exists?(gem.gemspec_filename(gem_version)) && gem_type == GEMSPEC_TYPE
-        # rubocop:enable Metrics/LineLength
 
         Utils.logger
              .info("Try to download #{gem_name} with version #{gem_version}")
@@ -216,9 +217,7 @@ module Gemirro
         gem_collection = Parallel.map(gem_collection, in_threads: 4) do |gem|
           [gem, spec_for(gem.name, gem.number, gem.platform)]
         end
-        gem_collection.reject! do |_, spec|
-          spec.nil?
-        end
+        gem_collection.compact!
 
         Parallel.map(gem_collection, in_threads: 4) do |gem, spec|
           dependencies = spec.dependencies.select do |d|

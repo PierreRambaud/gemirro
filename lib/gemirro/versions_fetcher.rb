@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Gemirro
   ##
   # The VersionsFetcher class is used for retrieving the file that contains all

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Configuration
 module Gemirro
   ##
@@ -40,7 +42,7 @@ module Gemirro
     # @return [Logger]
     #
     def logger
-      @logger ||= Logger.new(STDOUT)
+      @logger ||= Logger.new($stdout)
     end
 
     ##

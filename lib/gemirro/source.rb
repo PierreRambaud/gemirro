@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Gemirro
   ##
   # The Source class is used for storing information about an external source
@@ -34,7 +36,7 @@ module Gemirro
         "Fetching #{Configuration.versions_file} on #{@name} (#{@host})"
       )
 
-      Http.get(host + '/' + Configuration.versions_file).body
+      Http.get("#{host}/#{Configuration.versions_file}").body
     end
 
     ##
@@ -47,7 +49,7 @@ module Gemirro
         "Fetching #{Configuration.prerelease_versions_file}" \
         " on #{@name} (#{@host})"
       )
-      Http.get(host + '/' + Configuration.prerelease_versions_file).body
+      Http.get("#{host}/#{Configuration.prerelease_versions_file}").body
     end
 
     ##

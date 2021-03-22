@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Gemirro
   ##
   # The GemsFetcher class is responsible for downloading Gems from an external
