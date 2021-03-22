@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Gemirro
   ##
   # The VersionCollection class contains a collection of ::Gem::Version
@@ -10,8 +12,7 @@ module Gemirro
   class GemVersionCollection
     include Enumerable
 
-    attr_reader :gems
-    attr_reader :grouped
+    attr_reader :gems, :grouped
 
     ##
     # @param [Array] gems

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'confstruct'
 require 'digest/sha2'
 require 'fileutils'
@@ -13,9 +15,7 @@ require 'stringio'
 require 'tempfile'
 require 'zlib'
 
-unless $LOAD_PATH.include?(File.expand_path('../', __FILE__))
-  $LOAD_PATH.unshift(File.expand_path('../', __FILE__))
-end
+$LOAD_PATH.unshift(File.expand_path('../', __FILE__)) unless $LOAD_PATH.include?(File.expand_path('../', __FILE__))
 
 require 'gemirro/version'
 require 'gemirro/configuration'

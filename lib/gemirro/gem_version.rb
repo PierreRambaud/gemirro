@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Gemirro
   ##
   # The Gem class contains data about a Gem such as the name, requirement as

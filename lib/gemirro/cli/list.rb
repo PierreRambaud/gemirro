@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 Gemirro::CLI.options.command 'list' do
   banner 'Usage: gemirro list [OPTIONS]'
   description 'List available gems.'

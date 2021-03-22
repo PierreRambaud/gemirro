@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 Gemirro::CLI.options.command 'update' do
   banner 'Usage: gemirro update [OPTIONS]'
   description 'Updates the list of Gems'

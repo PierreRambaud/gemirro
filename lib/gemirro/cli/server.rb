@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 Gemirro::CLI.options.command 'server' do
   banner 'Usage: gemirro server [OPTIONS]'
   description 'Manage web server'
@@ -36,7 +38,7 @@ Gemirro::CLI.options.command 'server' do
   end
 
   # Copy stdout because we'll need to reopen it later on
-  @orig_stdout = STDOUT.clone
+  @orig_stdout = $stdout.clone
   $PROGRAM_NAME = 'gemirro'
 
   def create_pid
@@ -44,7 +46,7 @@ Gemirro::CLI.options.command 'server' do
       f.write(Process.pid.to_s)
     end
   rescue Errno::EACCES
-    STDOUT.reopen @orig_stdout
+    $stdout.reopen @orig_stdout
     puts "Error: Can't write to #{@pid_file} - Permission denied"
     exit!
   end
@@ -63,20 +65,18 @@ Gemirro::CLI.options.command 'server' do
 
   def start
     puts 'Starting...'
-    if File.exist?(@pid_file)
-      if running?(pid)
-        puts "Error: #{$PROGRAM_NAME} already running"
-        abort
-      end
+    if File.exist?(@pid_file) && running?(pid)
+      puts "Error: #{$PROGRAM_NAME} already running"
+      abort
     end
 
     Process.daemon if Gemirro::Utils.configuration.server.daemonize
     create_pid
-    STDOUT.reopen @orig_stdout
+    $stdout.reopen @orig_stdout
     puts "done! (PID is #{pid})\n"
     Gemirro::Server.run!
     destroy_pid
-    STDOUT.reopen '/dev/null', 'a'
+    $stdout.reopen '/dev/null', 'a'
   end
 
   def stop
@@ -113,6 +113,7 @@ Gemirro::CLI.options.command 'server' do
 
   def running?(process_id)
     return false if process_id.nil?
+
     Process.getpgid(process_id.to_i) != -1
   rescue Errno::ESRCH
     false

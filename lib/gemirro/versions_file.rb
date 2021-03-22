@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Gemirro
   ##
   # The VersionsFile class acts as a small Ruby wrapper around the RubyGems

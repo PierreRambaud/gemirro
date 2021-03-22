@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Gemirro
   ##
   # The Gem class contains data about a Gem such as the name, requirement as
@@ -14,6 +16,7 @@ module Gemirro
   class Gem
     attr_reader :name, :requirement
     attr_accessor :gemspec, :platform
+
     ONLY_LATEST = %i[latest newest].freeze
 
     ##
@@ -33,9 +36,7 @@ module Gemirro
     def initialize(name, requirement = nil, platform = 'ruby')
       requirement ||= ::Gem::Requirement.default
 
-      if requirement.is_a?(String)
-        requirement = ::Gem::Requirement.new(requirement)
-      end
+      requirement = ::Gem::Requirement.new(requirement) if requirement.is_a?(String)
 
       @name = name
       @requirement = requirement

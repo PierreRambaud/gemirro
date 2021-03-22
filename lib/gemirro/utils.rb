@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Gemirro
   ##
   # The Utils class is responsible for executing specific traitments
@@ -16,6 +18,7 @@ module Gemirro
                 :gems_fetcher,
                 :gems_collection,
                 :stored_gems)
+
     ##
     # Cache class to store marshal and data into files
     #
@@ -44,6 +47,7 @@ module Gemirro
       Parallel.map(file_paths, in_threads: 4) do |file_path|
         next if data[:files].key?(file_path) &&
                 data[:files][file_path] == File.mtime(file_path)
+
         has_file_changed = true
       end
 
@@ -53,6 +57,7 @@ module Gemirro
       gems = []
       Parallel.map(file_paths, in_threads: 4) do |file_path|
         next unless File.exist?(file_path)
+
         gems.concat(Marshal.load(Zlib::GzipReader.open(file_path).read))
         data[:files][file_path] = File.mtime(file_path)
       end
@@ -75,7 +80,7 @@ module Gemirro
         File.join(configuration.destination,
                   [specs_file_type,
                    marshal_version,
-                   'gz' + (orig ? '.orig' : '')].join('.'))
+                   "gz#{orig ? '.orig' : ''}"].join('.'))
       end
     end
 

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Gemirro
   ##
   # The Http class is responsible for executing GET request
@@ -18,9 +20,7 @@ module Gemirro
     def self.get(url)
       response = client.get(url, follow_redirect: true)
 
-      unless HTTP::Status.successful?(response.status)
-        raise HTTPClient::BadResponseError, response.reason
-      end
+      raise HTTPClient::BadResponseError, response.reason unless HTTP::Status.successful?(response.status)
 
       response
     end

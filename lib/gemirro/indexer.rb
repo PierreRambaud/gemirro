@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Gemirro
   ##
   # The Indexer class is responsible for downloading useful file directly
@@ -118,6 +120,7 @@ module Gemirro
         else
           source_content = download_from_source(file)
           next if source_content.nil?
+
           MirrorFile.new(dst_name).write(source_content)
         end
 
@@ -136,6 +139,7 @@ module Gemirro
       Utils.logger.info("Download from source: #{file}")
       resp = Http.get("#{source_host}/#{File.basename(file)}")
       return unless resp.code == 200
+
       resp.body
     end
 
@@ -155,7 +159,7 @@ module Gemirro
     #
     def build_indicies
       specs = *map_gems_to_specs(gem_file_list)
-      specs.select! { |s| s.class == ::Gem::Specification }
+      specs.select! { |s| s.instance_of?(::Gem::Specification) }
       ::Gem::Specification.dirs = []
       ::Gem::Specification.all = specs
 
@@ -178,10 +182,7 @@ module Gemirro
     #
     def map_gems_to_specs(gems)
       gems.map.with_index do |gemfile, index|
-        # rubocop:disable Metrics/LineLength
         Utils.logger.info("[#{index + 1}/#{gems.size}]: Processing #{gemfile.split('/')[-1]}")
-        # rubocop:enable Metrics/LineLength
-
         if File.size(gemfile).zero?
           Utils.logger.warn("Skipping zero-length gem: #{gemfile}")
           next
@@ -325,6 +326,7 @@ module Gemirro
       end
 
       return false if source_content.nil?
+
       new_content = source_content.concat(content).uniq
       create_zlib_file(dst_name, new_content)
     end

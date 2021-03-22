@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Gemirro
   # CLI mode
   module CLI
@@ -32,9 +34,7 @@ module Gemirro
       config_file += '/config.rb' unless config_file.end_with?('.rb') ||
                                          !File.directory?(config_file)
 
-      unless File.file?(config_file)
-        abort "The configuration file #{config_file} does not exist"
-      end
+      abort "The configuration file #{config_file} does not exist" unless File.file?(config_file)
 
       require(config_file)
     end

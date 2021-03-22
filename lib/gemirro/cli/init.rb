@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 Gemirro::CLI.options.command 'init' do
   banner 'Usage: gemirro init [DIRECTORY] [OPTIONS]'
   description 'Sets up a new mirror'
@@ -16,8 +18,10 @@ Gemirro::CLI.options.command 'init' do
     else
       Dir.glob("#{template}/**/*", File::FNM_DOTMATCH).each do |file|
         next if ['.', '..'].include?(File.basename(file))
+
         dest = File.join(directory, file.gsub(/^#{template}/, ''))
         next if File.exist?(dest)
+
         FileUtils.cp_r(file, dest)
       end
     end
