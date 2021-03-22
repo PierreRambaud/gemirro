@@ -189,12 +189,16 @@ module Gemirro
         end
 
         begin
-          spec = if ::Gem::Package.respond_to? :open
-                   ::Gem::Package
-                     .open(File.open(gemfile, 'rb'), 'r', &:metadata)
-                 else
-                   ::Gem::Package.new(gemfile).spec
-                 end
+          begin
+            spec = if ::Gem::Package.respond_to? :open
+                     ::Gem::Package
+                       .open(File.open(gemfile, 'rb'), 'r', &:metadata)
+                   else
+                     ::Gem::Package.new(gemfile).spec
+                   end
+          rescue NotImplementedError
+            next
+          end
 
           spec.loaded_from = gemfile
 
