@@ -40,8 +40,8 @@ module Gemirro
 
       unless defined?(Builder::XChar)
         raise 'Gem::Indexer requires that the XML Builder ' \
-        'library be installed:' \
-        "\n\tgem install builder"
+              'library be installed:' \
+              "\n\tgem install builder"
       end
 
       options = { build_modern: true }.merge options

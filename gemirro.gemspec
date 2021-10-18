@@ -18,16 +18,16 @@ Gem::Specification.new do |s|
 
   s.required_ruby_version = '>= 2.5'
 
-  s.add_dependency 'addressable', '~>2.5'
+  s.add_dependency 'addressable', '~>2.8'
   s.add_dependency 'builder', '~>3.2'
-  s.add_dependency 'confstruct', '~>1.0'
+  s.add_dependency 'confstruct', '~>1.1'
   s.add_dependency 'erubis', '~>2.7'
   s.add_dependency 'httpclient', '~>2.8'
-  s.add_dependency 'parallel', '~>1.20'
-  s.add_dependency 'sinatra', '~>2.0.1'
+  s.add_dependency 'parallel', '~>1.21'
+  s.add_dependency 'sinatra', '~>2.1'
   s.add_dependency 'sinatra-static-assets', '~>1.0'
   s.add_dependency 'slop', '~>3.6'
-  s.add_dependency 'thin', '~>1.7'
+  s.add_dependency 'thin', '~>1.8'
 
   s.add_development_dependency 'fakefs', '~>1'
   s.add_development_dependency 'rack-test', '~>1.1'
