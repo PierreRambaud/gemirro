@@ -25,6 +25,7 @@ Gem::Specification.new do |s|
   s.add_dependency 'httpclient', '~>2.8'
   s.add_dependency 'parallel', '~>1.20'
   s.add_dependency 'sinatra', '~>2.0.1'
+  s.add_dependency 'sinatra-static-assets', '~>1.0'
   s.add_dependency 'slop', '~>3.6'
   s.add_dependency 'thin', '~>1.7'
 
