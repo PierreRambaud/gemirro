@@ -3,7 +3,7 @@ name: "Gemirro tests"
 on: [push, pull_request]
 
 jobs:
-  build:
+  rspec:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -17,4 +17,17 @@ jobs:
       - run: |
           gem install bundler
           bundle install --jobs=3 --retry=3
-          bundle exec rake
+          bundle exec rspec
+
+  rubocop:
+    runs-on: ubuntu-latest
+    name: Run rubocop
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-ruby@v1
+        with:
+          ruby-version: "2.7"
+      - run: |
+          gem install bundler
+          bundle install --jobs=3 --retry=3
+          bundle exec rubocop
