@@ -29,7 +29,7 @@ This is done by running the `gemirro init` command.
 $ gemirro init /srv/http/mirror.com/
 ```
 
-Once created you can edit the main configuration file called `config.rb`.
+Once created you can edit the main configuration file called [config.rb](https://github.com/PierreRambaud/gemirro/blob/master/template/config.rb).
 This configuration file specifies what source to mirror, destination directory, server host and port, etc.
 
 Once configured and if you add gem in the `define_source`, you can pull them by running the following command:
