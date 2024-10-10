@@ -55,7 +55,6 @@ module Gemirro
       # Enforce base auth
       if defined?(config.basic_auth)
         client.force_basic_auth=(true) if config.basic_auth
-        # client.www_auth.reset_challenge()
       end
       @client = client
     end
