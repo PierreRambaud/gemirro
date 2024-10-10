@@ -32,6 +32,24 @@ Gemirro.configuration.configure do
   #
   # fetch_gem false
 
+  # If upstream repository requires authentication
+  # upstream_user 'username'
+  # upstream_password 'password'
+  # upstream_domain 'https://internal.com'
+
+  # Enforce the the base_auth
+  # basic_auth true
+
+  # Set the proxy server if behind the firewall
+  # proxy 'http://proxy.internal.com:80'
+
+  # Root CA cert location if additional root ca is added
+  # This will overwrite verfiy_mode. use PEER as default
+  # rootca '/etc/root_ca.crt'
+
+  # Not verify certificate in case the proxy has self-signed cert
+  # verify_mode false
+
   # You must define a source which where gems will be downloaded.
   # All gem in the block will be downloaded with the update command.
   # Other gems will be downloaded with the server.
