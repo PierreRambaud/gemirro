@@ -1,6 +1,5 @@
 .gitignore
 .rubocop.yml
-.travis.yml
 Gemfile
 LICENSE
 MANIFEST
@@ -62,7 +61,6 @@ template/public/dist/fonts/glyphicons-halflings-regular.ttf
 template/public/dist/fonts/glyphicons-halflings-regular.woff
 template/public/dist/fonts/glyphicons-halflings-regular.woff2
 template/public/dist/js/bootstrap.min.js
-template/public/dist/js/jquery.min.js
 template/public/gems/.gitkeep
 views/gem.erb
 views/index.erb
