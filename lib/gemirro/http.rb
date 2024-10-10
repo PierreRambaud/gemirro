@@ -52,7 +52,7 @@ module Gemirro
         client.ssl_config.verify_mode = OpenSSL::SSL::VERIFY_NONE unless config.verify_mode
       end
 
-      # Enforece base auth
+      # Enforce base auth
       if defined?(config.basic_auth)
         client.force_basic_auth=(true) if config.basic_auth
         # client.www_auth.reset_challenge()
