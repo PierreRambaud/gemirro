@@ -213,7 +213,7 @@ module Gemirro
           end
 
           version = spec.version.version
-          unless version =~ /^\d+\.\d+\.\d+.*/
+          unless version =~ /^\d+(\.\d+)?(\.\d+)?.*/
             msg = "Skipping gem #{spec.full_name} - invalid version #{version}"
             Utils.logger.warn(msg)
             next
