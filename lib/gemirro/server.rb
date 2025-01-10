@@ -262,7 +262,7 @@ module Gemirro
 
         File.open(spec_file, 'r') do |uz_file|
           uz_file.binmode
-          Marshal.load(::Gem.inflate(uz_file.read))
+          Marshal.load(::Gem::Util.inflate(uz_file.read))
         end
       end
 
