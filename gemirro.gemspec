@@ -28,6 +28,7 @@ Gem::Specification.new do |s|
   s.add_dependency 'sinatra-static-assets', '~>1.0'
   s.add_dependency 'slop', '~>3.6'
   s.add_dependency 'thin', '~>1.8'
+  s.add_dependency 'compact_index', '~> 0.15'
 
   s.add_development_dependency 'fakefs', '~>1'
   s.add_development_dependency 'rack-test', '~>1.1'
