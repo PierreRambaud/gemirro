@@ -108,6 +108,16 @@ module Gemirro
     end
 
     ##
+    # Return gem dependencies as json
+    #
+    # @return [nil]
+    #
+    get '/versions' do
+      content_type 'text/plain'
+      erb(:versions, { layout: false }, gems: Utils.gems_collection)
+    end
+
+    ##
     # Try to get all request and download files
     # if files aren't found.
     #

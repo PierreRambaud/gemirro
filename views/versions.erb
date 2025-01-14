@@ -1,0 +1,70 @@
+created_at: <%= Time.now.utc.iso8601 %>
+---
+<% gems.sort_by(&:name).group_by{ |x| x.name}.each do |name, gn| %>
+<%= name %> <%=
+  gn
+  .sort_by(&:version)
+  .collect do |g|
+    if g.platform != 'ruby'
+      '%s-%s' % [g.version, g.platform]
+    else
+      g.version.to_s
+    end
+#    g.inspect
+  end
+  .join(',')
+
+#I'm seeing it sat sha256 but it must be truncated for the length I'm seeing
+# but not, where is info_checksum. what is info_checksum
+#rubygems.org app models gem_info 110 ish
+%> <%= Digest::MD5.file('%s/gems/%s.gem' % [settings.public_folder, gn.last.gemfile_name]).hexdigest %>
+
+
+<%= 
+
+#require 'compact_index'
+
+#gems = CompactIndex::Gem.new(name, gn.sort_by(&:version).collect(&:version))
+
+#CompactIndex.info(gems).inspect
+
+
+
+%>
+
+<% end %>
+
+
+<%=
+
+require 'compact_index'
+
+  cg =
+     gems
+    .sort_by(&:name)
+    .group_by{ |x| x.name }
+    .collect do |name, gn|
+      CompactIndex::Gem.new(
+        name,
+        gn.collect{ |y|
+          CompactIndex::GemVersion.new(
+            y.version.to_s,
+            y.platform,
+            Digest::MD5.file('%s/gems/%s.gem' % [settings.public_folder, gn.last.gemfile_name]).hexdigest,
+            ''
+            )
+          }
+        )
+    end
+
+versions_path = '%s/versions.list' % [ settings.public_folder ]
+
+versions_file = CompactIndex::VersionsFile.new(versions_path)
+
+versions_file.contents(cg, calculate_info_checksums: true)
+ 
+puts versions_file.inspect  
+#File.read(versions_path)
+     
+%>
+
