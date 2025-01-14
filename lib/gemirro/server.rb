@@ -108,14 +108,44 @@ module Gemirro
     end
 
     ##
-    # Return gem dependencies as json
+    # Return gem dependencies as compact_index
+    #
+    # @return [nil]
+    #
+    get '/names' do
+      content_type 'text/plain'
+      erb(:names, { layout: false }, gems: Utils.gems_collection)
+    end
+
+    ##
+    # Return gem dependencies as compact_index
     #
     # @return [nil]
     #
     get '/versions' do
       content_type 'text/plain'
-      erb(:versions, { layout: false }, gems: Utils.gems_collection)
+      content = erb(:versions, { layout: false }, gems: Utils.gems_collection)
+      headers 'Repr-Digest' => Digest::SHA256.hexdigest(content)
+      content
     end
+
+    # Return gem dependencies as compact_index
+    #
+    # @return [nil]
+    #
+    get('/info/:gemname') do
+      content_type 'text/plain'
+
+      gems = Utils.gems_collection
+      gem = gems.find_by_name(params[:gemname])
+      return not_found if gem.nil?
+
+      content = erb(:info_gem, { layout: false }, gem: gem)
+      headers 'Repr-Digest' => Digest::SHA256.hexdigest(content)
+      content
+    end
+
+
 
     ##
     # Try to get all request and download files

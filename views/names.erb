@@ -1,0 +1,7 @@
+<%=
+  require 'compact_index'
+  CompactIndex
+    .names(gems.collect(&:name).uniq.sort)
+    .to_s 
+%>
+

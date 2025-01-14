@@ -15,7 +15,7 @@ created_at: <%= Time.now.utc.iso8601 %>
           CompactIndex::GemVersion.new(
             y.version.to_s,
             y.platform,
-            '', # Digest::MD5.file('%s/gems/%s.gem' % [settings.public_folder, y.gemfile_name]).hexdigest,
+            Digest::SHA256.file('%s/gems/%s.gem' % [settings.public_folder, y.gemfile_name]).hexdigest,
             ''
             )
           }
