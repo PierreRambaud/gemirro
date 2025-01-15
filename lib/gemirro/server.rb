@@ -114,7 +114,10 @@ module Gemirro
     #
     get '/names' do
       content_type 'text/plain'
-      erb(:names, { layout: false }, gems: Utils.gems_collection)
+      
+      content_path = File.join(settings.public_folder, 'names.list')
+      headers 'Repr-Digest' => Digest::SHA256.file(content_path).hexdigest
+      send_file content_path
     end
 
     ##
@@ -124,9 +127,10 @@ module Gemirro
     #
     get '/versions' do
       content_type 'text/plain'
-      content = erb(:versions, { layout: false }, gems: Utils.gems_collection)
-      headers 'Repr-Digest' => Digest::SHA256.hexdigest(content)
-      content
+
+      content_path = File.join(settings.public_folder, 'versions.list')
+      headers 'Repr-Digest' => Digest::SHA256.file(content_path).hexdigest
+      send_file content_path
     end
 
     # Return gem dependencies as compact_index
@@ -140,9 +144,10 @@ module Gemirro
       gem = gems.find_by_name(params[:gemname])
       return not_found if gem.nil?
 
-      content = erb(:info_gem, { layout: false }, gem: gem)
-      headers 'Repr-Digest' => Digest::SHA256.hexdigest(content)
-      content
+      content_path = File.join(settings.public_folder, 'info', params[:gemname] + '.list')
+
+      headers 'Repr-Digest' => Digest::SHA256.file(content_path).hexdigest
+      send_file content_path
     end
 
 

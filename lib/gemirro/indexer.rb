@@ -75,6 +75,12 @@ module Gemirro
         File.join(@dest_directory, "latest_specs.#{::Gem.marshal_version}")
       @dest_prerelease_specs_index =
         File.join(@dest_directory, "prerelease_specs.#{::Gem.marshal_version}")
+      @names_index =
+        File.join(@dest_directory, "names.list")
+      @versions_index =
+        File.join(@dest_directory, "versions.list")
+      @infos_dir =
+        File.join(@dest_directory, "info")
 
       @files = []
     end
@@ -166,12 +172,103 @@ module Gemirro
       if ::Gem::VERSION >= '2.5.0'
         build_marshal_gemspecs specs
         build_modern_indices specs if @build_modern
+	build_compact_indices specs
         compress_indices
       else
         build_marshal_gemspecs
         build_modern_indicies if @build_modern
+	build_compact_indices specs
         compress_indicies
       end
+    end
+
+    def build_compact_indices(specs)
+      build_compact_index_names(specs)
+      build_compact_index_versions(specs)
+      build_compact_index_infos(specs)
+    end
+
+    def build_compact_index_names(specs)
+      require 'compact_index'
+
+      gem_name_list = specs.collect(&:name).uniq.sort
+      File.open(@names_index,"w") do |f|
+        f.puts CompactIndex.names(gem_name_list).to_s
+      end
+      Utils.logger.info('Names File Generated (%d entries)' % [gem_name_list.length])
+      true
+    end
+
+    def build_compact_index_versions(specs)
+      require 'compact_index'
+      cg =
+         specs
+        .sort_by(&:name)
+        .group_by(&:name)
+        .collect do |name, gem_versions|
+          CompactIndex::Gem.new(
+           name,
+           gem_versions.collect{ |y|
+             CompactIndex::GemVersion.new(
+               y.version.to_s,
+               y.platform,
+               Digest::SHA256.file(y.loaded_from).hexdigest,
+	       ''
+               )
+             }
+           )
+        end
+
+      File.open(@versions_index, "w") do |f|
+	f.puts 'created_at: %s' % [Time.now.utc.iso8601]
+        f.puts '---'
+        # versions_path = '%s/versions.list' % [ settings.public_folder ]
+        f.puts CompactIndex::VersionsFile
+                 .new(File::NULL) # (versions_path)
+                 .contents(cg) #, calculate_info_checksums: true)
+                 .to_s 
+      end
+
+      Utils.logger.info('Versions File Generated')
+    end
+
+    def build_compact_index_infos(specs)
+      require 'compact_index'
+      FileUtils.mkdir_p(@infos_dir)
+
+      specs.sort_by(&:name).group_by(&:name).each do |name, gem_versions|
+        versions =
+          gem_versions.collect do |spec|
+            deps =
+              spec
+              .dependencies
+              .sort_by(&:name)
+              .collect do |dependency|
+                x = CompactIndex::Dependency.new(
+                  dependency.name,
+                  dependency.requirement.to_s,
+                  nil # Digest::SHA256.file('%s/gems/%s.gem' % [settings.public_folder, dependency.gemfile_name]).hexdigest
+                  )
+              end
+  
+            CompactIndex::GemVersion.new(
+              spec.version,
+              spec.platform,
+              Digest::SHA256.file(spec.loaded_from).hexdigest,
+              nil, # CompactIndex.info([spec.version.to_s]), ???
+              deps,
+              spec.required_ruby_version.to_s,
+              nil #spec.rubygems_version.to_s
+              )
+          end
+
+        File.open(File.join(@infos_dir, name + '.list'), "w") do |f|
+          f.puts CompactIndex.info(versions).to_s
+        end
+      end
+
+      Utils.logger.info('Info Files Generated')
+      true
     end
 
     ##
