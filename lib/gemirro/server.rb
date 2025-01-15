@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'sinatra/base'
-require 'sinatra/static_assets'
 require 'thin'
 require 'uri'
 require 'addressable/uri'
@@ -11,8 +10,6 @@ module Gemirro
   # Launch Sinatra server to easily download gems.
   #
   class Server < Sinatra::Base
-    register Sinatra::StaticAssets
-
     # rubocop:disable Layout/LineLength
     URI_REGEXP = /^(.*)-(\d+(?:\.\d+){1,4}.*?)(?:-(x86-(?:(?:mswin|mingw)(?:32|64)).*?|java))?\.(gem(?:spec\.rz)?)$/.freeze
     # rubocop:enable Layout/LineLength
@@ -262,7 +259,14 @@ module Gemirro
 
         File.open(spec_file, 'r') do |uz_file|
           uz_file.binmode
-          Marshal.load(::Gem.inflate(uz_file.read))
+          inflater = Zlib::Inflate.new
+          begin
+            inflate_data = inflater.inflate(uz_file.read)
+          ensure
+            inflater.finish
+            inflater.close
+          end
+          Marshal.load(inflate_data)
         end
       end
 

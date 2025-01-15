@@ -40,21 +40,21 @@ module Gemirro
 
       if defined?(config.proxy)
         proxy = config.proxy
-        client.proxy=(proxy)
+        client.proxy = (proxy)
       end
 
       # Use my own ca file for self signed cert
       if defined?(config.rootca)
-          abort "The configuration file #{config.rootca} does not exist" unless File.file?(config.rootca)
-          client.ssl_config.verify_mode = OpenSSL::SSL::VERIFY_PEER
-          client.ssl_config.set_trust_ca(config.rootca)
+        abort "The configuration file #{config.rootca} does not exist" unless File.file?(config.rootca)
+        client.ssl_config.verify_mode = OpenSSL::SSL::VERIFY_PEER
+        client.ssl_config.set_trust_ca(config.rootca)
       elsif defined?(config.verify_mode)
         client.ssl_config.verify_mode = OpenSSL::SSL::VERIFY_NONE unless config.verify_mode
       end
 
       # Enforce base auth
-      if defined?(config.basic_auth)
-        client.force_basic_auth=(true) if config.basic_auth
+      if defined?(config.basic_auth) && config.basic_auth
+        client.www_auth.basic_auth.force_auth = (true)
       end
       @client = client
     end

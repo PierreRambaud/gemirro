@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'builder'
 require 'confstruct'
 require 'digest/sha2'
 require 'fileutils'
