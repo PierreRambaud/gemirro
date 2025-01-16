@@ -220,6 +220,8 @@ module Gemirro
         gem_collection.compact!
 
         Parallel.map(gem_collection, in_threads: 4) do |gem, spec|
+          next if spec.nil?
+
           dependencies = spec.dependencies.select do |d|
             d.type == :runtime
           end
