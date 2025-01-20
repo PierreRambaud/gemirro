@@ -237,7 +237,8 @@ module Gemirro
 
       specs.sort_by(&:name).group_by(&:name).each do |name, gem_versions|
         versions =
-          gem_versions.collect do |spec|
+          # gem_versions.collect do |spec|
+          Parallel.map(gem_versions, in_threads: Utils.configuration.update_thread_count) do |spec|
             deps =
               spec
               .dependencies
@@ -276,7 +277,9 @@ module Gemirro
     # @return [Array]
     #
     def map_gems_to_specs(gems)
-      gems.map.with_index do |gemfile, index|
+      results = {}
+
+      Parallel.each_with_index(gems, in_threads: Utils.configuration.update_thread_count) do |gemfile, index|
         Utils.logger.info("[#{index + 1}/#{gems.size}]: Processing #{gemfile.split('/')[-1]}")
         if File.empty?(gemfile)
           Utils.logger.warn("Skipping zero-length gem: #{gemfile}")
@@ -286,8 +289,7 @@ module Gemirro
         begin
           begin
             spec = if ::Gem::Package.respond_to? :open
-                     ::Gem::Package
-                       .open(File.open(gemfile, 'rb'), 'r', &:metadata)
+                     ::Gem::Package.open(File.open(gemfile, 'rb'), 'r', &:metadata)
                    else
                      ::Gem::Package.new(gemfile).spec
                    end
@@ -333,7 +335,12 @@ module Gemirro
                  "\t#{e.backtrace.join "\n\t"}"].join("\n")
           Utils.logger.debug(msg)
         end
-      end.compact
+
+        results[gemfile] = spec
+      end
+
+      # Parallel can leave this out of order
+      results.sort_by { |path, _spec| path }.collect(&:last)
     end
 
     def update_index

@@ -236,7 +236,7 @@ module Gemirro
     #
     def query_gems_list
       Utils.gems_collection(false) # load collection
-      gems = Parallel.map(query_gems, in_threads: 4) do |query_gem|
+      gems = Parallel.map(query_gems, in_threads: Utils.configuration.update_thread_count) do |query_gem|
         gem_dependencies(query_gem)
       end
 
@@ -259,19 +259,19 @@ module Gemirro
 
         return '' if gem_collection.nil?
 
-        gem_collection = Parallel.map(gem_collection, in_threads: 4) do |gem|
+        gem_collection = Parallel.map(gem_collection, in_threads: Utils.configuration.update_thread_count) do |gem|
           [gem, spec_for(gem.name, gem.number, gem.platform)]
         end
         gem_collection.compact!
 
-        Parallel.map(gem_collection, in_threads: 4) do |gem, spec|
+        Parallel.map(gem_collection, in_threads: Utils.configuration.update_thread_count) do |gem, spec|
           next if spec.nil?
 
           dependencies = spec.dependencies.select do |d|
             d.type == :runtime
           end
 
-          dependencies = Parallel.map(dependencies, in_threads: 4) do |d|
+          dependencies = dependencies.collect do |d|
             [d.name.is_a?(Array) ? d.name.first : d.name, d.requirement.to_s]
           end
 
