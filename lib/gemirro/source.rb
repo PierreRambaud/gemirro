@@ -46,8 +46,8 @@ module Gemirro
     #
     def fetch_prerelease_versions
       Utils.logger.info(
-        "Fetching #{Configuration.prerelease_versions_file}" \
-        " on #{@name} (#{@host})"
+        "Fetching #{Configuration.prerelease_versions_file} " \
+        "on #{@name} (#{@host})"
       )
       Http.get("#{host}/#{Configuration.prerelease_versions_file}").body
     end
