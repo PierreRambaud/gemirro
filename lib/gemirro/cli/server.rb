@@ -42,9 +42,7 @@ Gemirro::CLI.options.command 'server' do
   $PROGRAM_NAME = 'gemirro'
 
   def create_pid
-    File.open(@pid_file, 'w') do |f|
-      f.write(Process.pid.to_s)
-    end
+    File.write(@pid_file, Process.pid.to_s)
   rescue Errno::EACCES
     $stdout.reopen @orig_stdout
     puts "Error: Can't write to #{@pid_file} - Permission denied"
@@ -76,7 +74,7 @@ Gemirro::CLI.options.command 'server' do
     puts "done! (PID is #{pid})\n"
     Gemirro::Server.run!
     destroy_pid
-    $stdout.reopen '/dev/null', 'a'
+    $stdout.reopen File::NULL, 'a'
   end
 
   def stop

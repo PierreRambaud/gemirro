@@ -9,12 +9,9 @@
 
     <title>Gemirro - a simple ruby gems mirror</title>
 
-    <%=
-      stylesheet_link_tag(
-      "/dist/css/bootstrap.min.css",
-      "/dist/css/gemirro.css",
-      :media => "screen"
-    ) %>
+    <link href="/dist/css/bootstrap.min.css" media="screen" rel="stylesheet" type="text/css" />
+    <link href="/dist/css/gemirro.css" media="screen" rel="stylesheet" type="text/css" />
+
   </head>
   <body>
     <div class="container-fluid">
@@ -29,11 +26,7 @@
         </div>
       </div>
     </div>
-    <%=
-      javascript_script_tag(
-      "/dist/js/jquery-3.2.1.slim.min.js",
-      "/dist/js/bootstrap.bundle.min.js",
-      :media => "screen"
-    ) %>
+    <script src="/dist/js/jquery-3.2.1.slim.min.js" type="text/javascript"></script>
+    <script src="/dist/js/bootstrap.bundle.min.js" type="text/javascript"></script>
   </body>
 </html>
