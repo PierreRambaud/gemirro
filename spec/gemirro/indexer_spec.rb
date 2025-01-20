@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'builder'
 require 'rubygems/indexer'
 require 'tempfile'
 require 'gemirro/source'
@@ -34,6 +35,8 @@ module Gemirro
     end
 
     it 'should install indices' do
+      allow(Gemirro.configuration).to receive(:destination).and_return('/tmp')
+
       dir = MirrorDirectory.new('/tmp')
       dir.add_directory('test')
       dir.add_directory('gem_generate_index/quick/Marshal.4.8')
