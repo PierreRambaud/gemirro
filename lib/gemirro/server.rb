@@ -105,7 +105,7 @@ module Gemirro
     end
 
     ##
-    # Return gem dependencies as compact_index
+    # Return gem list as compact_index
     #
     # @return [nil]
     #
@@ -118,7 +118,7 @@ module Gemirro
     end
 
     ##
-    # Return gem dependencies as compact_index
+    # Return gem versions as compact_index
     #
     # @return [nil]
     #
