@@ -223,7 +223,7 @@ module Gemirro
         f.puts format('created_at: %s', Time.now.utc.iso8601)
         f.puts '---'
         f.puts CompactIndex::VersionsFile
-          .new(File::NULL) # (versions_path)
+          .new(@versions_index)
           .contents(cg, calculate_info_checksums: false)
           .to_s
       end
