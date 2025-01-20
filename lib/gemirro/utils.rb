@@ -133,11 +133,11 @@ module Gemirro
     def self.stored_gem(gem_name, gem_version, platform = 'ruby')
       platform = 'ruby' if platform.nil?
       @stored_gems ||= {}
-      # rubocop:disable Metrics/LineLength
       @stored_gems[gem_name] = {} unless @stored_gems.key?(gem_name)
       @stored_gems[gem_name][gem_version] = {} unless @stored_gems[gem_name].key?(gem_version)
-      @stored_gems[gem_name][gem_version][platform] ||= Gem.new(gem_name, gem_version, platform) unless @stored_gems[gem_name][gem_version].key?(platform)
-      # rubocop:enable Metrics/LineLength
+      unless @stored_gems[gem_name][gem_version].key?(platform)
+        @stored_gems[gem_name][gem_version][platform] ||= Gem.new(gem_name, gem_version, platform)
+      end
 
       @stored_gems[gem_name][gem_version][platform]
     end

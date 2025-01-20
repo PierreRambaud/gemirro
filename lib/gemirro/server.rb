@@ -125,9 +125,9 @@ module Gemirro
     get '/versions' do
       content_type 'text/plain'
       content_path = File.join(settings.public_folder, 'versions.list')
-      
+
       headers 'etag' => Digest::MD5.file(content_path).hexdigest
-      headers 'repr-digest' => 'sha-256="%s"' % [Digest::SHA256.file(content_path).hexdigest]
+      headers 'repr-digest' => %(sha-256="#{Digest::SHA256.file(content_path).hexdigest}")
       send_file content_path
     end
 
@@ -139,16 +139,14 @@ module Gemirro
       gems = Utils.gems_collection
       gem = gems.find_by_name(params[:gemname])
       return not_found if gem.nil?
-      
+
       content_type 'text/plain'
-      content_path = File.join(settings.public_folder, 'info', params[:gemname] + '.list')
+      content_path = File.join(settings.public_folder, 'info', "#{params[:gemname]}.list")
 
       headers 'etag' => Digest::MD5.file(content_path).hexdigest
-      headers 'repr-digest' => 'sha-256="%s"' % [Digest::SHA256.file(content_path).hexdigest]
+      headers 'repr-digest' => %(sha-256="#{Digest::SHA256.file(content_path).hexdigest}")
       send_file content_path
     end
-
-
 
     ##
     # Try to get all request and download files
@@ -243,7 +241,7 @@ module Gemirro
       end
 
       gems.flatten!
-      gems.reject!(&:nil?)
+      gems.compact!
       gems.reject!(&:empty?)
       gems
     end
@@ -297,11 +295,15 @@ module Gemirro
       #
       def spec_for(gemname, version, platform = 'ruby')
         gem = Utils.stored_gem(gemname, version.to_s, platform)
-        gemspec_path = File.join('quick',
-                                 Gemirro::Configuration.marshal_identifier,
-                                 gem.gemspec_filename)
-        spec_file = File.join(settings.public_folder,
-                              gemspec_path)
+        gemspec_path = File.join(
+          'quick',
+          Gemirro::Configuration.marshal_identifier,
+          gem.gemspec_filename
+        )
+        spec_file = File.join(
+          settings.public_folder,
+          gemspec_path
+        )
         fetch_gem(gemspec_path) unless File.exist?(spec_file)
 
         return unless File.exist?(spec_file)
