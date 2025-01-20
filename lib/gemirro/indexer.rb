@@ -37,34 +37,37 @@ module Gemirro
       require 'fileutils'
       require 'tmpdir'
       require 'zlib'
+      require 'builder/xchar'
 
-      unless defined?(Builder::XChar)
-        raise 'Gem::Indexer requires that the XML Builder ' \
-              'library be installed:' \
-              "\n\tgem install builder"
-      end
-
-      options = { build_modern: true }.merge options
+      options.merge!({ build_modern: true, build_compact: true })
 
       @build_modern = options[:build_modern]
-
+      @build_compact = options[:build_compact]
+      
       @dest_directory = directory
-      @directory = File.join(Dir.tmpdir,
-                             "gem_generate_index_#{rand(1_000_000_000)}")
+      @directory =
+        File.join(Dir.tmpdir, "gem_generate_index_#{rand(1_000_000_000)}")
 
       marshal_name = "Marshal.#{::Gem.marshal_version}"
 
-      @master_index = File.join @directory, 'yaml'
-      @marshal_index = File.join @directory, marshal_name
+      @master_index =
+        File.join(@directory, 'yaml')
+      @marshal_index =
+        File.join(@directory, marshal_name)
 
-      @quick_dir = File.join @directory, 'quick'
-      @quick_marshal_dir = File.join @quick_dir, marshal_name
-      @quick_marshal_dir_base = File.join 'quick', marshal_name # FIX: UGH
+      @quick_dir = File.join(@directory, 'quick')
+      @quick_marshal_dir =
+        File.join(@quick_dir, marshal_name)
+      @quick_marshal_dir_base =
+        File.join(@dest_directory, 'quick', marshal_name) # FIX: UGH
 
-      @quick_index = File.join @quick_dir, 'index'
-      @latest_index = File.join @quick_dir, 'latest_index'
+      @quick_index =
+        File.join(@quick_dir, 'index')
+      @latest_index =
+        File.join(@quick_dir, 'latest_index')
 
-      @specs_index = File.join @directory, "specs.#{::Gem.marshal_version}"
+      @specs_index =
+        File.join(@directory, "specs.#{::Gem.marshal_version}")
       @latest_specs_index =
         File.join(@directory, "latest_specs.#{::Gem.marshal_version}")
       @prerelease_specs_index =
@@ -106,11 +109,9 @@ module Gemirro
 
       if files.include?(@quick_marshal_dir) && !files.include?(@quick_dir)
         files.delete @quick_marshal_dir
-        dst_name = File.join(@dest_directory, @quick_marshal_dir_base)
-        FileUtils.mkdir_p(File.dirname(dst_name), verbose: verbose)
-        FileUtils.rm_rf(dst_name, verbose: verbose)
-        FileUtils.mv(@quick_marshal_dir, dst_name,
-                     verbose: verbose, force: true)
+        FileUtils.mkdir_p(File.dirname(@quick_marshal_dir_base), verbose: verbose)
+        FileUtils.rm_rf(@quick_marshal_dir_base, verbose: verbose)
+        FileUtils.mv(@quick_marshal_dir, @quick_marshal_dir_base, verbose: verbose, force: true)
       end
 
       files.each do |path|
@@ -172,20 +173,19 @@ module Gemirro
       if ::Gem::VERSION >= '2.5.0'
         build_marshal_gemspecs specs
         build_modern_indices specs if @build_modern
-	build_compact_indices specs
         compress_indices
       else
         build_marshal_gemspecs
         build_modern_indicies if @build_modern
-	build_compact_indices specs
         compress_indicies
       end
+      build_compact_indices specs if @build_compact
     end
 
     def build_compact_indices(specs)
       build_compact_index_names(specs)
-      build_compact_index_versions(specs)
       build_compact_index_infos(specs)
+      build_compact_index_versions(specs)
     end
 
     def build_compact_index_names(specs)
@@ -212,20 +212,19 @@ module Gemirro
              CompactIndex::GemVersion.new(
                y.version.to_s,
                y.platform,
-               Digest::SHA256.file(y.loaded_from).hexdigest,
-	       ''
+               nil, # Digest::SHA256.file(y.loaded_from).hexdigest useless here
+               Digest::MD5.file(File.join(@infos_dir, name + '.list')).hexdigest
                )
              }
            )
         end
 
       File.open(@versions_index, "w") do |f|
-	f.puts 'created_at: %s' % [Time.now.utc.iso8601]
+	      f.puts 'created_at: %s' % [Time.now.utc.iso8601]
         f.puts '---'
-        # versions_path = '%s/versions.list' % [ settings.public_folder ]
         f.puts CompactIndex::VersionsFile
                  .new(File::NULL) # (versions_path)
-                 .contents(cg) #, calculate_info_checksums: true)
+                 .contents(cg, calculate_info_checksums: false)
                  .to_s 
       end
 
@@ -244,10 +243,9 @@ module Gemirro
               .dependencies
               .sort_by(&:name)
               .collect do |dependency|
-                x = CompactIndex::Dependency.new(
+                CompactIndex::Dependency.new(
                   dependency.name,
-                  dependency.requirement.to_s,
-                  nil # Digest::SHA256.file('%s/gems/%s.gem' % [settings.public_folder, dependency.gemfile_name]).hexdigest
+                  dependency.requirement.to_s
                   )
               end
   
@@ -255,10 +253,10 @@ module Gemirro
               spec.version,
               spec.platform,
               Digest::SHA256.file(spec.loaded_from).hexdigest,
-              nil, # CompactIndex.info([spec.version.to_s]), ???
+              nil,
               deps,
               spec.required_ruby_version.to_s,
-              nil #spec.rubygems_version.to_s
+              spec.required_rubygems_version.to_s
               )
           end
 
@@ -368,12 +366,14 @@ module Gemirro
 
       ::Gem.time('Updated indexes') do
         update_specs_index(released, @dest_specs_index, @specs_index)
-        update_specs_index(released,
-                           @dest_latest_specs_index,
-                           @latest_specs_index)
-        update_specs_index(prerelease,
-                           @dest_prerelease_specs_index,
-                           @prerelease_specs_index)
+        update_specs_index(
+          released,
+          @dest_latest_specs_index,
+          @latest_specs_index)
+        update_specs_index(
+          prerelease,
+          @dest_prerelease_specs_index,
+          @prerelease_specs_index)
       end
 
       if ::Gem::VERSION >= '2.5.0'
@@ -401,10 +401,11 @@ module Gemirro
           res = build_zlib_file(file, src_name, dst_name)
           next unless res
         else
-          FileUtils.mv(src_name,
-                       dst_name,
-                       verbose: verbose,
-                       force: true)
+          FileUtils.mv(
+            src_name,
+            dst_name,
+            verbose: verbose,
+            force: true)
         end
 
         File.utime(newest_mtime, newest_mtime, dst_name)
@@ -419,9 +420,10 @@ module Gemirro
 
       if from_source
         source_content = download_from_source(file)
-        source_content = Marshal.load(Zlib::GzipReader
-                                        .new(StringIO
-                                               .new(source_content)).read)
+        source_content = Marshal.load(
+          Zlib::GzipReader.new(
+            StringIO.new(source_content)
+            ).read)
       else
         source_content = Marshal.load(Zlib::GzipReader.open(dst_name).read)
       end
@@ -439,10 +441,11 @@ module Gemirro
         io.write(Marshal.dump(content))
       end
 
-      FileUtils.mv(temp_file.path,
-                   dst_name,
-                   verbose: verbose,
-                   force: true)
+      FileUtils.mv(
+        temp_file.path,
+        dst_name,
+        verbose: verbose,
+        force: true)
       Utils.cache.flush_key(File.basename(dst_name))
     end
 

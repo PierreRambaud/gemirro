@@ -111,9 +111,9 @@ module Gemirro
     #
     get '/names' do
       content_type 'text/plain'
-      
       content_path = File.join(settings.public_folder, 'names.list')
-      headers 'Repr-Digest' => Digest::SHA256.file(content_path).hexdigest
+
+      headers 'etag' => Digest::MD5.file(content_path).hexdigest
       send_file content_path
     end
 
@@ -124,9 +124,10 @@ module Gemirro
     #
     get '/versions' do
       content_type 'text/plain'
-
       content_path = File.join(settings.public_folder, 'versions.list')
-      headers 'Repr-Digest' => Digest::SHA256.file(content_path).hexdigest
+      
+      headers 'etag' => Digest::MD5.file(content_path).hexdigest
+      headers 'repr-digest' => 'sha-256="%s"' % [Digest::SHA256.file(content_path).hexdigest]
       send_file content_path
     end
 
@@ -135,15 +136,15 @@ module Gemirro
     # @return [nil]
     #
     get('/info/:gemname') do
-      content_type 'text/plain'
-
       gems = Utils.gems_collection
       gem = gems.find_by_name(params[:gemname])
       return not_found if gem.nil?
-
+      
+      content_type 'text/plain'
       content_path = File.join(settings.public_folder, 'info', params[:gemname] + '.list')
 
-      headers 'Repr-Digest' => Digest::SHA256.file(content_path).hexdigest
+      headers 'etag' => Digest::MD5.file(content_path).hexdigest
+      headers 'repr-digest' => 'sha-256="%s"' % [Digest::SHA256.file(content_path).hexdigest]
       send_file content_path
     end
 
