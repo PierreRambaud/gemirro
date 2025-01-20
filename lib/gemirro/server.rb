@@ -245,6 +245,7 @@ module Gemirro
       end
 
       gems.flatten!
+      gems.reject!(&:nil?)
       gems.reject!(&:empty?)
       gems
     end
