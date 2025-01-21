@@ -111,9 +111,12 @@ module Gemirro
     #
     get '/names' do
       content_type 'text/plain'
-      content_path = File.join(settings.public_folder, 'names.list')
+      
+      content_path = Dir.glob(File.join(settings.public_folder, "names.*.*.list")).last
+      _, etag, repr_digest, _ = content_path.split('.', -4)
 
-      headers 'etag' => Digest::MD5.file(content_path).hexdigest
+      headers 'etag' => etag
+      headers 'repr-digest' => %(sha-256="#{repr_digest}")
       send_file content_path
     end
 
@@ -124,10 +127,12 @@ module Gemirro
     #
     get '/versions' do
       content_type 'text/plain'
-      content_path = File.join(settings.public_folder, 'versions.list')
+      
+      content_path = Dir.glob(File.join(settings.public_folder, "versions.*.*.list")).last
+      _, etag, repr_digest, _ = content_path.split('.', -4)
 
-      headers 'etag' => Digest::MD5.file(content_path).hexdigest
-      headers 'repr-digest' => %(sha-256="#{Digest::SHA256.file(content_path).hexdigest}")
+      headers 'etag' => etag
+      headers 'repr-digest' => %(sha-256="#{repr_digest}")
       send_file content_path
     end
 
@@ -141,10 +146,13 @@ module Gemirro
       return not_found if gem.nil?
 
       content_type 'text/plain'
-      content_path = File.join(settings.public_folder, 'info', "#{params[:gemname]}.list")
+      
+      
+      content_path = Dir.glob(File.join(settings.public_folder, 'info', "#{params[:gemname]}.*.*.list")).last
+      _, etag, repr_digest, _ = content_path.split('.', -4)
 
-      headers 'etag' => Digest::MD5.file(content_path).hexdigest
-      headers 'repr-digest' => %(sha-256="#{Digest::SHA256.file(content_path).hexdigest}")
+      headers 'etag' => etag
+      headers 'repr-digest' => %(sha-256="#{repr_digest}")
       send_file content_path
     end
 

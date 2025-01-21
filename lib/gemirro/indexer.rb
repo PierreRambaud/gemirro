@@ -37,7 +37,9 @@ module Gemirro
       require 'fileutils'
       require 'tmpdir'
       require 'zlib'
-      require 'builder/xchar'
+      require 'builder/xchar'            
+      require 'compact_index'
+
 
       options.merge!({ build_modern: true, build_compact: true })
 
@@ -80,8 +82,6 @@ module Gemirro
         File.join(@dest_directory, "prerelease_specs.#{::Gem.marshal_version}")
       @names_index =
         File.join(@dest_directory, 'names.list')
-      @versions_index =
-        File.join(@dest_directory, 'versions.list')
       @infos_dir =
         File.join(@dest_directory, 'info')
 
@@ -189,18 +189,30 @@ module Gemirro
     end
 
     def build_compact_index_names(specs)
-      require 'compact_index'
+      Utils.logger.info("[1/1]: Caching /names")
+      FileUtils.rm_rf(Dir.glob(File.join(@dest_directory, 'names*.list')))
+
+#      
+#      File.open(@names_index, 'w') do |f|
+#        f.puts CompactIndex.names(gem_name_list).to_s
+#      end
 
       gem_name_list = specs.collect(&:name).uniq.sort
-      File.open(@names_index, 'w') do |f|
-        f.puts CompactIndex.names(gem_name_list).to_s
+      Tempfile.create("names.list") do |f|
+        f.write CompactIndex.names(gem_name_list).to_s
+        f.rewind
+        File.rename(
+          f.path,
+          File.join(@dest_directory, "names.#{Digest::MD5.file(f.path).hexdigest}.#{Digest::SHA256.file(f.path).hexdigest}.list"))
       end
-      Utils.logger.info(format('Names File Generated (%d entries)', gem_name_list.length))
-      true
+
+      nil
     end
 
     def build_compact_index_versions(specs)
-      require 'compact_index'
+      Utils.logger.info("[1/1]: Caching /versions")
+      FileUtils.rm_rf(Dir.glob(File.join(@dest_directory, 'versions*.list')))
+
       cg =
         specs
         .sort_by(&:name)
@@ -213,29 +225,36 @@ module Gemirro
                 y.version.to_s,
                 y.platform,
                 nil, # Digest::SHA256.file(y.loaded_from).hexdigest useless here
-                Digest::MD5.file(File.join(@infos_dir, "#{name}.list")).hexdigest
+                Dir.glob(File.join(@infos_dir, "#{name}.*.*.list")).last.split('.', -4)[-3] # Digest::MD5.file(File.join(@infos_dir, "#{name}.list")).hexdigest
               )
             end
           )
         end
 
-      File.open(@versions_index, 'w') do |f|
-        f.puts format('created_at: %s', Time.now.utc.iso8601)
-        f.puts '---'
-        f.puts CompactIndex::VersionsFile
-          .new(@versions_index)
+      Tempfile.create('versions.list') do |f|
+        f.write format('created_at: %s', Time.now.utc.iso8601)
+        f.write "\n---\n"
+        f.write CompactIndex::VersionsFile
+          .new(f.path)
           .contents(cg, calculate_info_checksums: false)
           .to_s
+        f.rewind
+        File.rename(
+          f.path,
+          File.join(@dest_directory, "versions.#{Digest::MD5.file(f.path).hexdigest}.#{Digest::SHA256.file(f.path).hexdigest}.list"))
       end
 
-      Utils.logger.info('Versions File Generated')
+      nil
     end
 
     def build_compact_index_infos(specs)
-      require 'compact_index'
       FileUtils.mkdir_p(@infos_dir)
+      FileUtils.rm_rf(Dir.glob(File.join(@infos_dir, '*.list')))
 
-      specs.sort_by(&:name).group_by(&:name).each do |name, gem_versions|
+      grouped_specs = specs.sort_by(&:name).group_by(&:name)
+      grouped_specs.each_with_index do |(name, gem_versions), index|
+        Utils.logger.info("[#{index + 1}/#{grouped_specs.size}]: Caching /info/#{name}")
+        
         versions =
           # gem_versions.collect do |spec|
           Parallel.map(gem_versions, in_threads: Utils.configuration.update_thread_count) do |spec|
@@ -261,13 +280,20 @@ module Gemirro
             )
           end
 
-        File.open(File.join(@infos_dir, "#{name}.list"), 'w') do |f|
-          f.puts CompactIndex.info(versions).to_s
+    #    File.open(File.join(@infos_dir, "#{name}.list"), 'w') do |f|
+    #      f.puts CompactIndex.info(versions).to_s
+    #    end
+
+        Tempfile.create("info_#{name}.list") do |f|
+          f.write CompactIndex.info(versions).to_s
+          f.rewind
+          File.rename(
+            f.path,
+            File.join(@infos_dir, "#{name}.#{Digest::MD5.file(f.path).hexdigest}.#{Digest::SHA256.file(f.path).hexdigest}.list"))
         end
       end
 
-      Utils.logger.info('Info Files Generated')
-      true
+      nil
     end
 
     ##
@@ -277,7 +303,7 @@ module Gemirro
     # @return [Array]
     #
     def map_gems_to_specs(gems)
-      results = {}
+      results = []
 
       Parallel.each_with_index(gems, in_threads: Utils.configuration.update_thread_count) do |gemfile, index|
         Utils.logger.info("[#{index + 1}/#{gems.size}]: Processing #{gemfile.split('/')[-1]}")
@@ -335,12 +361,12 @@ module Gemirro
                  "\t#{e.backtrace.join "\n\t"}"].join("\n")
           Utils.logger.debug(msg)
         end
-
-        results[gemfile] = spec
+        
+        results[index] = spec
       end
 
-      # Parallel can leave this out of order
-      results.sort_by { |path, _spec| path }.collect(&:last)
+      # nils can result from insert by index
+      results.compact
     end
 
     def update_index
