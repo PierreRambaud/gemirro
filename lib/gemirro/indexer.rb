@@ -237,8 +237,8 @@ module Gemirro
 
       Tempfile.create('versions.list') do |f|
         previous_versions_file = Dir.glob(File.join(@dest_directory, 'versions*.list')).last
-      
-        if partial && File.exist?(previous_versions_file)
+
+        if partial && previous_versions_file
           versions_file = CompactIndex::VersionsFile.new(previous_versions_file)
         else
           versions_file = CompactIndex::VersionsFile.new(f.path)
