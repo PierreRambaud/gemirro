@@ -10,12 +10,6 @@ module Gemirro
   # Launch Sinatra server to easily download gems.
   #
   class Server < Sinatra::Base
-    # rubocop:disable Layout/LineLength
-    URI_REGEXP = /^(.*)-(\d+(?:\.\d+){1,4}.*?)(?:-(x86-(?:(?:mswin|mingw)(?:32|64)).*?|java))?\.(gem(?:spec\.rz)?)$/.freeze
-    # rubocop:enable Layout/LineLength
-    GEMSPEC_TYPE = 'gemspec.rz'
-    GEM_TYPE = 'gem'
-
     access_logger = Logger.new(Utils.configuration.server.access_log).tap do |logger|
       ::Logger.class_eval { alias_method :write, :<< }
       logger.level = ::Logger::INFO

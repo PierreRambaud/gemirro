@@ -13,11 +13,20 @@ module Gemirro
   #  @return [Gemirro::GemsFetcher]
   #
   class Utils
-    attr_reader(:cache,
-                :versions_fetcher,
-                :gems_fetcher,
-                :gems_collection,
-                :stored_gems)
+    attr_reader(
+      :cache,
+      :versions_fetcher,
+      :gems_fetcher,
+      :gems_collection,
+      :stored_gems
+    )
+
+    # rubocop:disable Layout/LineLength
+    URI_REGEXP = /^(.*)-(\d+(?:\.\d+){1,4}.*?)(?:-(x86-(?:(?:mswin|mingw)(?:32|64)).*?|java))?\.(gem(?:spec\.rz)?)$/.freeze
+    # rubocop:enable Layout/LineLength
+
+    GEMSPEC_TYPE = 'gemspec.rz'
+    GEM_TYPE = 'gem'
 
     ##
     # Cache class to store marshal and data into files

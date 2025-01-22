@@ -19,12 +19,14 @@ module Gemirro
   #  @return [Array]
   #
   class Indexer < ::Gem::Indexer
-    attr_accessor(:files,
-                  :quick_marshal_dir,
-                  :directory,
-                  :dest_directory,
-                  :only_origin,
-                  :updated_gems)
+    attr_accessor(
+      :files,
+      :quick_marshal_dir,
+      :directory,
+      :dest_directory,
+      :only_origin,
+      :updated_gems
+    )
 
     ##
     # Create an indexer that will index the gems in +directory+.
@@ -81,6 +83,8 @@ module Gemirro
         File.join(@dest_directory, "prerelease_specs.#{::Gem.marshal_version}")
       @infos_dir =
         File.join(@dest_directory, 'info')
+      @api_v1_dependencies_dir =
+        File.join(@dest_directory, 'api', 'v1', 'dependencies')
 
       @files = []
     end
@@ -177,11 +181,88 @@ module Gemirro
         compress_indicies
       end
 
+      build_api_v1_dependencies(specs)
+
       return unless @build_compact
 
       build_compact_index_names
       build_compact_index_infos(specs)
       build_compact_index_versions(specs)
+    end
+
+    def build_api_v1_dependencies(specs, partial = false)
+      FileUtils.mkdir_p(@api_v1_dependencies_dir)
+
+      if partial
+        specs.collect(&:name).uniq do |name|
+          FileUtils.rm_rf(Dir.glob(File.join(@api_v1_dependencies_dir, "#{name}.*.*.list")))
+        end
+      else
+        FileUtils.rm_rf(Dir.glob(File.join(@api_v1_dependencies_dir, '*.list')))
+      end
+
+      grouped_specs = specs.sort_by(&:name).group_by(&:name)
+      grouped_specs.each_with_index do |(name, gem_versions), index|
+        Utils.logger.info("[#{index + 1}/#{grouped_specs.size}]: Caching /api/v1/dependencies/#{name}")
+
+        gem_versions =
+          gem_versions.sort do |a, b|
+            a.version <=> b.version
+          end
+
+        gem_versions =
+          Parallel.map(gem_versions, in_threads: Utils.configuration.update_thread_count) do |gem|
+            [gem, Gemirro::Utils.spec_for(gem.name, gem.version.to_s, gem.platform)]
+          end
+        gem_versions.compact!
+
+        cg = []
+        Parallel.map(gem_versions, in_threads: Utils.configuration.update_thread_count) do |gem, spec|
+          next if spec.nil?
+
+          dependencies = spec.dependencies.select do |d|
+            d.type == :runtime
+          end
+
+          dependencies = dependencies.collect do |d|
+            [d.name.is_a?(Array) ? d.name.first : d.name, d.requirement.to_s]
+          end
+
+          cg[index] =
+            {
+              name: gem.name,
+              number: gem.version.to_s,
+              platform: gem.platform,
+              dependencies: dependencies
+            }
+        end
+
+        Tempfile.create("#{name}.json.list") do |f|
+          f.write cg.to_json
+          f.rewind
+
+          File.rename(
+            f.path,
+            File.join(
+              @api_v1_dependencies_dir,
+              "#{name}.json.#{Digest::MD5.file(f.path).hexdigest}.#{Digest::SHA256.file(f.path).hexdigest}.list"
+            )
+          )
+        end
+
+        Tempfile.create("#{name}.marshal.list") do |f|
+          f.write Marshal.dump(cg)
+          f.rewind
+
+          File.rename(
+            f.path,
+            File.join(
+              @api_v1_dependencies_dir,
+              "#{name}.marshal.#{Digest::MD5.file(f.path).hexdigest}.#{Digest::SHA256.file(f.path).hexdigest}.list"
+            )
+          )
+        end
+      end
     end
 
     def build_compact_index_names
@@ -472,8 +553,9 @@ module Gemirro
         compress_indicies
       end
 
-      if @build_compact
+      build_api_v1_dependencies(version_specs, true)
 
+      if @build_compact
         build_compact_index_names
         build_compact_index_infos(version_specs, true)
         build_compact_index_versions(specs, true)
