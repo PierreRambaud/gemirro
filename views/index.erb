@@ -12,21 +12,21 @@
         <div class="panel panel-info">
           <div class="panel-heading">
             <a href="<%= url("gem/#{name}") %>">
-              <h2 class="panel-title"><%= escape(name) %> <span class="badge pull-right"><%= escape(versions.newest.number) %></span></h2>
+              <h2 class="panel-title"><%= Rack::Utils.escape_html(name) %> <span class="badge pull-right"><%= Rack::Utils.escape_html(versions.newest.number) %></span></h2>
             </a>
           </div>
 
           <div class="panel-body">
-            <% spec = spec_for(name, versions.newest.number) %>
+            <% spec = Gemirro::Utils.spec_for(name, versions.newest.number) %>
             <% if spec.is_a?(::Gem::Specification) %>
-              <%= escape(spec.description) %>
+              <%= Rack::Utils.escape_html(spec.description) %>
             <% end %>
 
             <% versions.reverse_each.first(5).each do |version| %>
               <p>
-                <code>gem install <%= escape(version.name) %> <%= "--prerelease" if version.number.to_s.match(/[a-z]/i) %> -v "<%= escape(version.number) %>"</code>
+                <code>gem install <%= Rack::Utils.escape_html(version.name) %> <%= "--prerelease" if version.number.to_s.match(/[a-z]/i) %> -v "<%= Rack::Utils.escape_html(version.number) %>"</code>
                 <% unless version.platform =~ /^ruby/i %>
-                  <small class="platform"><%= escape(version.platform) %></small>
+                  <small class="platform"><%= Rack::Utils.escape_html(version.platform) %></small>
                 <% end %>
               </p>
             <% end %>

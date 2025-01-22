@@ -141,5 +141,152 @@ module Gemirro
 
       @stored_gems[gem_name][gem_version][platform]
     end
+
+    ##
+    # Return gem specification from gemname and version
+    #
+    # @param [String] gemname
+    # @param [String] version
+    # @return [::Gem::Specification]
+    #
+    def self.spec_for(gemname, version, platform = 'ruby')
+      gem = Utils.stored_gem(gemname, version.to_s, platform)
+      gemspec_path = File.join(
+        'quick',
+        Gemirro::Configuration.marshal_identifier,
+        gem.gemspec_filename
+      )
+
+      spec_file = File.join(
+        Utils.configuration.destination.gsub(%r{/$}, ''),
+        gemspec_path
+      )
+      fetch_gem(gemspec_path) unless File.exist?(spec_file)
+
+      return unless File.exist?(spec_file)
+
+      File.open(spec_file, 'r') do |uz_file|
+        uz_file.binmode
+        inflater = Zlib::Inflate.new
+        begin
+          inflate_data = inflater.inflate(uz_file.read)
+        ensure
+          inflater.finish
+          inflater.close
+        end
+        Marshal.load(inflate_data)
+      end
+    end
+
+    ##
+    # Try to fetch gem and download its if it's possible, and
+    # build and install indicies.
+    #
+    # @param [String] resource
+    # @return [Indexer]
+    #
+    def self.fetch_gem(resource)
+      return unless Utils.configuration.fetch_gem
+
+      name = File.basename(resource)
+      result = name.match(URI_REGEXP)
+      return unless result
+
+      gem_name, gem_version, gem_platform, gem_type = result.captures
+      return unless gem_name && gem_version
+
+      begin
+        gem = Utils.stored_gem(gem_name, gem_version, gem_platform)
+        gem.gemspec = true if gem_type == GEMSPEC_TYPE
+
+        return if Utils.gems_fetcher.gem_exists?(gem.filename(gem_version)) && gem_type == GEM_TYPE
+        return if Utils.gems_fetcher.gemspec_exists?(gem.gemspec_filename(gem_version)) && gem_type == GEMSPEC_TYPE
+
+        Utils.logger
+             .info("Try to download #{gem_name} with version #{gem_version}")
+        Utils.gems_fetcher.source.gems.clear
+        Utils.gems_fetcher.source.gems.push(gem)
+        Utils.gems_fetcher.fetch
+
+        update_indexes if Utils.configuration.update_on_fetch
+      rescue StandardError => e
+        Utils.logger.error(e)
+      end
+    end
+
+    ##
+    # Return gems list from query params
+    #
+    # @return [Array]
+    #
+    def self.query_gems_list(query_gems)
+      Utils.gems_collection(false) # load collection
+      gems = Parallel.map(query_gems, in_threads: Utils.configuration.update_thread_count) do |query_gem|
+        gem_dependencies(query_gem)
+      end
+
+      gems.flatten!
+      gems.compact!
+      gems.reject!(&:empty?)
+      gems
+    end
+
+    ##
+    # List of versions and dependencies of each version
+    # from a gem name.
+    #
+    # @return [Array]
+    #
+    def self.gem_dependencies(gem_name)
+      Utils.cache.cache(gem_name) do
+        gems = Utils.gems_collection(false)
+        gem_collection = gems.find_by_name(gem_name)
+
+        return '' if gem_collection.nil?
+
+        gem_collection = Parallel.map(gem_collection, in_threads: Utils.configuration.update_thread_count) do |gem|
+          [gem, Gemirro::Utils.spec_for(gem.name, gem.number, gem.platform)]
+        end
+        gem_collection.compact!
+
+        Parallel.map(gem_collection, in_threads: Utils.configuration.update_thread_count) do |gem, spec|
+          next if spec.nil?
+
+          dependencies = spec.dependencies.select do |d|
+            d.type == :runtime
+          end
+
+          dependencies = dependencies.collect do |d|
+            [d.name.is_a?(Array) ? d.name.first : d.name, d.requirement.to_s]
+          end
+
+          {
+            name: gem.name,
+            number: gem.number,
+            platform: gem.platform,
+            dependencies: dependencies
+          }
+        end
+      end
+    end
+
+    ##
+    # Update indexes files
+    #
+    # @return [Indexer]
+    #
+    def self.update_indexes
+      indexer = Gemirro::Indexer.new(Utils.configuration.destination)
+      indexer.only_origin = true
+      indexer.ui = ::Gem::SilentUI.new
+
+      Utils.logger.info('Generating indexes')
+      indexer.update_index
+      indexer.updated_gems.each do |gem|
+        Utils.cache.flush_key(File.basename(gem))
+      end
+    rescue SystemExit => e
+      Utils.logger.info(e.message)
+    end
   end
 end
