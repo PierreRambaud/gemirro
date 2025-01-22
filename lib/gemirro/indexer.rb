@@ -236,17 +236,17 @@ module Gemirro
         end
 
       Tempfile.create('versions.list') do |f|
-        unless partial
+        previous_versions_file = Dir.glob(File.join(@dest_directory, 'versions*.list')).last
+      
+        if partial && File.exist?(previous_versions_file)
+          versions_file = CompactIndex::VersionsFile.new(previous_versions_file)
+        else
+          versions_file = CompactIndex::VersionsFile.new(f.path)
           f.write format('created_at: %s', Time.now.utc.iso8601)
           f.write "\n---\n"
         end
-        
-        
-        
-        versions_file = CompactIndex::VersionsFile.new(partial ? Dir.glob(File.join(@dest_directory, 'versions*.list')).last : f.path)
 
         f.write CompactIndex.versions(versions_file, cg)
-          
         f.rewind
 
         FileUtils.rm_rf(Dir.glob(File.join(@dest_directory, 'versions*.list')))
@@ -437,8 +437,8 @@ module Gemirro
         Dir.glob(File.join(File.join(@dest_directory, 'gems'), '*.gem')).select do |possibility|
           gem_name_updates.any? { |updated| File.basename(possibility) =~ /^#{updated}-\d/ }
         end
-        
-      Utils.logger.info("Reloading for /info")
+
+      Utils.logger.info('Reloading for /info')
       version_specs = map_gems_to_specs(u2)
 
       prerelease, released = specs.partition { |s| s.version.prerelease? }
