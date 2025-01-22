@@ -22,8 +22,17 @@ Gemirro::CLI.options.command 'index' do
     indexer    = Gemirro::Indexer.new(config.destination)
     indexer.ui = Gem::SilentUI.new
 
-    config.logger.info('Generating indexes')
-    indexer.generate_index if opts[:u].nil?
-    indexer.update_index unless opts[:u].nil?
+    if opts[:u]
+      if File.exist?(File.join(config.destination, 'specs.4.8'))
+        config.logger.info('Generating index updates')
+        indexer.update_index
+      else
+        config.logger.info('Generating indexes')
+        indexer.generate_index
+      end
+    else
+      config.logger.info('Generating indexes')
+      indexer.generate_index
+    end
   end
 end
