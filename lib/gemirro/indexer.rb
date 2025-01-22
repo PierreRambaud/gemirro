@@ -188,7 +188,9 @@ module Gemirro
       Utils.logger.info('[1/1]: Caching /names')
       FileUtils.rm_rf(Dir.glob(File.join(@dest_directory, 'names*.list')))
 
-      gem_name_list = Dir.glob('*.gem', base: File.join(@dest_directory, 'gems')).collect{ |x| x.sub(/-\d+(\.\d+)*(\.[a-zA-Z\d]+)*([-_a-zA-Z\d]+)?\.gem/, '') }.uniq.sort!
+      gem_name_list = Dir.glob('*.gem', base: File.join(@dest_directory, 'gems')).collect do |x|
+        x.sub(/-\d+(\.\d+)*(\.[a-zA-Z\d]+)*([-_a-zA-Z\d]+)?\.gem/, '')
+      end.uniq.sort!
 
       Tempfile.create('names.list') do |f|
         f.write CompactIndex.names(gem_name_list).to_s
@@ -211,12 +213,11 @@ module Gemirro
         .sort_by(&:name)
         .group_by(&:name)
         .collect do |name, gem_versions|
-        
           gem_versions =
             gem_versions.sort do |a, b|
               a.version <=> b.version
             end
-        
+
           CompactIndex::Gem.new(
             name,
             gem_versions.collect do |y|
@@ -235,12 +236,17 @@ module Gemirro
         end
 
       Tempfile.create('versions.list') do |f|
-        f.write format('created_at: %s', Time.now.utc.iso8601)
-        f.write "\n---\n"
-        f.write CompactIndex::VersionsFile
-          .new(partial ? Dir.glob(File.join(@dest_directory, 'versions*.list')).last : f.path)
-          .contents(cg, calculate_info_checksums: false)
-          .to_s
+        unless partial
+          f.write format('created_at: %s', Time.now.utc.iso8601)
+          f.write "\n---\n"
+        end
+        
+        
+        
+        versions_file = CompactIndex::VersionsFile.new(partial ? Dir.glob(File.join(@dest_directory, 'versions*.list')).last : f.path)
+
+        f.write CompactIndex.versions(versions_file, cg)
+          
         f.rewind
 
         FileUtils.rm_rf(Dir.glob(File.join(@dest_directory, 'versions*.list')))
@@ -431,7 +437,9 @@ module Gemirro
         Dir.glob(File.join(File.join(@dest_directory, 'gems'), '*.gem')).select do |possibility|
           gem_name_updates.any? { |updated| File.basename(possibility) =~ /^#{updated}-\d/ }
         end
-      specs = map_gems_to_specs(u2)
+        
+      Utils.logger.info("Reloading for /info")
+      version_specs = map_gems_to_specs(u2)
 
       prerelease, released = specs.partition { |s| s.version.prerelease? }
 
@@ -467,7 +475,7 @@ module Gemirro
       if @build_compact
 
         build_compact_index_names
-        build_compact_index_infos(specs, true)
+        build_compact_index_infos(version_specs, true)
         build_compact_index_versions(specs, true)
       end
 
