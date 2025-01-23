@@ -26,6 +26,7 @@ module Gemirro
     # @param [String] content
     #
     def write(content)
+      FileUtils.mkdir_p(File.dirname(@path))
       handle = File.open(@path, 'w')
 
       handle.write(content)

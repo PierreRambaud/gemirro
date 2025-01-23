@@ -85,8 +85,8 @@ module Gemirro
     #
     get '/api/v1/dependencies' do
       content_type 'application/octet-stream'
-      if params[:gems].to_s.split(',').any?
-        Marshal.dump(Gemirro::Utils.query_gems_list(params[:gems].to_s.split(',')))
+      if params[:gems].to_s != '' && params[:gems].to_s.split(',').any?
+        Marshal.dump(dependencies_loader(params[:gems].to_s.split(',')))
       else
         200
       end
@@ -99,10 +99,14 @@ module Gemirro
     #
     get '/api/v1/dependencies.json' do
       content_type 'application/json'
-      if params[:gems].to_s.split(',').any?
-        JSON.dump(Gemirro::Utils.query_gems_list(params[:gems].to_s.split(',')))
+      if params[:gems]
+        if params[:gems].to_s.split(',').any?
+          JSON.dump(dependencies_loader(params[:gems].to_s.split(',')))
+        else
+          '[]'
+        end
       else
-        {}
+        ''
       end
     end
 
@@ -172,6 +176,22 @@ module Gemirro
       return not_found unless File.exist?(resource)
 
       send_file(resource)
+    end
+
+    def dependencies_loader(names)
+      names.collect do |name|
+        f = File.join(settings.public_folder, 'api', 'v1', 'dependencies', "#{name}.*.*.list")
+        Marshal.load(File.read(Dir.glob(f).last))
+      rescue StandardError => e
+        env['rack.errors'].write "Cound not open #{f}\n"
+        env['rack.errors'].write "#{e.message}\n"
+        e.backtrace.each do |err|
+          env['rack.errors'].write "#{err}\n"
+        end
+        nil
+      end
+      .flatten
+      .compact
     end
   end
 end

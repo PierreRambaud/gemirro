@@ -1,7 +1,6 @@
 require 'rack/test'
 require 'json'
 require 'parallel'
-require 'gemirro/cache'
 require 'gemirro/utils'
 require 'gemirro/mirror_directory'
 require 'gemirro/mirror_file'

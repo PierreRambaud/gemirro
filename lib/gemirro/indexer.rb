@@ -217,7 +217,10 @@ module Gemirro
         gem_versions.compact!
 
         cg = []
-        Parallel.map(gem_versions, in_threads: Utils.configuration.update_thread_count) do |gem, spec|
+        Parallel.each_with_index(
+          gem_versions,
+          in_threads: Utils.configuration.update_thread_count
+        ) do |(gem, spec), index2|
           next if spec.nil?
 
           dependencies = spec.dependencies.select do |d|
@@ -228,7 +231,7 @@ module Gemirro
             [d.name.is_a?(Array) ? d.name.first : d.name, d.requirement.to_s]
           end
 
-          cg[index] =
+          cg[index2] =
             {
               name: gem.name,
               number: gem.version.to_s,
@@ -237,20 +240,7 @@ module Gemirro
             }
         end
 
-        Tempfile.create("#{name}.json.list") do |f|
-          f.write cg.to_json
-          f.rewind
-
-          File.rename(
-            f.path,
-            File.join(
-              @api_v1_dependencies_dir,
-              "#{name}.json.#{Digest::MD5.file(f.path).hexdigest}.#{Digest::SHA256.file(f.path).hexdigest}.list"
-            )
-          )
-        end
-
-        Tempfile.create("#{name}.marshal.list") do |f|
+        Tempfile.create("api_v1_dependencies_#{name}.list") do |f|
           f.write Marshal.dump(cg)
           f.rewind
 
@@ -258,7 +248,7 @@ module Gemirro
             f.path,
             File.join(
               @api_v1_dependencies_dir,
-              "#{name}.marshal.#{Digest::MD5.file(f.path).hexdigest}.#{Digest::SHA256.file(f.path).hexdigest}.list"
+              "#{name}.#{Digest::MD5.file(f.path).hexdigest}.#{Digest::SHA256.file(f.path).hexdigest}.list"
             )
           )
         end
@@ -628,7 +618,7 @@ module Gemirro
         verbose: verbose,
         force: true
       )
-      Utils.cache.flush_key(File.basename(dst_name))
+      #      Utils.cache.flush_key(File.basename(dst_name))
     end
 
     def verbose

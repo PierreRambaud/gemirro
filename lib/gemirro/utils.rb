@@ -14,7 +14,6 @@ module Gemirro
   #
   class Utils
     attr_reader(
-      :cache,
       :versions_fetcher,
       :gems_fetcher,
       :gems_collection,
@@ -27,16 +26,6 @@ module Gemirro
 
     GEMSPEC_TYPE = 'gemspec.rz'
     GEM_TYPE = 'gem'
-
-    ##
-    # Cache class to store marshal and data into files
-    #
-    # @return [Gemirro::Cache]
-    #
-    def self.cache
-      @cache ||= Gemirro::Cache
-                 .new(File.join(configuration.destination, '.cache'))
-    end
 
     ##
     # Generate Gems collection from Marshal dump
@@ -211,8 +200,7 @@ module Gemirro
         return if Utils.gems_fetcher.gem_exists?(gem.filename(gem_version)) && gem_type == GEM_TYPE
         return if Utils.gems_fetcher.gemspec_exists?(gem.gemspec_filename(gem_version)) && gem_type == GEMSPEC_TYPE
 
-        Utils.logger
-             .info("Try to download #{gem_name} with version #{gem_version}")
+        Utils.logger.info("Try to download #{gem_name} with version #{gem_version}")
         Utils.gems_fetcher.source.gems.clear
         Utils.gems_fetcher.source.gems.push(gem)
         Utils.gems_fetcher.fetch
@@ -234,50 +222,48 @@ module Gemirro
         gem_dependencies(query_gem)
       end
 
-      gems.flatten!
-      gems.compact!
-      gems.reject!(&:empty?)
-      gems
+      gems.flatten.compact.reject(&:empty?)
     end
 
-    ##
-    # List of versions and dependencies of each version
-    # from a gem name.
+    #     ##
+    #     # List of versions and dependencies of each version
+    #     # from a gem name.
+    #     #
+    #     # @return [Array]
+    #     #
+    #     def self.gem_dependencies(gem_name)
+    #       Utils.cache.cache(gem_name) do
+    #         gems = Utils.gems_collection(false)
+    #         gem_collection = gems.find_by_name(gem_name)
     #
-    # @return [Array]
+    #         return '' if gem_collection.nil?
     #
-    def self.gem_dependencies(gem_name)
-      Utils.cache.cache(gem_name) do
-        gems = Utils.gems_collection(false)
-        gem_collection = gems.find_by_name(gem_name)
-
-        return '' if gem_collection.nil?
-
-        gem_collection = Parallel.map(gem_collection, in_threads: Utils.configuration.update_thread_count) do |gem|
-          [gem, Gemirro::Utils.spec_for(gem.name, gem.number, gem.platform)]
-        end
-        gem_collection.compact!
-
-        Parallel.map(gem_collection, in_threads: Utils.configuration.update_thread_count) do |gem, spec|
-          next if spec.nil?
-
-          dependencies = spec.dependencies.select do |d|
-            d.type == :runtime
-          end
-
-          dependencies = dependencies.collect do |d|
-            [d.name.is_a?(Array) ? d.name.first : d.name, d.requirement.to_s]
-          end
-
-          {
-            name: gem.name,
-            number: gem.number,
-            platform: gem.platform,
-            dependencies: dependencies
-          }
-        end
-      end
-    end
+    #         gem_collection =
+    #           Parallel.map(gem_collection, in_threads: Utils.configuration.update_thread_count) do |gem|
+    #             [gem, Gemirro::Utils.spec_for(gem.name, gem.number, gem.platform)]
+    #           end
+    #         gem_collection.compact!
+    #
+    #         Parallel.map(gem_collection, in_threads: Utils.configuration.update_thread_count) do |gem, spec|
+    #           next if spec.nil?
+    #
+    #           dependencies = spec.dependencies.select do |d|
+    #             d.type == :runtime
+    #           end
+    #
+    #           dependencies = dependencies.collect do |d|
+    #             [d.name.is_a?(Array) ? d.name.first : d.name, d.requirement.to_s]
+    #           end
+    #
+    #           {
+    #             name: gem.name,
+    #             number: gem.number,
+    #             platform: gem.platform,
+    #             dependencies: dependencies
+    #           }
+    #         end
+    #       end
+    #     end
 
     ##
     # Update indexes files
@@ -291,9 +277,9 @@ module Gemirro
 
       Utils.logger.info('Generating indexes')
       indexer.update_index
-      indexer.updated_gems.each do |gem|
-        Utils.cache.flush_key(File.basename(gem))
-      end
+    #      indexer.updated_gems.each do |gem|
+    #        Utils.cache.flush_key(File.basename(gem))
+    #      end
     rescue SystemExit => e
       Utils.logger.info(e.message)
     end

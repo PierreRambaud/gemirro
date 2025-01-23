@@ -22,8 +22,9 @@ Gemirro::CLI.options.command 'index' do
     indexer    = Gemirro::Indexer.new(config.destination)
     indexer.ui = Gem::SilentUI.new
 
-    if opts[:u]
-      if File.exist?(File.join(config.destination, 'specs.4.8'))
+
+    if File.exist?(File.join(config.destination, "specs.#{::Gem.marshal_version}.gz"))
+      if opts[:u]
         config.logger.info('Generating index updates')
         indexer.update_index
       else
@@ -31,8 +32,8 @@ Gemirro::CLI.options.command 'index' do
         indexer.generate_index
       end
     else
-      config.logger.info('Generating indexes')
-      indexer.generate_index
+      config.logger.error("public/specs.#{::Gem.marshal_version}.gz file is missing.")
+      config.logger.error('Run "gemirro update" before running index.')
     end
   end
 end
