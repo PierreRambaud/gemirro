@@ -153,11 +153,12 @@ module Gemirro
     def self.spec_for(gemname, version, platform = 'ruby')
       gem = Utils.stored_gem(gemname, version.to_s, platform)
 
-      spec_file = File.join(
-        'quick',
-        Gemirro::Configuration.marshal_identifier,
-        gem.gemspec_filename
-      )
+      spec_file =
+        File.join(
+          'quick',
+          Gemirro::Configuration.marshal_identifier,
+          gem.gemspec_filename
+        )
 
       fetch_gem(spec_file) unless File.exist?(spec_file)
 

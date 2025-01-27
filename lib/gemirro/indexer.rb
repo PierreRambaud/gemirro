@@ -289,6 +289,12 @@ module Gemirro
               a.version <=> b.version
             end
 
+          info_file = Dir.glob(File.join(@infos_dir, "#{name}.*.*.list")).last
+
+          throw "Info file for #{name} not found" unless info_file
+
+          info_file_checksum = info_file.split('.', -4)[-3]
+
           CompactIndex::Gem.new(
             name,
             gem_versions.collect do |y|
@@ -296,11 +302,7 @@ module Gemirro
                 y.version.to_s,
                 y.platform,
                 nil,
-                begin
-                  Dir.glob(File.join(@infos_dir, "#{name}.*.*.list")).last.split('.', -4)[-3]
-                rescue StandardError
-                  Utils.logger.error("No match for #{File.join(@infos_dir, "#{name}.*.*.list")} Found")
-                end
+                info_file_checksum
               )
             end
           )
@@ -482,7 +484,12 @@ module Gemirro
       # files manually deleted
       @updated_gems += (indexed_gemfiles - present_gemfiles).collect { |x| File.join(@dest_directory, 'gems', x) }
 
-      specs_mtime = File.stat(@dest_specs_index).mtime
+      specs_mtime =
+        begin
+          File.stat(@dest_specs_index).mtime
+        rescue StandardError
+          Time.at(0)
+        end
       newest_mtime = Time.at(0)
 
       # files that have been replaced
@@ -524,7 +531,11 @@ module Gemirro
         end
 
       ::Gem.time('Updated indexes') do
-        update_specs_index(released, @dest_specs_index, @specs_index)
+        update_specs_index(
+          released,
+          @dest_specs_index,
+          @specs_index
+        )
         update_specs_index(
           released,
           @dest_latest_specs_index,

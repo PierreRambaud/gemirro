@@ -22,8 +22,10 @@ module Gemirro
     # @return [Gemirro::VersionsFile]
     #
     def fetch
-      VersionsFile.load(read_file(Configuration.versions_file),
-                        read_file(Configuration.prerelease_versions_file, true))
+      VersionsFile.load(
+        read_file(Configuration.versions_file),
+        read_file(Configuration.prerelease_versions_file, true)
+      )
     end
 
     ##

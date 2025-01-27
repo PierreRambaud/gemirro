@@ -31,14 +31,19 @@ module Gemirro
           gem.platform = versions[1] if versions
           version = versions[0] if versions
           if gem.gemspec?
-            gemfile = fetch_gemspec(gem, version)
-            if gemfile
+            gemspec = fetch_gemspec(gem, version)
+            if gemspec
               Utils.configuration.mirror_gemspecs_directory
-                   .add_file(gem.gemspec_filename(version), gemfile)
+                   .add_file(gem.gemspec_filename(version), gemspec)
             end
           else
             gemfile = fetch_gem(gem, version)
             if gemfile
+              gemspec = fetch_gemspec(gem, version)
+              if gemspec
+                Utils.configuration.mirror_gemspecs_directory
+                     .add_file(gem.gemspec_filename(version), gemspec)
+              end
               Utils.configuration.mirror_gems_directory
                    .add_file(gem.filename(version), gemfile)
             end
