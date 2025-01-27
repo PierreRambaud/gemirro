@@ -17,5 +17,11 @@ Gemirro::CLI.options.command 'update' do
     gems     = Gemirro::GemsFetcher.new(source, versions)
 
     gems.fetch
+    
+    source.gems.each do |gem|
+      gem.gemspec = true
+    end
+
+    gems.fetch
   end
 end
