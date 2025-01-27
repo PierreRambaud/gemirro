@@ -75,10 +75,14 @@ module Gemirro
     def self.specs_files_paths(orig = true)
       marshal_version = Gemirro::Configuration.marshal_version
       Parallel.map(specs_file_types, in_threads: Utils.configuration.update_thread_count) do |specs_file_type|
-        File.join(configuration.destination,
-                  [specs_file_type,
-                   marshal_version,
-                   "gz#{orig ? '.orig' : ''}"].join('.'))
+        File.join(
+          configuration.destination,
+          [
+            specs_file_type,
+            marshal_version,
+            "gz#{orig ? '.orig' : ''}"
+          ].join('.')
+        )
       end
     end
 
@@ -110,8 +114,7 @@ module Gemirro
     # @see Gemirro::VersionsFetcher.fetch
     #
     def self.versions_fetcher
-      @versions_fetcher ||= Gemirro::VersionsFetcher
-                            .new(configuration.source).fetch
+      @versions_fetcher ||= Gemirro::VersionsFetcher.new(configuration.source).fetch
     end
 
     ##
@@ -149,17 +152,14 @@ module Gemirro
     #
     def self.spec_for(gemname, version, platform = 'ruby')
       gem = Utils.stored_gem(gemname, version.to_s, platform)
-      gemspec_path = File.join(
+
+      spec_file = File.join(
         'quick',
         Gemirro::Configuration.marshal_identifier,
         gem.gemspec_filename
       )
 
-      spec_file = File.join(
-        Utils.configuration.destination.gsub(%r{/$}, ''),
-        gemspec_path
-      )
-      fetch_gem(gemspec_path) unless File.exist?(spec_file)
+      fetch_gem(spec_file) unless File.exist?(spec_file)
 
       return unless File.exist?(spec_file)
 
