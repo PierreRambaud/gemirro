@@ -36,8 +36,7 @@ module Gemirro
     def self.gems_collection(orig = true)
       @gems_collection = {} if @gems_collection.nil?
 
-      is_orig = orig ? 1 : 0
-      data = @gems_collection[is_orig]
+      data = @gems_collection[orig ? 1 : 0]
       data = { files: {}, values: nil } if data.nil?
 
       file_paths = specs_files_paths(orig)
@@ -225,46 +224,6 @@ module Gemirro
 
       gems.flatten.compact.reject(&:empty?)
     end
-
-    #     ##
-    #     # List of versions and dependencies of each version
-    #     # from a gem name.
-    #     #
-    #     # @return [Array]
-    #     #
-    #     def self.gem_dependencies(gem_name)
-    #       Utils.cache.cache(gem_name) do
-    #         gems = Utils.gems_collection(false)
-    #         gem_collection = gems.find_by_name(gem_name)
-    #
-    #         return '' if gem_collection.nil?
-    #
-    #         gem_collection =
-    #           Parallel.map(gem_collection, in_threads: Utils.configuration.update_thread_count) do |gem|
-    #             [gem, Gemirro::Utils.spec_for(gem.name, gem.number, gem.platform)]
-    #           end
-    #         gem_collection.compact!
-    #
-    #         Parallel.map(gem_collection, in_threads: Utils.configuration.update_thread_count) do |gem, spec|
-    #           next if spec.nil?
-    #
-    #           dependencies = spec.dependencies.select do |d|
-    #             d.type == :runtime
-    #           end
-    #
-    #           dependencies = dependencies.collect do |d|
-    #             [d.name.is_a?(Array) ? d.name.first : d.name, d.requirement.to_s]
-    #           end
-    #
-    #           {
-    #             name: gem.name,
-    #             number: gem.number,
-    #             platform: gem.platform,
-    #             dependencies: dependencies
-    #           }
-    #         end
-    #       end
-    #     end
 
     ##
     # Update indexes files
