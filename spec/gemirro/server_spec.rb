@@ -36,11 +36,14 @@ module Gemirro
       Utils.instance_eval('@gems_orig_collection = nil')
       Utils.instance_eval('@gems_source_collection = nil')
       FakeFS::FileSystem.clone(Gemirro::Configuration.views_directory)
+      allow_any_instance_of(Indexer).to receive(:compress_indices)
+      allow_any_instance_of(Indexer).to receive(:compress_indicies)
+      allow_any_instance_of(Indexer).to receive(:rand).and_return('0')
     end
 
     context 'HTML render' do
       it 'should display index page' do
-        allow(Logger).to receive(:new).twice.and_return(@fake_logger)
+        allow(Logger).to receive(:new).exactly(3).times.and_return(@fake_logger)
         allow(@fake_logger).to receive(:tap)
           .and_return(nil)
           .and_yield(@fake_logger)
@@ -66,7 +69,12 @@ module Gemirro
                                       ::Gem::Version.create('0.1.0'),
                                       'ruby']])
 
-        MirrorFile.new('/var/www/gemirro/specs.4.8.gz.orig').write(marshal_dump)
+        MirrorFile.new('/var/www/gemirro/specs.4.8').write(Marshal.dump({}))
+        MirrorFile.new('/var/www/gemirro/latest_specs.4.8').write(Marshal.dump({}))
+        MirrorFile.new('/var/www/gemirro/prerelease_specs.4.8').write(Marshal.dump({}))
+        MirrorFile.new('/tmp/gem_generate_index_0/specs.4.8.gz').write(Marshal.dump({}))
+        allow(Zlib::GzipReader).to receive(:open).and_return(double(read: Marshal.dump([])))
+
         Struct.new('SuccessGzipReader', :read)
         gzip_reader = Struct::SuccessGzipReader.new(marshal_dump)
         MirrorDirectory.new('/var/www/gemirro')
@@ -103,8 +111,24 @@ module Gemirro
                          "\xF5\xF4\x1D1\xF3\xBA\xE7+!\"\xD4\xEB-\xB1X%\xB3\x14\xD3" \
                          "\xCB\xEDw\xEE\xBD\xFDk\xE99OSz\xF3\xEA\xFA]w7\xF5\xAF\xB5" \
                          "\x9F+\xFEG\x96")
+        MirrorFile.new('/var/www/gemirro/quick/Marshal.4.8/' \
+                    'volay-0.1.0.gemspec.rz')
         # rubocop:enable Metrics/LineLength
 
+        MirrorFile.new('/var/www/gemirro/api/v1/dependencies/volay.md5.sha.list')
+        .write(Marshal.dump([
+          {
+            name: 'volay',
+            number: "0.1.0",
+            platform: 'ruby',
+            dependencies: [
+              {
+                name: 'json',
+                requirement: '~> 2.1'
+              }
+            ]
+          }
+        ]))
         allow(Zlib::GzipReader).to receive(:open)
           .once
           .with('/var/www/gemirro/specs.4.8.gz.orig')
@@ -211,7 +235,8 @@ module Gemirro
         get '/api/v1/dependencies.json'
         expect(last_response.headers['Content-Type'])
           .to eq('application/json')
-        expect(last_response.body).to eq('')
+          puts last_response.body
+        expect(last_response.body).to eq('[]')
         expect(last_response).to be_ok
       end
 
@@ -259,6 +284,21 @@ module Gemirro
                          "\xCB\xEDw\xEE\xBD\xFDk\xE99OSz\xF3\xEA\xFA]w7\xF5\xAF\xB5" \
                          "\x9F+\xFEG\x96")
         # rubocop:enable Metrics/LineLength
+
+        MirrorFile.new('/var/www/gemirro/api/v1/dependencies/volay.md5.sha.list')
+        .write(Marshal.dump([
+          {
+            name: 'volay',
+            number: "0.1.0",
+            platform: 'ruby',
+            dependencies: [
+              {
+                name: 'json',
+                requirement: '~> 2.1'
+              }
+            ]
+          }
+        ]))
 
         gem = Gemirro::GemVersion.new('volay', '0.1.0', 'ruby')
         collection = Gemirro::GemVersionCollection.new([gem])

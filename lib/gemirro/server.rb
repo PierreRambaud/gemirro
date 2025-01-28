@@ -99,15 +99,16 @@ module Gemirro
     #
     get '/api/v1/dependencies.json' do
       content_type 'application/json'
-      if params[:gems]
-        if params[:gems].to_s.split(',').any?
-          JSON.dump(dependencies_loader(params[:gems].to_s.split(',')))
-        else
-          '[]'
-        end
-      else
-        ''
-      end
+
+      return '[]' unless params[:gems]
+
+      gem_names = params[:gems].to_s
+                               .split(',')
+                               .map(&:strip)
+                               .reject(&:empty?)
+      return '[]' if gem_names.empty?
+
+      JSON.dump(dependencies_loader(gem_names))
     end
 
     ##
