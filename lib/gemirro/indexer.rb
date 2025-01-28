@@ -137,7 +137,7 @@ module Gemirro
     end
 
     ##
-    # Download file from source
+    # Download file from source (example: rubygems.org)
     #
     # @param [String] file File path
     # @return [String]
@@ -189,7 +189,13 @@ module Gemirro
       build_compact_index_infos(specs)
       build_compact_index_versions(specs)
     end
-
+    
+    ##
+    # Cache Modern Index endpoints /api/v1/dependencies?gems= and /api/v1/dependencies.json?gems=
+    # This single request may include many fragments. server.rb determines which are required per request.
+    #
+    # @return nil
+    #
     def build_api_v1_dependencies(specs, partial = false)
       FileUtils.mkdir_p(@api_v1_dependencies_dir)
 
@@ -249,6 +255,12 @@ module Gemirro
       end
     end
 
+    ##
+    # Cache compact_index endpoint /names
+    # Report all gems with versions available. Does not require opening spec files.
+    #
+    # @return nil
+    #
     def build_compact_index_names
       Utils.logger.info('[1/1]: Caching /names')
       FileUtils.rm_rf(Dir.glob(File.join(@dest_directory, 'names*.list')))
@@ -270,6 +282,13 @@ module Gemirro
       nil
     end
 
+    ##
+    # Cache compact_index endpoint /versions
+    #
+    # @param [Array] specs Gems list
+    # @param [Boolean] partial Is gem list an update or a full index
+    # @return nil
+    #
     def build_compact_index_versions(specs, partial = false)
       Utils.logger.info('[1/1]: Caching /versions')
 
@@ -330,6 +349,13 @@ module Gemirro
       nil
     end
 
+    ##
+    # Cache compact_index endpoint /info/[gemname]
+    #
+    # @param [Array] specs Gems list
+    # @param [Boolean] partial Is gem list an update or a full index
+    # @return nil
+    #
     def build_compact_index_infos(specs, partial = false)
       FileUtils.mkdir_p(@infos_dir)
 
@@ -351,7 +377,6 @@ module Gemirro
           end
 
         versions =
-          # gem_versions.collect do |spec|
           Parallel.map(gem_versions, in_threads: Utils.configuration.update_thread_count) do |spec|
             deps =
               spec
@@ -467,6 +492,11 @@ module Gemirro
       results.compact
     end
 
+    ##
+    # Handle `index --update`, detecting changed files and file lists.
+    #
+    # @return nil
+    #
     def update_index
       make_temp_directories
 
@@ -474,9 +504,9 @@ module Gemirro
       indexed_gemfiles = Dir.glob('*.gemspec.rz', base: @quick_marshal_dir_base).collect { |x| x.gsub(/spec.rz$/, '') }
 
       @updated_gems = []
-      # files manually added
+      # detect files manually added to public/gems
       @updated_gems += (present_gemfiles - indexed_gemfiles).collect { |x| File.join(@dest_directory, 'gems', x) }
-      # files manually deleted
+      # detect files manually deleted from public/gems
       @updated_gems += (indexed_gemfiles - present_gemfiles).collect { |x| File.join(@dest_directory, 'gems', x) }
 
       specs_mtime =
@@ -504,14 +534,16 @@ module Gemirro
 
       specs = map_gems_to_specs(@updated_gems)
 
-      # wider net
+      # specs only includes latest discovered files.
+      # /info/[gemname] and /api/v1/dependencies can not be rebuilt
+      # incrementally, so retrive specs for all versions of these gems.
       gem_name_updates = specs.collect(&:name).uniq
       u2 =
         Dir.glob(File.join(File.join(@dest_directory, 'gems'), '*.gem')).select do |possibility|
           gem_name_updates.any? { |updated| File.basename(possibility) =~ /^#{updated}-\d/ }
         end
 
-      Utils.logger.info('Reloading for /info')
+      Utils.logger.info('Reloading for /info/[gemname]')
       version_specs = map_gems_to_specs(u2)
 
       prerelease, released = specs.partition { |s| s.version.prerelease? }
