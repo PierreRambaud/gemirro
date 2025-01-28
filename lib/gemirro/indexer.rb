@@ -210,17 +210,11 @@ module Gemirro
             a.version <=> b.version
           end
 
-        gem_versions =
-          Parallel.map(gem_versions, in_threads: Utils.configuration.update_thread_count) do |gem|
-            [gem, Gemirro::Utils.spec_for(gem.name, gem.version.to_s, gem.platform)]
-          end
-        gem_versions.compact!
-
         cg = []
         Parallel.each_with_index(
           gem_versions,
           in_threads: Utils.configuration.update_thread_count
-        ) do |(gem, spec), index2|
+        ) do |spec, index2|
           next if spec.nil?
 
           dependencies = spec.dependencies.select do |d|
@@ -233,9 +227,9 @@ module Gemirro
 
           cg[index2] =
             {
-              name: gem.name,
-              number: gem.version.to_s,
-              platform: gem.platform,
+              name: spec.name,
+              number: spec.version.to_s,
+              platform: spec.platform,
               dependencies: dependencies
             }
         end
@@ -629,7 +623,6 @@ module Gemirro
         verbose: verbose,
         force: true
       )
-      #      Utils.cache.flush_key(File.basename(dst_name))
     end
 
     def verbose

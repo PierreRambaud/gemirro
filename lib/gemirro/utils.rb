@@ -34,14 +34,27 @@ module Gemirro
     # @return [Gemirro::GemVersionCollection]
     #
     def self.gems_collection(orig = true)
-      @gems_collection = {} if @gems_collection.nil?
+      update_indexes # if Utils.configuration.update_on_fetch
 
-      data = @gems_collection[orig ? 1 : 0]
-      data = { files: {}, values: nil } if data.nil?
+      @gems_collection ||= {}
 
-      file_paths = specs_files_paths(orig)
+      data ||= @gems_collection[orig ? 1 : 0]
+      data ||= { files: {}, values: nil }
+
+      file_paths =
+        %i[specs prerelease_specs].collect do |specs_file_type|
+          File.join(
+            configuration.destination,
+            [
+              specs_file_type,
+              Gemirro::Configuration.marshal_version,
+              "gz#{orig ? '.orig' : ''}"
+            ].join('.')
+          )
+        end
+
       has_file_changed = false
-      Parallel.map(file_paths, in_threads: Utils.configuration.update_thread_count) do |file_path|
+      file_paths.each do |file_path|
         next if data[:files].key?(file_path) &&
                 data[:files][file_path] == File.mtime(file_path)
 
@@ -63,35 +76,6 @@ module Gemirro
       data[:values] = collection
 
       collection
-    end
-
-    ##
-    # Return specs fils paths
-    #
-    # @param [TrueClass|FalseClass] orig Fetch orig files
-    # @return [Array]
-    #
-    def self.specs_files_paths(orig = true)
-      marshal_version = Gemirro::Configuration.marshal_version
-      Parallel.map(specs_file_types, in_threads: Utils.configuration.update_thread_count) do |specs_file_type|
-        File.join(
-          configuration.destination,
-          [
-            specs_file_type,
-            marshal_version,
-            "gz#{orig ? '.orig' : ''}"
-          ].join('.')
-        )
-      end
-    end
-
-    ##
-    # Return specs fils types
-    #
-    # @return [Array]
-    #
-    def self.specs_file_types
-      %i[specs prerelease_specs]
     end
 
     ##
