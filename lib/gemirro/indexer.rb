@@ -356,6 +356,7 @@ module Gemirro
             deps =
               spec
               .dependencies
+              .select { |d| d.type == :runtime }
               .sort_by(&:name)
               .collect do |dependency|
                 CompactIndex::Dependency.new(
