@@ -121,7 +121,7 @@ module Gemirro
         if ["#{@specs_index}.gz",
             "#{@latest_specs_index}.gz",
             "#{@prerelease_specs_index}.gz"].include?(path)
-          res = build_zlib_file(file,  File.join(@directory, file), File.join(@dest_directory, file), true)
+          res = build_zlib_file(file, File.join(@directory, file), File.join(@dest_directory, file), true)
           next unless res
         else
           source_content = download_from_source(file)
@@ -187,7 +187,7 @@ module Gemirro
       build_compact_index_infos(specs)
       build_compact_index_versions(specs)
     end
-    
+
     ##
     # Cache Modern Index endpoints /api/v1/dependencies?gems= and /api/v1/dependencies.json?gems=
     # This single request may include many fragments. server.rb determines which are required per request.
@@ -599,7 +599,7 @@ module Gemirro
         file = path.sub(%r{^#{Regexp.escape @directory}/?}, '')
 
         if ["#{@specs_index}.gz", "#{@latest_specs_index}.gz", "#{@prerelease_specs_index}.gz"].include?(path)
-          res = build_zlib_file(file,  File.join(@directory, file), File.join(@dest_directory, file))
+          res = build_zlib_file(file, File.join(@directory, file), File.join(@dest_directory, file))
           next unless res
         else
           FileUtils.mv(

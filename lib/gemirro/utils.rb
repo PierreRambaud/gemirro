@@ -66,17 +66,11 @@ module Gemirro
       Parallel.map(file_paths, in_threads: Utils.configuration.update_thread_count) do |file_path|
         next unless File.exist?(file_path)
 
-
-
-
         gems.concat(Marshal.load(Zlib::GzipReader.open(file_path).read))
         @gems_collection[local ? :local : :remote][:files][file_path] = File.mtime(file_path)
       end
 
-      ret = @gems_collection[local ? :local : :remote][:values] = GemVersionCollection.new(gems)
-      
-      
-      ret
+      @gems_collection[local ? :local : :remote][:values] = GemVersionCollection.new(gems)
     end
 
     ##
