@@ -115,7 +115,7 @@ module Gemirro
                     'volay-0.1.0.gemspec.rz')
         # rubocop:enable Metrics/LineLength
 
-        MirrorFile.new('/var/www/gemirro/api/v1/dependencies/volay.md5.sha.list')
+        f = MirrorFile.new('/var/www/gemirro/api/v1/dependencies/volay.d41d8cd98f00b204e9800998ecf8427e.e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.list')
         .write(Marshal.dump([
           {
             name: 'volay',
@@ -129,12 +129,18 @@ module Gemirro
             ]
           }
         ]))
+
         allow(Zlib::GzipReader).to receive(:open)
           .once
-          .with('/var/www/gemirro/specs.4.8.gz.orig')
+          .with('/var/www/gemirro/specs.4.8.gz.local')
           .and_return(gzip_reader)
 
+        # should this have been written to disk earlier?
+        f = MirrorFile.new('/var/www/gemirro/specs.4.8.gz.local')
+          .write(marshal_dump)
+
         get '/gem/volay'
+        
         expect(last_response.status).to eq(200)
         expect(last_response).to be_ok
       end

@@ -33,49 +33,50 @@ module Gemirro
     # @param [TrueClass|FalseClass] orig Fetch orig files
     # @return [Gemirro::GemVersionCollection]
     #
-    def self.gems_collection(orig = true)
-      update_indexes # if Utils.configuration.update_on_fetch
-
+    def self.gems_collection(local = true)
       @gems_collection ||= {}
-
-      data ||= @gems_collection[orig ? 1 : 0]
-      data ||= { files: {}, values: nil }
+      @gems_collection[local ? :local : :remote] ||= { files: {}, values: nil }
 
       file_paths =
         %i[specs prerelease_specs].collect do |specs_file_type|
           File.join(
             configuration.destination,
-            [
-              specs_file_type,
-              Gemirro::Configuration.marshal_version,
-              "gz#{orig ? '.orig' : ''}"
-            ].join('.')
+            if local
+              "#{specs_file_type}.#{Gemirro::Configuration.marshal_version}.gz.local"
+            else
+              "#{specs_file_type}.#{Gemirro::Configuration.marshal_version}.gz"
+            end
           )
         end
 
-      has_file_changed = false
-      file_paths.each do |file_path|
-        next if data[:files].key?(file_path) &&
-                data[:files][file_path] == File.mtime(file_path)
-
-        has_file_changed = true
-      end
+      has_file_changed =
+        !file_paths.all? do |file_path|
+          @gems_collection[local ? :local : :remote][:files].key?(file_path) &&
+            @gems_collection[local ? :local : :remote][:files][file_path] == File.mtime(file_path)
+        end
 
       # Return result if no file changed
-      return data[:values] if !has_file_changed && !data[:values].nil?
+      if !has_file_changed && !@gems_collection[local ? :local : :remote][:values].nil?
+        return @gems_collection[local ? :local : :remote][:values]
+      end
 
       gems = []
+
+      # parallel is not for mtime, it's for the Marshal.
       Parallel.map(file_paths, in_threads: Utils.configuration.update_thread_count) do |file_path|
         next unless File.exist?(file_path)
 
+
+
+
         gems.concat(Marshal.load(Zlib::GzipReader.open(file_path).read))
-        data[:files][file_path] = File.mtime(file_path)
+        @gems_collection[local ? :local : :remote][:files][file_path] = File.mtime(file_path)
       end
 
-      collection = GemVersionCollection.new(gems)
-      data[:values] = collection
-
-      collection
+      ret = @gems_collection[local ? :local : :remote][:values] = GemVersionCollection.new(gems)
+      
+      
+      ret
     end
 
     ##

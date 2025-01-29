@@ -56,7 +56,7 @@ module Gemirro
     end
 
     ##
-    # Display information about one gem
+    # Display information about one gem, human readable
     #
     # @return [nil]
     #
@@ -70,7 +70,7 @@ module Gemirro
 
     ##
     # Display home page containing the list of gems already
-    # downloaded on the server
+    # downloaded on the server, human readable
     #
     # @return [nil]
     #
@@ -79,7 +79,7 @@ module Gemirro
     end
 
     ##
-    # Return gem dependencies as binary
+    # Return gem dependencies as marshaled binary
     #
     # @return [nil]
     #
@@ -112,7 +112,7 @@ module Gemirro
     end
 
     ##
-    # Return gem list as compact_index
+    # compact_index, Return list of available gem names
     #
     # @return [nil]
     #
@@ -128,7 +128,7 @@ module Gemirro
     end
 
     ##
-    # Return gem versions as compact_index
+    # compact_index, Return list of gem, including versions
     #
     # @return [nil]
     #
@@ -143,7 +143,7 @@ module Gemirro
       send_file content_path
     end
 
-    # Return gem dependencies as compact_index
+    # compact_index, Return gem dependencies for all versions of a gem
     #
     # @return [nil]
     #
@@ -179,6 +179,11 @@ module Gemirro
       send_file(resource)
     end
 
+    ##
+    # Compile fragments for /api/v1/dependencies
+    #
+    # @return [nil]
+    #
     def dependencies_loader(names)
       names.collect do |name|
         f = File.join(settings.public_folder, 'api', 'v1', 'dependencies', "#{name}.*.*.list")

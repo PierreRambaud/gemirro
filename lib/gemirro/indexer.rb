@@ -117,19 +117,17 @@ module Gemirro
 
       files.each do |path|
         file = path.sub(%r{^#{Regexp.escape @directory}/?}, '')
-        src_name = File.join(@directory, file)
-        dst_name = File.join(@dest_directory, file)
 
         if ["#{@specs_index}.gz",
             "#{@latest_specs_index}.gz",
             "#{@prerelease_specs_index}.gz"].include?(path)
-          res = build_zlib_file(file, src_name, dst_name, true)
+          res = build_zlib_file(file,  File.join(@directory, file), File.join(@dest_directory, file), true)
           next unless res
         else
           source_content = download_from_source(file)
           next if source_content.nil?
 
-          MirrorFile.new(dst_name).write(source_content)
+          MirrorFile.new(File.join(@dest_directory, file)).write(source_content)
         end
 
         FileUtils.rm_rf(path)
@@ -599,30 +597,26 @@ module Gemirro
 
       files.each do |path|
         file = path.sub(%r{^#{Regexp.escape @directory}/?}, '')
-        src_name = File.join(@directory, file)
-        dst_name = File.join(@dest_directory, file)
 
-        if ["#{@specs_index}.gz",
-            "#{@latest_specs_index}.gz",
-            "#{@prerelease_specs_index}.gz"].include?(path)
-          res = build_zlib_file(file, src_name, dst_name)
+        if ["#{@specs_index}.gz", "#{@latest_specs_index}.gz", "#{@prerelease_specs_index}.gz"].include?(path)
+          res = build_zlib_file(file,  File.join(@directory, file), File.join(@dest_directory, file))
           next unless res
         else
           FileUtils.mv(
-            src_name,
-            dst_name,
+            File.join(@directory, file),
+            File.join(@dest_directory, file),
             verbose: verbose,
             force: true
           )
         end
 
-        File.utime(newest_mtime, newest_mtime, dst_name)
+        File.utime(newest_mtime, newest_mtime, File.join(@dest_directory, file))
       end
     end
 
     def build_zlib_file(file, src_name, dst_name, from_source = false)
       content = Marshal.load(Zlib::GzipReader.open(src_name).read)
-      create_zlib_file("#{dst_name}.orig", content)
+      create_zlib_file("#{dst_name}.local", content)
 
       return false if @only_origin
 
@@ -644,18 +638,18 @@ module Gemirro
     end
 
     def create_zlib_file(dst_name, content)
-      temp_file = Tempfile.new('gemirro')
+      Tempfile.create(File.basename(dst_name)) do |f|
+        gzf = Zlib::GzipWriter.new(f)
+        gzf.write(Marshal.dump(content))
+        gzf.close
 
-      Zlib::GzipWriter.open(temp_file.path) do |io|
-        io.write(Marshal.dump(content))
+        FileUtils.mv(
+          f.path,
+          dst_name,
+          verbose: verbose,
+          force: true
+        )
       end
-
-      FileUtils.mv(
-        temp_file.path,
-        dst_name,
-        verbose: verbose,
-        force: true
-      )
     end
 
     def verbose
