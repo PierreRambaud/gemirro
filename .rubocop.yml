@@ -1,7 +1,7 @@
 AllCops:
   SuggestExtensions: false
   NewCops: enable
-  TargetRubyVersion: 2.5
+  TargetRubyVersion: 3.0
   Include:
     - '**/Gemfile'
     - lib/**/*.rb
