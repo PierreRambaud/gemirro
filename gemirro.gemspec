@@ -16,7 +16,7 @@ Gem::Specification.new do |s|
 
   s.files = File.read(File.expand_path('../MANIFEST', __FILE__)).split("\n")
 
-  s.required_ruby_version = '>= 2.5'
+  s.required_ruby_version = '>= 3.0'
 
   s.add_dependency 'addressable', '~>2.8'
   s.add_dependency 'builder', '~>3.2'
