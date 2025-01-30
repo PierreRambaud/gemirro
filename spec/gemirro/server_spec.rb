@@ -82,6 +82,53 @@ module Gemirro
         expect(last_response.status).to eq(200)
         expect(last_response).to be_ok
       end
+      
+      it 'responds to compact_index /names' do
+        MirrorFile.new('/var/www/gemirro/names.md5.sha256.list').write('---\n- volay\n')
+
+        get '/names'
+        expect(last_response.status).to eq(200)
+        expect(last_response).to be_ok
+        expect(last_response.body).to  eq('---\n- volay\n')
+        expect(last_response.headers['etag']).to eq("md5")
+        expect(last_response.headers['repr-digest']).to  eq('sha-256="sha256"')
+      end
+
+      it 'responds to compact_index /info/[gemname]' do
+        marshal_dump = Marshal.dump([['volay',
+                                      ::Gem::Version.create('0.1.0'),
+                                      'ruby']])
+
+        MirrorFile.new('/var/www/gemirro/specs.4.8.gz.local').write(Marshal.dump({}))
+      
+        allow(Zlib::GzipReader).to receive(:open).and_return(double(read: marshal_dump))
+        
+        
+        MirrorDirectory.new('/var/www/gemirro/info')
+        MirrorFile.new('/var/www/gemirro/info/volay.md5.sha256.list').write('---\n 0.1.0 |checksum:sha256\n')
+        
+
+        get '/info/volay'
+        expect(last_response.status).to eq(200)
+        expect(last_response).to be_ok
+        expect(last_response.body).to eq('---\n 0.1.0 |checksum:sha256\n')
+        expect(last_response.headers['etag']).to eq("md5")
+        expect(last_response.headers['repr-digest']).to  eq('sha-256="sha256"')
+      end
+      
+
+      it 'responds to compact_index /versions' do
+        MirrorFile.new('/var/www/gemirro/versions.md5.sha256.list').write('created_at: 2025-01-01T00:00:00Z\m---\nvolay 0.1.0\n')
+      
+        get '/versions'
+        expect(last_response.status).to eq(200)
+        expect(last_response).to be_ok
+        expect(last_response.body).to eq('created_at: 2025-01-01T00:00:00Z\m---\nvolay 0.1.0\n')
+        expect(last_response.headers['etag']).to eq("md5")
+        expect(last_response.headers['repr-digest']).to  eq('sha-256="sha256"')
+      end
+      
+
     end
 
     context 'Download' do

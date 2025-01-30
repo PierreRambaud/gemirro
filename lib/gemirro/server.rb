@@ -119,7 +119,7 @@ module Gemirro
     get '/names' do
       content_type 'text/plain'
 
-      content_path = Dir.glob(File.join(settings.public_folder, 'names.*.*.list')).last
+      content_path = Dir.glob(File.join(Gemirro.configuration.destination, 'names.*.*.list')).last
       _, etag, repr_digest, _ = content_path.split('.', -4)
 
       headers 'etag' => etag
@@ -135,7 +135,7 @@ module Gemirro
     get '/versions' do
       content_type 'text/plain'
 
-      content_path = Dir.glob(File.join(settings.public_folder, 'versions.*.*.list')).last
+      content_path = Dir.glob(File.join(Utils.configuration.destination, 'versions.*.*.list')).last
       _, etag, repr_digest, _ = content_path.split('.', -4)
 
       headers 'etag' => etag
@@ -154,7 +154,7 @@ module Gemirro
 
       content_type 'text/plain'
 
-      content_path = Dir.glob(File.join(settings.public_folder, 'info', "#{params[:gemname]}.*.*.list")).last
+      content_path = Dir.glob(File.join(Utils.configuration.destination, 'info', "#{params[:gemname]}.*.*.list")).last
       _, etag, repr_digest, _ = content_path.split('.', -4)
 
       headers 'etag' => etag
