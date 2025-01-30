@@ -100,15 +100,10 @@ module Gemirro
     #
     def fetch_gem(gem, version)
       filename = gem.filename(version)
-      satisfied = if gem.only_latest?
-                    true
-                  else
-                    gem.requirement.satisfied_by?(version)
-                  end
+      satisfied = gem.only_latest? || gem.requirement.satisfied_by?(version)
       name = gem.name
 
-      if gem_exists?(filename) || ignore_gem?(name, version, gem.platform) ||
-         !satisfied
+      if gem_exists?(filename) || ignore_gem?(name, version, gem.platform) || !satisfied
         Utils.logger.debug("Skipping #{filename}")
         return
       end
