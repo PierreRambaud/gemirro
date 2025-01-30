@@ -39,6 +39,9 @@ module Gemirro
       allow_any_instance_of(Indexer).to receive(:compress_indices)
       allow_any_instance_of(Indexer).to receive(:compress_indicies)
       allow_any_instance_of(Indexer).to receive(:rand).and_return('0')
+
+      source = Source.new('Rubygems', 'https://rubygems.org')
+      allow(Gemirro.configuration).to receive(:source).and_return(source)
     end
 
     context 'HTML render' do
@@ -179,8 +182,8 @@ module Gemirro
         allow(::Gem::SilentUI).to receive(:new).once.and_return(true)
 
         allow(Gemirro.configuration).to receive(:logger)
-          .exactly(3).and_return(@fake_logger)
-        allow(@fake_logger).to receive(:info).exactly(3)
+          .exactly(4).and_return(@fake_logger)
+        allow(@fake_logger).to receive(:info).exactly(4)
 
         get '/gems/gemirro-0.0.1.gem'
         expect(last_response).to_not be_ok
