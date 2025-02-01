@@ -1,1 +1,14 @@
-.pull-none {float:none;}
+body { max-width: 600px; margin: 0 auto; padding: 0; font-family: sans-serif; }
+
+dl { display: grid; grid-template-columns: 1fr min-content; }
+
+dt { grid-column: 1; margin: 0; padding: 8px 0; border-bottom: 1px solid #e2e2e2; }
+dd { grid-column: 2; margin: 0; padding: 8px 0; border-bottom: 1px solid #e2e2e2; }
+
+dd.full { grid-column: 1/2; border-bottom: 0; }
+dd.description, dd.authors, dd.dependencies { grid-column: 1/2; border-bottom: 0; }
+
+.btn { color: #fff; background: #007bff; padding: 5px; border-radius: 4px; text-decoration: none; }
+
+
+ul { list-style-type: none; margin: 0; padding: 0 0 0 1em; }

@@ -130,6 +130,7 @@ module Gemirro
 
       spec_file =
         File.join(
+          configuration.destination,
           'quick',
           Gemirro::Configuration.marshal_identifier,
           gem.gemspec_filename
@@ -137,6 +138,7 @@ module Gemirro
 
       fetch_gem(spec_file) unless File.exist?(spec_file)
 
+      # this is a separate action
       return unless File.exist?(spec_file)
 
       File.open(spec_file, 'r') do |uz_file|
@@ -148,6 +150,7 @@ module Gemirro
           inflater.finish
           inflater.close
         end
+
         Marshal.load(inflate_data)
       end
     end
