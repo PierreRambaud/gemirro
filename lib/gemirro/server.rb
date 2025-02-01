@@ -10,12 +10,6 @@ module Gemirro
   # Launch Sinatra server to easily download gems.
   #
   class Server < Sinatra::Base
-    # rubocop:disable Layout/LineLength
-    URI_REGEXP = /^(.*)-(\d+(?:\.\d+){1,4}.*?)(?:-(x86-(?:(?:mswin|mingw)(?:32|64)).*?|java))?\.(gem(?:spec\.rz)?)$/.freeze
-    # rubocop:enable Layout/LineLength
-    GEMSPEC_TYPE = 'gemspec.rz'
-    GEM_TYPE = 'gem'
-
     access_logger = Logger.new(Utils.configuration.server.access_log).tap do |logger|
       ::Logger.class_eval { alias_method :write, :<< }
       logger.level = ::Logger::INFO
@@ -62,7 +56,7 @@ module Gemirro
     end
 
     ##
-    # Display information about one gem
+    # Display information about one gem, human readable
     #
     # @return [nil]
     #
@@ -76,7 +70,7 @@ module Gemirro
 
     ##
     # Display home page containing the list of gems already
-    # downloaded on the server
+    # downloaded on the server, human readable
     #
     # @return [nil]
     #
@@ -85,13 +79,17 @@ module Gemirro
     end
 
     ##
-    # Return gem dependencies as binary
+    # Return gem dependencies as marshaled binary
     #
     # @return [nil]
     #
     get '/api/v1/dependencies' do
       content_type 'application/octet-stream'
-      query_gems.any? ? Marshal.dump(query_gems_list) : 200
+      if params[:gems].to_s != '' && params[:gems].to_s.split(',').any?
+        Marshal.dump(dependencies_loader(params[:gems].to_s.split(',')))
+      else
+        200
+      end
     end
 
     ##
@@ -101,7 +99,67 @@ module Gemirro
     #
     get '/api/v1/dependencies.json' do
       content_type 'application/json'
-      query_gems.any? ? JSON.dump(query_gems_list) : {}
+
+      return '[]' unless params[:gems]
+
+      gem_names = params[:gems].to_s
+                               .split(',')
+                               .map(&:strip)
+                               .reject(&:empty?)
+      return '[]' if gem_names.empty?
+
+      JSON.dump(dependencies_loader(gem_names))
+    end
+
+    ##
+    # compact_index, Return list of available gem names
+    #
+    # @return [nil]
+    #
+    get '/names' do
+      content_type 'text/plain'
+
+      content_path = Dir.glob(File.join(Gemirro.configuration.destination, 'names.*.*.list')).last
+      _, etag, repr_digest, _ = content_path.split('.', -4)
+
+      headers 'etag' => etag
+      headers 'repr-digest' => %(sha-256="#{repr_digest}")
+      send_file content_path
+    end
+
+    ##
+    # compact_index, Return list of gem, including versions
+    #
+    # @return [nil]
+    #
+    get '/versions' do
+      content_type 'text/plain'
+
+      content_path = Dir.glob(File.join(Utils.configuration.destination, 'versions.*.*.list')).last
+      _, etag, repr_digest, _ = content_path.split('.', -4)
+
+      headers 'etag' => etag
+      headers 'repr-digest' => %(sha-256="#{repr_digest}")
+      send_file content_path
+    end
+
+    # compact_index, Return gem dependencies for all versions of a gem
+    #
+    # @return [nil]
+    #
+    get('/info/:gemname') do
+      gems = Utils.gems_collection
+      gem = gems.find_by_name(params[:gemname])
+      return not_found if gem.nil?
+
+      content_type 'text/plain'
+
+      content_path = Dir.glob(File.join(Utils.configuration.destination, 'info', "#{params[:gemname]}.*.*.list")).last
+      _, etag, repr_digest, _ = content_path.split('.', -4)
+
+      headers 'etag' => etag
+      headers 'repr-digest' => %(sha-256="#{repr_digest}")
+      send_file content_path
     end
 
     ##
@@ -114,7 +172,7 @@ module Gemirro
       resource = "#{settings.public_folder}#{path}"
 
       # Try to download gem
-      fetch_gem(resource) unless File.exist?(resource)
+      Gemirro::Utils.fetch_gem(resource) unless File.exist?(resource)
       # If not found again, return a 404
       return not_found unless File.exist?(resource)
 
@@ -122,175 +180,24 @@ module Gemirro
     end
 
     ##
-    # Try to fetch gem and download its if it's possible, and
-    # build and install indicies.
+    # Compile fragments for /api/v1/dependencies
     #
-    # @param [String] resource
-    # @return [Indexer]
+    # @return [nil]
     #
-    def fetch_gem(resource)
-      return unless Utils.configuration.fetch_gem
-
-      name = File.basename(resource)
-      result = name.match(URI_REGEXP)
-      return unless result
-
-      gem_name, gem_version, gem_platform, gem_type = result.captures
-      return unless gem_name && gem_version
-
-      begin
-        gem = Utils.stored_gem(gem_name, gem_version, gem_platform)
-        gem.gemspec = true if gem_type == GEMSPEC_TYPE
-
-        return if Utils.gems_fetcher.gem_exists?(gem.filename(gem_version)) && gem_type == GEM_TYPE
-        return if Utils.gems_fetcher.gemspec_exists?(gem.gemspec_filename(gem_version)) && gem_type == GEMSPEC_TYPE
-
-        Utils.logger
-             .info("Try to download #{gem_name} with version #{gem_version}")
-        Utils.gems_fetcher.source.gems.clear
-        Utils.gems_fetcher.source.gems.push(gem)
-        Utils.gems_fetcher.fetch
-
-        update_indexes if Utils.configuration.update_on_fetch
+    def dependencies_loader(names)
+      names.collect do |name|
+        f = File.join(settings.public_folder, 'api', 'v1', 'dependencies', "#{name}.*.*.list")
+        Marshal.load(File.read(Dir.glob(f).last))
       rescue StandardError => e
-        Utils.logger.error(e)
-      end
-    end
-
-    ##
-    # Update indexes files
-    #
-    # @return [Indexer]
-    #
-    def update_indexes
-      indexer = Gemirro::Indexer.new(Utils.configuration.destination)
-      indexer.only_origin = true
-      indexer.ui = ::Gem::SilentUI.new
-
-      Utils.logger.info('Generating indexes')
-      indexer.update_index
-      indexer.updated_gems.each do |gem|
-        Utils.cache.flush_key(File.basename(gem))
-      end
-    rescue SystemExit => e
-      Utils.logger.info(e.message)
-    end
-
-    ##
-    # Return all gems pass to query
-    #
-    # @return [Array]
-    #
-    def query_gems
-      params[:gems].to_s.split(',')
-    end
-
-    ##
-    # Return gems list from query params
-    #
-    # @return [Array]
-    #
-    def query_gems_list
-      Utils.gems_collection(false) # load collection
-      gems = Parallel.map(query_gems, in_threads: 4) do |query_gem|
-        gem_dependencies(query_gem)
-      end
-
-      gems.flatten!
-      gems.reject!(&:empty?)
-      gems
-    end
-
-    ##
-    # List of versions and dependencies of each version
-    # from a gem name.
-    #
-    # @return [Array]
-    #
-    def gem_dependencies(gem_name)
-      Utils.cache.cache(gem_name) do
-        gems = Utils.gems_collection(false)
-        gem_collection = gems.find_by_name(gem_name)
-
-        return '' if gem_collection.nil?
-
-        gem_collection = Parallel.map(gem_collection, in_threads: 4) do |gem|
-          [gem, spec_for(gem.name, gem.number, gem.platform)]
+        env['rack.errors'].write "Cound not open #{f}\n"
+        env['rack.errors'].write "#{e.message}\n"
+        e.backtrace.each do |err|
+          env['rack.errors'].write "#{err}\n"
         end
-        gem_collection.compact!
-
-        Parallel.map(gem_collection, in_threads: 4) do |gem, spec|
-          next if spec.nil?
-
-          dependencies = spec.dependencies.select do |d|
-            d.type == :runtime
-          end
-
-          dependencies = Parallel.map(dependencies, in_threads: 4) do |d|
-            [d.name.is_a?(Array) ? d.name.first : d.name, d.requirement.to_s]
-          end
-
-          {
-            name: gem.name,
-            number: gem.number,
-            platform: gem.platform,
-            dependencies: dependencies
-          }
-        end
+        nil
       end
-    end
-
-    helpers do
-      ##
-      # Return gem specification from gemname and version
-      #
-      # @param [String] gemname
-      # @param [String] version
-      # @return [::Gem::Specification]
-      #
-      def spec_for(gemname, version, platform = 'ruby')
-        gem = Utils.stored_gem(gemname, version.to_s, platform)
-        gemspec_path = File.join('quick',
-                                 Gemirro::Configuration.marshal_identifier,
-                                 gem.gemspec_filename)
-        spec_file = File.join(settings.public_folder,
-                              gemspec_path)
-        fetch_gem(gemspec_path) unless File.exist?(spec_file)
-
-        return unless File.exist?(spec_file)
-
-        File.open(spec_file, 'r') do |uz_file|
-          uz_file.binmode
-          inflater = Zlib::Inflate.new
-          begin
-            inflate_data = inflater.inflate(uz_file.read)
-          ensure
-            inflater.finish
-            inflater.close
-          end
-          Marshal.load(inflate_data)
-        end
-      end
-
-      ##
-      # Escape string
-      #
-      # @param [String] string
-      # @return [String]
-      #
-      def escape(string)
-        Rack::Utils.escape_html(string)
-      end
-
-      ##
-      # Homepage link
-      #
-      # @param [Gem] spec
-      # @return [String]
-      #
-      def homepage(spec)
-        URI.parse(Addressable::URI.escape(spec.homepage))
-      end
+      .flatten
+      .compact
     end
   end
 end

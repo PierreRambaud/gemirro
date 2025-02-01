@@ -12,7 +12,7 @@ module Gemirro
         error_log: '/tmp/gemirro.access.log',
         daemonize: true
       },
-
+      update_thread_count: begin; Etc.nprocessors - 1; rescue StandardError; 4; end,
       update_on_fetch: true,
       fetch_gem: true
     }

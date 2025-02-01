@@ -31,10 +31,10 @@ module Gemirro
           gem.platform = versions[1] if versions
           version = versions[0] if versions
           if gem.gemspec?
-            gemfile = fetch_gemspec(gem, version)
-            if gemfile
+            gemspec = fetch_gemspec(gem, version)
+            if gemspec
               Utils.configuration.mirror_gemspecs_directory
-                   .add_file(gem.gemspec_filename(version), gemfile)
+                   .add_file(gem.gemspec_filename(version), gemspec)
             end
           else
             gemfile = fetch_gem(gem, version)
@@ -100,15 +100,10 @@ module Gemirro
     #
     def fetch_gem(gem, version)
       filename = gem.filename(version)
-      satisfied = if gem.only_latest?
-                    true
-                  else
-                    gem.requirement.satisfied_by?(version)
-                  end
+      satisfied = gem.only_latest? || gem.requirement.satisfied_by?(version)
       name = gem.name
 
-      if gem_exists?(filename) || ignore_gem?(name, version, gem.platform) ||
-         !satisfied
+      if gem_exists?(filename) || ignore_gem?(name, version, gem.platform) || !satisfied
         Utils.logger.debug("Skipping #{filename}")
         return
       end

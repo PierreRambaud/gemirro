@@ -1,7 +1,6 @@
 require 'rack/test'
 require 'json'
 require 'parallel'
-require 'gemirro/cache'
 require 'gemirro/utils'
 require 'gemirro/mirror_directory'
 require 'gemirro/mirror_file'
@@ -37,11 +36,17 @@ module Gemirro
       Utils.instance_eval('@gems_orig_collection = nil')
       Utils.instance_eval('@gems_source_collection = nil')
       FakeFS::FileSystem.clone(Gemirro::Configuration.views_directory)
+      allow_any_instance_of(Indexer).to receive(:compress_indices)
+      allow_any_instance_of(Indexer).to receive(:compress_indicies)
+      allow_any_instance_of(Indexer).to receive(:rand).and_return('0')
+
+      source = Source.new('Rubygems', 'https://rubygems.org')
+      allow(Gemirro.configuration).to receive(:source).and_return(source)
     end
 
     context 'HTML render' do
       it 'should display index page' do
-        allow(Logger).to receive(:new).twice.and_return(@fake_logger)
+        allow(Logger).to receive(:new).exactly(3).times.and_return(@fake_logger)
         allow(@fake_logger).to receive(:tap)
           .and_return(nil)
           .and_yield(@fake_logger)
@@ -67,54 +72,63 @@ module Gemirro
                                       ::Gem::Version.create('0.1.0'),
                                       'ruby']])
 
-        MirrorFile.new('/var/www/gemirro/specs.4.8.gz.orig').write(marshal_dump)
-        Struct.new('SuccessGzipReader', :read)
-        gzip_reader = Struct::SuccessGzipReader.new(marshal_dump)
-        MirrorDirectory.new('/var/www/gemirro')
-                       .add_directory('quick/Marshal.4.8')
-        # rubocop:disable Metrics/LineLength
-        MirrorFile.new('/var/www/gemirro/quick/Marshal.4.8/' \
-                       'volay-0.1.0.gemspec.rz')
-                  .write("x\x9C\x8D\x94]\x8F\xD2@\x14\x86\x89Y\xBB\xB4|\xEC\x12\xD7h" \
-                         "\xD4h\xD3K\x13J\x01\x97\xC84n\x9A\xA8\xBBi\xE2\xC5\x06\xBB" \
-                         "{\xC3\x85)\xE5\x00\x13f:u:E\xD1\xC4\xDF\xE6\xB5\xBF\xCAiK" \
-                         "\x11\xE3GK\xEF\x98\xF7\xBC\xCFy\xCF\xC9\xCCQ=A\x0F\xAE\x80" \
-                         "\"\xF4>\x82\x00/p\xE0\v\xCC\xC2;\xC1\xDD\xA3\xFA\xF4\xA1k4" \
-                         "\x06\xA6e\xF6_(Hy\xEBa\xD55\xB4\r#\xFEV\xB1k\xDE\r\xEAdu" \
-                         "\xB7\xC0cY1U\xE4\xA1\x95\x8A\xD3C7A\xAA\x87)\xB4\x9C\x1FO" \
-                         "\xBE\xD7\xE4OA\xEA\x17\x16\x82k\xD4o\xBC\xD7\x99\xC2x\xEC" \
-                         "\xAD@\xBFe$\xA1\xA0\xC7\xDBX\x00\xD5\x05/\xBC\xEFg\xDE\x13" \
-                         "\xF8\x98`\x0E\x14B1U\xE4w\xEC\x1A\xC7\x17\xAF2\x85\xADd\xC4" \
-                         "\xBE96\x87\xF9\x1F\xEA\xDF%\x8A\x95\xE3T\x9E\xCC2\xF3i\x9B" \
-                         "\xA1\xB3\xCC\xFE\rD\x10\xCE!\f\xB6\x1A\xD2\x9C\xD0\xA7\xB2" \
-                         "\xBF\x13\x8A?\x13<\xEB\x06\x04\xA7b\xD4q\xF8\xAF&\x0E!\xDF" \
-                         ".~\xEF\xE3\xDC\xCC@\xD2Hl\#@M\x9E\x84BN\x00\x9D:\x11\a\x0E" \
-                         "\x04\xFC\x18.\xD1#g\x93\xCF\xEB\xC3\x81m\\\xC1\x97\xD9" \
-                         "\x9Af7\\\xE3l\xD7_\xBC\x02BX\"\xD23\xBB\xF9o\x83A\xB1\x12" \
-                         "\xBBe\xB7\xED\x93K\xFB\xB4\x82\xB6\x80\xA9K\xB1\x1E\x96" \
-                         "\x10\xEA\x03sP\xCD\xBFP\x16\xEE\x8D\x85\xBF\x86E\\\x96" \
-                         "\xC02G\xF9\b\xEC\x16:\x9D\xC3\x06\b\x8B\xD2\xA9\x95\x84" \
-                         "\xD9\x97\xED\xC3p\x89+\x81\xA9}\xAB`\xD9\x9D\xFF\x03\xF6" \
-                         "\xD2\xC2\xBF\xCD\xFD`\xDD\x15\x10\x97\xED\xA4.[\xAB\xC6(" \
-                         "\x94\x05B\xE3\xB1\xBC\xA5e\xF6\xC3\xAA\x11\n\xE5>A\x8CiD " \
-                         "`\x9B\xF2\x04\xE3\xCA\t\xC6\x87\by-f,`Q\xD9\x1E,sp^q\x0F" \
-                         "\x85\xD4r\x8Dg\x11\x06\xCE\xC1\xE4>\x9D\xF9\xC9\xFC\xE5" \
-                         "\xC8YR\x1F\x133`4\xBB\xF9R~\xEF:\x93\xE8\x93\\\x92\xBF\r" \
-                         "\xA3\t\xF8\x84l\xF5<\xBF\xBE\xF9\xE3Q\xD2?q,\x04\x84:\x0E" \
-                         "\xF5\xF4\x1D1\xF3\xBA\xE7+!\"\xD4\xEB-\xB1X%\xB3\x14\xD3" \
-                         "\xCB\xEDw\xEE\xBD\xFDk\xE99OSz\xF3\xEA\xFA]w7\xF5\xAF\xB5" \
-                         "\x9F+\xFEG\x96")
-        # rubocop:enable Metrics/LineLength
+        MirrorFile.new('/var/www/gemirro/specs.4.8.gz.local').write(Marshal.dump({}))
 
-        allow(Zlib::GzipReader).to receive(:open)
-          .once
-          .with('/var/www/gemirro/specs.4.8.gz.orig')
-          .and_return(gzip_reader)
+
+        allow(Zlib::GzipReader).to receive(:open).and_return(double(read: marshal_dump))
 
         get '/gem/volay'
+
         expect(last_response.status).to eq(200)
         expect(last_response).to be_ok
       end
+      
+      it 'responds to compact_index /names' do
+        MirrorFile.new('/var/www/gemirro/names.md5.sha256.list').write('---\n- volay\n')
+
+        get '/names'
+        expect(last_response.status).to eq(200)
+        expect(last_response).to be_ok
+        expect(last_response.body).to  eq('---\n- volay\n')
+        expect(last_response.headers['etag']).to eq("md5")
+        expect(last_response.headers['repr-digest']).to  eq('sha-256="sha256"')
+      end
+
+      it 'responds to compact_index /info/[gemname]' do
+        marshal_dump = Marshal.dump([['volay',
+                                      ::Gem::Version.create('0.1.0'),
+                                      'ruby']])
+
+        MirrorFile.new('/var/www/gemirro/specs.4.8.gz.local').write(Marshal.dump({}))
+      
+        allow(Zlib::GzipReader).to receive(:open).and_return(double(read: marshal_dump))
+        
+        
+        MirrorDirectory.new('/var/www/gemirro/info')
+        MirrorFile.new('/var/www/gemirro/info/volay.md5.sha256.list').write('---\n 0.1.0 |checksum:sha256\n')
+        
+
+        get '/info/volay'
+        expect(last_response.status).to eq(200)
+        expect(last_response).to be_ok
+        expect(last_response.body).to eq('---\n 0.1.0 |checksum:sha256\n')
+        expect(last_response.headers['etag']).to eq("md5")
+        expect(last_response.headers['repr-digest']).to  eq('sha-256="sha256"')
+      end
+      
+
+      it 'responds to compact_index /versions' do
+        MirrorFile.new('/var/www/gemirro/versions.md5.sha256.list').write('created_at: 2025-01-01T00:00:00Z\m---\nvolay 0.1.0\n')
+      
+        get '/versions'
+        expect(last_response.status).to eq(200)
+        expect(last_response).to be_ok
+        expect(last_response.body).to eq('created_at: 2025-01-01T00:00:00Z\m---\nvolay 0.1.0\n')
+        expect(last_response.headers['etag']).to eq("md5")
+        expect(last_response.headers['repr-digest']).to  eq('sha-256="sha256"')
+      end
+      
+
     end
 
     context 'Download' do
@@ -150,8 +164,8 @@ module Gemirro
         allow(::Gem::SilentUI).to receive(:new).once.and_return(true)
 
         allow(Gemirro.configuration).to receive(:logger)
-          .exactly(3).and_return(@fake_logger)
-        allow(@fake_logger).to receive(:info).exactly(3)
+          .exactly(4).and_return(@fake_logger)
+        allow(@fake_logger).to receive(:info).exactly(4)
 
         get '/gems/gemirro-0.0.1.gem'
         expect(last_response).to_not be_ok
@@ -212,7 +226,8 @@ module Gemirro
         get '/api/v1/dependencies.json'
         expect(last_response.headers['Content-Type'])
           .to eq('application/json')
-        expect(last_response.body).to eq('')
+          puts last_response.body
+        expect(last_response.body).to eq('[]')
         expect(last_response).to be_ok
       end
 
@@ -260,6 +275,21 @@ module Gemirro
                          "\xCB\xEDw\xEE\xBD\xFDk\xE99OSz\xF3\xEA\xFA]w7\xF5\xAF\xB5" \
                          "\x9F+\xFEG\x96")
         # rubocop:enable Metrics/LineLength
+
+        MirrorFile.new('/var/www/gemirro/api/v1/dependencies/volay.md5.sha.list')
+        .write(Marshal.dump([
+          {
+            name: 'volay',
+            number: "0.1.0",
+            platform: 'ruby',
+            dependencies: [
+              {
+                name: 'json',
+                requirement: '~> 2.1'
+              }
+            ]
+          }
+        ]))
 
         gem = Gemirro::GemVersion.new('volay', '0.1.0', 'ruby')
         collection = Gemirro::GemVersionCollection.new([gem])

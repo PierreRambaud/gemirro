@@ -22,8 +22,10 @@ module Gemirro
     # @return [Gemirro::VersionsFile]
     #
     def fetch
-      VersionsFile.load(read_file(Configuration.versions_file),
-                        read_file(Configuration.prerelease_versions_file, true))
+      VersionsFile.load(
+        read_file(Configuration.versions_file),
+        read_file(Configuration.prerelease_versions_file, true)
+      )
     end
 
     ##
@@ -36,6 +38,8 @@ module Gemirro
       destination = Gemirro.configuration.destination
       file_dst = File.join(destination, file)
       unless File.exist?(file_dst)
+        throw 'No source defined' unless @source
+
         File.write(file_dst, @source.fetch_versions) unless prerelease
         File.write(file_dst, @source.fetch_prerelease_versions) if prerelease
       end

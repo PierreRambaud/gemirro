@@ -19,12 +19,14 @@ module Gemirro
   #  @return [Array]
   #
   class Indexer < ::Gem::Indexer
-    attr_accessor(:files,
-                  :quick_marshal_dir,
-                  :directory,
-                  :dest_directory,
-                  :only_origin,
-                  :updated_gems)
+    attr_accessor(
+      :files,
+      :quick_marshal_dir,
+      :directory,
+      :dest_directory,
+      :only_origin,
+      :updated_gems
+    )
 
     ##
     # Create an indexer that will index the gems in +directory+.
@@ -37,34 +39,38 @@ module Gemirro
       require 'fileutils'
       require 'tmpdir'
       require 'zlib'
+      require 'builder/xchar'
+      require 'compact_index'
 
-      unless defined?(Builder::XChar)
-        raise 'Gem::Indexer requires that the XML Builder ' \
-              'library be installed:' \
-              "\n\tgem install builder"
-      end
-
-      options = { build_modern: true }.merge options
+      options.merge!({ build_modern: true, build_compact: true })
 
       @build_modern = options[:build_modern]
+      @build_compact = options[:build_compact]
 
       @dest_directory = directory
-      @directory = File.join(Dir.tmpdir,
-                             "gem_generate_index_#{rand(1_000_000_000)}")
+      @directory =
+        File.join(Dir.tmpdir, "gem_generate_index_#{rand(1_000_000_000)}")
 
       marshal_name = "Marshal.#{::Gem.marshal_version}"
 
-      @master_index = File.join @directory, 'yaml'
-      @marshal_index = File.join @directory, marshal_name
+      @master_index =
+        File.join(@directory, 'yaml')
+      @marshal_index =
+        File.join(@directory, marshal_name)
 
-      @quick_dir = File.join @directory, 'quick'
-      @quick_marshal_dir = File.join @quick_dir, marshal_name
-      @quick_marshal_dir_base = File.join 'quick', marshal_name # FIX: UGH
+      @quick_dir = File.join(@directory, 'quick')
+      @quick_marshal_dir =
+        File.join(@quick_dir, marshal_name)
+      @quick_marshal_dir_base =
+        File.join(@dest_directory, 'quick', marshal_name) # FIX: UGH
 
-      @quick_index = File.join @quick_dir, 'index'
-      @latest_index = File.join @quick_dir, 'latest_index'
+      @quick_index =
+        File.join(@quick_dir, 'index')
+      @latest_index =
+        File.join(@quick_dir, 'latest_index')
 
-      @specs_index = File.join @directory, "specs.#{::Gem.marshal_version}"
+      @specs_index =
+        File.join(@directory, "specs.#{::Gem.marshal_version}")
       @latest_specs_index =
         File.join(@directory, "latest_specs.#{::Gem.marshal_version}")
       @prerelease_specs_index =
@@ -75,6 +81,10 @@ module Gemirro
         File.join(@dest_directory, "latest_specs.#{::Gem.marshal_version}")
       @dest_prerelease_specs_index =
         File.join(@dest_directory, "prerelease_specs.#{::Gem.marshal_version}")
+      @infos_dir =
+        File.join(@dest_directory, 'info')
+      @api_v1_dependencies_dir =
+        File.join(@dest_directory, 'api', 'v1', 'dependencies')
 
       @files = []
     end
@@ -100,28 +110,24 @@ module Gemirro
 
       if files.include?(@quick_marshal_dir) && !files.include?(@quick_dir)
         files.delete @quick_marshal_dir
-        dst_name = File.join(@dest_directory, @quick_marshal_dir_base)
-        FileUtils.mkdir_p(File.dirname(dst_name), verbose: verbose)
-        FileUtils.rm_rf(dst_name, verbose: verbose)
-        FileUtils.mv(@quick_marshal_dir, dst_name,
-                     verbose: verbose, force: true)
+        FileUtils.mkdir_p(File.dirname(@quick_marshal_dir_base), verbose: verbose)
+        FileUtils.rm_rf(@quick_marshal_dir_base, verbose: verbose)
+        FileUtils.mv(@quick_marshal_dir, @quick_marshal_dir_base, verbose: verbose, force: true)
       end
 
       files.each do |path|
         file = path.sub(%r{^#{Regexp.escape @directory}/?}, '')
-        src_name = File.join(@directory, file)
-        dst_name = File.join(@dest_directory, file)
 
         if ["#{@specs_index}.gz",
             "#{@latest_specs_index}.gz",
             "#{@prerelease_specs_index}.gz"].include?(path)
-          res = build_zlib_file(file, src_name, dst_name, true)
+          res = build_zlib_file(file, File.join(@directory, file), File.join(@dest_directory, file), true)
           next unless res
         else
           source_content = download_from_source(file)
           next if source_content.nil?
 
-          MirrorFile.new(dst_name).write(source_content)
+          MirrorFile.new(File.join(@dest_directory, file)).write(source_content)
         end
 
         FileUtils.rm_rf(path)
@@ -129,7 +135,7 @@ module Gemirro
     end
 
     ##
-    # Download file from source
+    # Download file from source (example: rubygems.org)
     #
     # @param [String] file File path
     # @return [String]
@@ -164,14 +170,250 @@ module Gemirro
       ::Gem::Specification.all = specs
 
       if ::Gem::VERSION >= '2.5.0'
-        build_marshal_gemspecs specs
-        build_modern_indices specs if @build_modern
+        build_marshal_gemspecs(specs)
+        build_modern_indices(specs) if @build_modern
         compress_indices
       else
         build_marshal_gemspecs
         build_modern_indicies if @build_modern
         compress_indicies
       end
+
+      build_api_v1_dependencies(specs)
+
+      return unless @build_compact
+
+      build_compact_index_names
+      build_compact_index_infos(specs)
+      build_compact_index_versions(specs)
+    end
+
+    ##
+    # Cache Modern Index endpoints /api/v1/dependencies?gems= and /api/v1/dependencies.json?gems=
+    # This single request may include many fragments. server.rb determines which are required per request.
+    #
+    # @return nil
+    #
+    def build_api_v1_dependencies(specs, partial = false)
+      FileUtils.mkdir_p(@api_v1_dependencies_dir)
+
+      if partial
+        specs.collect(&:name).uniq do |name|
+          FileUtils.rm_rf(Dir.glob(File.join(@api_v1_dependencies_dir, "#{name}.*.*.list")))
+        end
+      else
+        FileUtils.rm_rf(Dir.glob(File.join(@api_v1_dependencies_dir, '*.list')))
+      end
+
+      grouped_specs = specs.sort_by(&:name).group_by(&:name)
+      grouped_specs.each_with_index do |(name, gem_versions), index|
+        Utils.logger.info("[#{index + 1}/#{grouped_specs.size}]: Caching /api/v1/dependencies/#{name}")
+
+        gem_versions =
+          gem_versions.sort do |a, b|
+            a.version <=> b.version
+          end
+
+        cg = []
+        Parallel.each_with_index(
+          gem_versions,
+          in_threads: Utils.configuration.update_thread_count
+        ) do |spec, index2|
+          next if spec.nil?
+
+          dependencies = spec.dependencies.select do |d|
+            d.type == :runtime
+          end
+
+          dependencies = dependencies.collect do |d|
+            [d.name.is_a?(Array) ? d.name.first : d.name, d.requirement.to_s]
+          end
+
+          cg[index2] =
+            {
+              name: spec.name,
+              number: spec.version.to_s,
+              platform: spec.platform,
+              dependencies: dependencies
+            }
+        end
+
+        Tempfile.create("api_v1_dependencies_#{name}.list") do |f|
+          f.write Marshal.dump(cg)
+          f.rewind
+
+          File.rename(
+            f.path,
+            File.join(
+              @api_v1_dependencies_dir,
+              "#{name}.#{Digest::MD5.file(f.path).hexdigest}.#{Digest::SHA256.file(f.path).hexdigest}.list"
+            )
+          )
+        end
+      end
+    end
+
+    ##
+    # Cache compact_index endpoint /names
+    # Report all gems with versions available. Does not require opening spec files.
+    #
+    # @return nil
+    #
+    def build_compact_index_names
+      Utils.logger.info('[1/1]: Caching /names')
+      FileUtils.rm_rf(Dir.glob(File.join(@dest_directory, 'names*.list')))
+
+      gem_name_list = Dir.glob('*.gem', base: File.join(@dest_directory, 'gems')).collect do |x|
+        x.sub(/-\d+(\.\d+)*(\.[a-zA-Z\d]+)*([-_a-zA-Z\d]+)?\.gem/, '')
+      end.uniq.sort!
+
+      Tempfile.create('names.list') do |f|
+        f.write CompactIndex.names(gem_name_list).to_s
+        f.rewind
+        File.rename(
+          f.path,
+          File.join(@dest_directory,
+                    "names.#{Digest::MD5.file(f.path).hexdigest}.#{Digest::SHA256.file(f.path).hexdigest}.list")
+        )
+      end
+
+      nil
+    end
+
+    ##
+    # Cache compact_index endpoint /versions
+    #
+    # @param [Array] specs Gems list
+    # @param [Boolean] partial Is gem list an update or a full index
+    # @return nil
+    #
+    def build_compact_index_versions(specs, partial = false)
+      Utils.logger.info('[1/1]: Caching /versions')
+
+      cg =
+        specs
+        .sort_by(&:name)
+        .group_by(&:name)
+        .collect do |name, gem_versions|
+          gem_versions =
+            gem_versions.sort do |a, b|
+              a.version <=> b.version
+            end
+
+          info_file = Dir.glob(File.join(@infos_dir, "#{name}.*.*.list")).last
+
+          throw "Info file for #{name} not found" unless info_file
+
+          info_file_checksum = info_file.split('.', -4)[-3]
+
+          CompactIndex::Gem.new(
+            name,
+            gem_versions.collect do |y|
+              CompactIndex::GemVersion.new(
+                y.version.to_s,
+                y.platform,
+                nil,
+                info_file_checksum
+              )
+            end
+          )
+        end
+
+      Tempfile.create('versions.list') do |f|
+        previous_versions_file = Dir.glob(File.join(@dest_directory, 'versions*.list')).last
+
+        if partial && previous_versions_file
+          versions_file = CompactIndex::VersionsFile.new(previous_versions_file)
+        else
+          versions_file = CompactIndex::VersionsFile.new(f.path)
+          f.write format('created_at: %s', Time.now.utc.iso8601)
+          f.write "\n---\n"
+        end
+
+        f.write CompactIndex.versions(versions_file, cg)
+        f.rewind
+
+        FileUtils.rm_rf(Dir.glob(File.join(@dest_directory, 'versions*.list')))
+
+        File.rename(
+          f.path,
+          File.join(
+            @dest_directory,
+            "versions.#{Digest::MD5.file(f.path).hexdigest}.#{Digest::SHA256.file(f.path).hexdigest}.list"
+          )
+        )
+      end
+
+      nil
+    end
+
+    ##
+    # Cache compact_index endpoint /info/[gemname]
+    #
+    # @param [Array] specs Gems list
+    # @param [Boolean] partial Is gem list an update or a full index
+    # @return nil
+    #
+    def build_compact_index_infos(specs, partial = false)
+      FileUtils.mkdir_p(@infos_dir)
+
+      if partial
+        specs.collect(&:name).uniq do |name|
+          FileUtils.rm_rf(Dir.glob(File.join(@infos_dir, "#{name}.*.*.list")))
+        end
+      else
+        FileUtils.rm_rf(Dir.glob(File.join(@infos_dir, '*.list')))
+      end
+
+      grouped_specs = specs.sort_by(&:name).group_by(&:name)
+      grouped_specs.each_with_index do |(name, gem_versions), index|
+        Utils.logger.info("[#{index + 1}/#{grouped_specs.size}]: Caching /info/#{name}")
+
+        gem_versions =
+          gem_versions.sort do |a, b|
+            a.version <=> b.version
+          end
+
+        versions =
+          Parallel.map(gem_versions, in_threads: Utils.configuration.update_thread_count) do |spec|
+            deps =
+              spec
+              .dependencies
+              .select { |d| d.type == :runtime }
+              .sort_by(&:name)
+              .collect do |dependency|
+                CompactIndex::Dependency.new(
+                  dependency.name,
+                  dependency.requirement.to_s
+                )
+              end
+
+            CompactIndex::GemVersion.new(
+              spec.version,
+              spec.platform,
+              Digest::SHA256.file(spec.loaded_from).hexdigest,
+              nil,
+              deps,
+              spec.required_ruby_version.to_s,
+              spec.required_rubygems_version.to_s
+            )
+          end
+
+        Tempfile.create("info_#{name}.list") do |f|
+          f.write CompactIndex.info(versions).to_s
+          f.rewind
+
+          File.rename(
+            f.path,
+            File.join(
+              @infos_dir,
+              "#{name}.#{Digest::MD5.file(f.path).hexdigest}.#{Digest::SHA256.file(f.path).hexdigest}.list"
+            )
+          )
+        end
+      end
+
+      nil
     end
 
     ##
@@ -181,7 +423,9 @@ module Gemirro
     # @return [Array]
     #
     def map_gems_to_specs(gems)
-      gems.map.with_index do |gemfile, index|
+      results = []
+
+      Parallel.each_with_index(gems, in_threads: Utils.configuration.update_thread_count) do |gemfile, index|
         Utils.logger.info("[#{index + 1}/#{gems.size}]: Processing #{gemfile.split('/')[-1]}")
         if File.empty?(gemfile)
           Utils.logger.warn("Skipping zero-length gem: #{gemfile}")
@@ -190,12 +434,12 @@ module Gemirro
 
         begin
           begin
-            spec = if ::Gem::Package.respond_to? :open
-                     ::Gem::Package
-                       .open(File.open(gemfile, 'rb'), 'r', &:metadata)
-                   else
-                     ::Gem::Package.new(gemfile).spec
-                   end
+            spec =
+              if ::Gem::Package.respond_to? :open
+                ::Gem::Package.open(File.open(gemfile, 'rb'), 'r', &:metadata)
+              else
+                ::Gem::Package.new(gemfile).spec
+              end
           rescue NotImplementedError
             next
           end
@@ -213,7 +457,7 @@ module Gemirro
           end
 
           version = spec.version.version
-          unless version =~ /^\d+\.\d+\.\d+.*/
+          unless version =~ /^\d+(\.\d+)?(\.\d+)?.*/
             msg = "Skipping gem #{spec.full_name} - invalid version #{version}"
             Utils.logger.warn(msg)
             next
@@ -223,8 +467,8 @@ module Gemirro
             spec.abbreviate
             spec.sanitize
           else
-            abbreviate spec
-            sanitize spec
+            abbreviate(spec)
+            sanitize(spec)
           end
 
           spec
@@ -238,20 +482,48 @@ module Gemirro
                  "\t#{e.backtrace.join "\n\t"}"].join("\n")
           Utils.logger.debug(msg)
         end
-      end.compact
+
+        results[index] = spec
+      end
+
+      # nils can result from insert by index
+      results.compact
     end
 
+    ##
+    # Handle `index --update`, detecting changed files and file lists.
+    #
+    # @return nil
+    #
     def update_index
       make_temp_directories
 
-      specs_mtime = File.stat(@dest_specs_index).mtime
+      present_gemfiles = Dir.glob('*.gem', base: File.join(@dest_directory, 'gems'))
+      indexed_gemfiles = Dir.glob('*.gemspec.rz', base: @quick_marshal_dir_base).collect { |x| x.gsub(/spec.rz$/, '') }
+
+      @updated_gems = []
+      # detect files manually added to public/gems
+      @updated_gems += (present_gemfiles - indexed_gemfiles).collect { |x| File.join(@dest_directory, 'gems', x) }
+      # detect files manually deleted from public/gems
+      @updated_gems += (indexed_gemfiles - present_gemfiles).collect { |x| File.join(@dest_directory, 'gems', x) }
+
+      specs_mtime =
+        begin
+          File.stat(@dest_specs_index).mtime
+        rescue StandardError
+          Time.at(0)
+        end
       newest_mtime = Time.at(0)
 
-      @updated_gems = gem_file_list.select do |gem|
-        gem_mtime = File.stat(gem).mtime
-        newest_mtime = gem_mtime if gem_mtime > newest_mtime
-        gem_mtime > specs_mtime
-      end
+      # files that have been replaced
+      @updated_gems +=
+        gem_file_list.select do |gem|
+          gem_mtime = File.stat(gem).mtime
+          newest_mtime = gem_mtime if gem_mtime > newest_mtime
+          gem_mtime > specs_mtime
+        end
+
+      @updated_gems.uniq!
 
       if @updated_gems.empty?
         Utils.logger.info('No new gems')
@@ -259,30 +531,60 @@ module Gemirro
       end
 
       specs = map_gems_to_specs(@updated_gems)
+
+      # specs only includes latest discovered files.
+      # /info/[gemname] and /api/v1/dependencies can not be rebuilt
+      # incrementally, so retrive specs for all versions of these gems.
+      gem_name_updates = specs.collect(&:name).uniq
+      u2 =
+        Dir.glob(File.join(File.join(@dest_directory, 'gems'), '*.gem')).select do |possibility|
+          gem_name_updates.any? { |updated| File.basename(possibility) =~ /^#{updated}-\d/ }
+        end
+
+      Utils.logger.info('Reloading for /info/[gemname]')
+      version_specs = map_gems_to_specs(u2)
+
       prerelease, released = specs.partition { |s| s.version.prerelease? }
 
       ::Gem::Specification.dirs = []
       ::Gem::Specification.all = *specs
-      files = if ::Gem::VERSION >= '2.5.0'
-                build_marshal_gemspecs specs
-              else
-                build_marshal_gemspecs
-              end
+      files =
+        if ::Gem::VERSION >= '2.5.0'
+          build_marshal_gemspecs specs
+        else
+          build_marshal_gemspecs
+        end
 
       ::Gem.time('Updated indexes') do
-        update_specs_index(released, @dest_specs_index, @specs_index)
-        update_specs_index(released,
-                           @dest_latest_specs_index,
-                           @latest_specs_index)
-        update_specs_index(prerelease,
-                           @dest_prerelease_specs_index,
-                           @prerelease_specs_index)
+        update_specs_index(
+          released,
+          @dest_specs_index,
+          @specs_index
+        )
+        update_specs_index(
+          released,
+          @dest_latest_specs_index,
+          @latest_specs_index
+        )
+        update_specs_index(
+          prerelease,
+          @dest_prerelease_specs_index,
+          @prerelease_specs_index
+        )
       end
 
       if ::Gem::VERSION >= '2.5.0'
         compress_indices
       else
         compress_indicies
+      end
+
+      build_api_v1_dependencies(version_specs, true)
+
+      if @build_compact
+        build_compact_index_names
+        build_compact_index_infos(version_specs, true)
+        build_compact_index_versions(specs, true)
       end
 
       Utils.logger.info("Updating production dir #{@dest_directory}") if verbose
@@ -295,36 +597,36 @@ module Gemirro
 
       files.each do |path|
         file = path.sub(%r{^#{Regexp.escape @directory}/?}, '')
-        src_name = File.join(@directory, file)
-        dst_name = File.join(@dest_directory, file)
 
-        if ["#{@specs_index}.gz",
-            "#{@latest_specs_index}.gz",
-            "#{@prerelease_specs_index}.gz"].include?(path)
-          res = build_zlib_file(file, src_name, dst_name)
+        if ["#{@specs_index}.gz", "#{@latest_specs_index}.gz", "#{@prerelease_specs_index}.gz"].include?(path)
+          res = build_zlib_file(file, File.join(@directory, file), File.join(@dest_directory, file))
           next unless res
         else
-          FileUtils.mv(src_name,
-                       dst_name,
-                       verbose: verbose,
-                       force: true)
+          FileUtils.mv(
+            File.join(@directory, file),
+            File.join(@dest_directory, file),
+            verbose: verbose,
+            force: true
+          )
         end
 
-        File.utime(newest_mtime, newest_mtime, dst_name)
+        File.utime(newest_mtime, newest_mtime, File.join(@dest_directory, file))
       end
     end
 
     def build_zlib_file(file, src_name, dst_name, from_source = false)
       content = Marshal.load(Zlib::GzipReader.open(src_name).read)
-      create_zlib_file("#{dst_name}.orig", content)
+      create_zlib_file("#{dst_name}.local", content)
 
       return false if @only_origin
 
       if from_source
         source_content = download_from_source(file)
-        source_content = Marshal.load(Zlib::GzipReader
-                                        .new(StringIO
-                                               .new(source_content)).read)
+        source_content = Marshal.load(
+          Zlib::GzipReader.new(
+            StringIO.new(source_content)
+          ).read
+        )
       else
         source_content = Marshal.load(Zlib::GzipReader.open(dst_name).read)
       end
@@ -336,17 +638,18 @@ module Gemirro
     end
 
     def create_zlib_file(dst_name, content)
-      temp_file = Tempfile.new('gemirro')
+      Tempfile.create(File.basename(dst_name)) do |f|
+        gzf = Zlib::GzipWriter.new(f)
+        gzf.write(Marshal.dump(content))
+        gzf.close
 
-      Zlib::GzipWriter.open(temp_file.path) do |io|
-        io.write(Marshal.dump(content))
+        FileUtils.mv(
+          f.path,
+          dst_name,
+          verbose: verbose,
+          force: true
+        )
       end
-
-      FileUtils.mv(temp_file.path,
-                   dst_name,
-                   verbose: verbose,
-                   force: true)
-      Utils.cache.flush_key(File.basename(dst_name))
     end
 
     def verbose

@@ -6,7 +6,7 @@ More, to mirroring a source, you only need to start the server, and gems will au
 
 ## Requirements
 
-* Ruby 2.2 or newer
+* Ruby 3.0 or newer
 * Enough space to store Gems
 * A recent version of Rubygems (`gem update --system`)
 

@@ -1,9 +1,10 @@
 PATH
   remote: .
   specs:
-    gemirro (1.5.0)
+    gemirro (1.6.0)
       addressable (~> 2.8)
       builder (~> 3.2)
+      compact_index (~> 0.15)
       confstruct (~> 1.1)
       erubis (~> 2.7)
       httpclient (~> 2.8)
@@ -21,6 +22,7 @@ GEM
     ast (2.4.2)
     base64 (0.2.0)
     builder (3.3.0)
+    compact_index (0.15.0)
     confstruct (1.1.0)
       hashie (>= 3.3, < 5)
     daemons (1.4.1)
@@ -36,7 +38,7 @@ GEM
     mustermann (3.0.3)
       ruby2_keywords (~> 0.0.1)
     parallel (1.26.3)
-    parser (3.3.6.0)
+    parser (3.3.7.0)
       ast (~> 2.4.1)
       racc
     public_suffix (6.0.1)
@@ -112,4 +114,4 @@ DEPENDENCIES
   simplecov (~> 0.21)
 
 BUNDLED WITH
-   2.1.4
+   2.4.19

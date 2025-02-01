@@ -23,6 +23,12 @@ Gemirro.configuration.configure do
   server.access_log File.expand_path('../logs/access.log', __FILE__)
   server.error_log File.expand_path('../logs/error.log', __FILE__)
 
+  # Number of parallel processes while indexing. Too many will kill
+  # your indexing process prematurely.
+  #
+  # update_threads Etc.nprocessors - 1
+  # update_threads 4
+
   # If you don't want to generate indexes after each fetched gem.
   #
   # update_on_fetch false

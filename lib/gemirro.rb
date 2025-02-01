@@ -20,7 +20,6 @@ $LOAD_PATH.unshift(File.expand_path('../', __FILE__)) unless $LOAD_PATH.include?
 
 require 'gemirro/version'
 require 'gemirro/configuration'
-require 'gemirro/cache'
 require 'gemirro/utils'
 require 'gemirro/gem'
 require 'gemirro/gem_version'
