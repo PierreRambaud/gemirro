@@ -186,7 +186,6 @@ module Gemirro
       allow(FileUtils).to receive(:mv)
       allow(File).to receive(:utime)
 
-      # indexer.generate_index
       indexer.update_index
     end
   end
