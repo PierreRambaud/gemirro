@@ -1,4 +1,4 @@
-body { max-width: 600px; margin: 0 auto; padding: 0; font-family: sans-serif; }
+body { max-width: 620px; margin: 0 auto; padding: 0; font-family: sans-serif; }
 
 dl { display: grid; grid-template-columns: 1fr min-content; }
 
@@ -12,3 +12,11 @@ dd.description, dd.authors, dd.dependencies { grid-column: 1/2; border-bottom: 0
 
 
 ul { list-style-type: none; margin: 0; padding: 0 0 0 1em; }
+
+  a, a:visited, a:active, a:hover { color: #007bff; }
+
+@media (prefers-color-scheme: dark) {
+  html, body { background: #16161d; color: #fff; }
+  a, a:visited, a:active, a:hover { color: lightskyblue; }
+  .btn { color: #16161d; background: lightskyblue; padding: 5px; border-radius: 4px; text-decoration: none; }
+}
