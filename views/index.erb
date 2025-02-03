@@ -14,7 +14,7 @@
           <h2><%= Rack::Utils.escape_html(versions.newest.number) %></h2>
         </dd>
         
-        <% spec = Gemirro::Utils.spec_for(name, versions.newest.number) %>
+        <% spec = Gemirro::Utils.spec_for(name, versions.newest.number, versions.newest.platform) %>
         <% if spec.is_a?(::Gem::Specification) %>
           <dd class="description">
             <%= Rack::Utils.escape_html(spec.description)  %>
