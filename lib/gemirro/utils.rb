@@ -40,9 +40,10 @@ module Gemirro
           )
         end
 
-      has_file_changed = @gems_collection[:files] != file_paths.each_with_object({}) do |f, r|
-        r[f] = File.mtime(f)
-      end
+      has_file_changed =
+        @gems_collection[:files] != file_paths.each_with_object({}) do |f, r|
+          r[f] = File.mtime(f) if File.exist?(f)
+        end
 
       # Return result if no file changed
       return @gems_collection[:values] if !has_file_changed && !@gems_collection[:values].nil?
