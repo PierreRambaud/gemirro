@@ -1,6 +1,8 @@
+.github/workflows/ruby.yml
 .gitignore
 .rubocop.yml
 Gemfile
+Gemfile.lock
 LICENSE
 MANIFEST
 README.md
@@ -51,15 +53,11 @@ task/rspec.rake
 task/rubocop.rake
 template/config.rb
 template/logs/.gitkeep
-template/public/dist/css/bootstrap.min.css
 template/public/dist/css/gemirro.css
-template/public/dist/fonts/glyphicons-halflings-regular.eot
-template/public/dist/fonts/glyphicons-halflings-regular.svg
-template/public/dist/fonts/glyphicons-halflings-regular.ttf
-template/public/dist/fonts/glyphicons-halflings-regular.woff
-template/public/dist/fonts/glyphicons-halflings-regular.woff2
-template/public/dist/js/bootstrap.min.js
 template/public/gems/.gitkeep
+template/public/latest_specs.4.8
+template/public/prerelease_specs.4.8
+template/public/specs.4.8
 views/gem.erb
 views/index.erb
 views/layout.erb
