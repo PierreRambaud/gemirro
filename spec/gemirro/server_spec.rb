@@ -226,7 +226,6 @@ module Gemirro
         get '/api/v1/dependencies.json'
         expect(last_response.headers['Content-Type'])
           .to eq('application/json')
-          puts last_response.body
         expect(last_response.body).to eq('[]')
         expect(last_response).to be_ok
       end

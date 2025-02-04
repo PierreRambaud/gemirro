@@ -20,7 +20,7 @@ Gemirro::CLI.options.command 'init' do
         next if ['.', '..'].include?(File.basename(file))
 
         dest = File.join(directory, file.gsub(/^#{template}/, ''))
-        next if File.exist?(dest)
+        next if File.exist?(dest) && dest !~ /gemirro.css/
 
         FileUtils.cp_r(file, dest)
       end

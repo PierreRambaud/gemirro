@@ -25,37 +25,28 @@ module Gemirro
     GEM_TYPE = 'gem'
 
     ##
-    # Generate Gems collection from Marshal dump
+    # Generate Gems collection from Marshal dump - always the .local file
     #
-    # @param [TrueClass|FalseClass] orig Fetch orig files
     # @return [Gemirro::GemVersionCollection]
     #
-    def self.gems_collection(local = true)
-      @gems_collection ||= {}
-      @gems_collection[local ? :local : :remote] ||= { files: {}, values: nil }
+    def self.gems_collection
+      @gems_collection ||= { files: {}, values: nil }
 
       file_paths =
         %i[specs prerelease_specs].collect do |specs_file_type|
           File.join(
             configuration.destination,
-            if local
-              "#{specs_file_type}.#{Gemirro::Configuration.marshal_version}.gz.local"
-            else
-              "#{specs_file_type}.#{Gemirro::Configuration.marshal_version}.gz"
-            end
+            "#{specs_file_type}.#{Gemirro::Configuration.marshal_version}.gz.local"
           )
         end
 
       has_file_changed =
-        !file_paths.all? do |file_path|
-          @gems_collection[local ? :local : :remote][:files].key?(file_path) &&
-            @gems_collection[local ? :local : :remote][:files][file_path] == File.mtime(file_path)
+        @gems_collection[:files] != file_paths.each_with_object({}) do |f, r|
+          r[f] = File.mtime(f) if File.exist?(f)
         end
 
       # Return result if no file changed
-      if !has_file_changed && !@gems_collection[local ? :local : :remote][:values].nil?
-        return @gems_collection[local ? :local : :remote][:values]
-      end
+      return @gems_collection[:values] if !has_file_changed && !@gems_collection[:values].nil?
 
       gems = []
 
@@ -64,10 +55,10 @@ module Gemirro
         next unless File.exist?(file_path)
 
         gems.concat(Marshal.load(Zlib::GzipReader.open(file_path).read))
-        @gems_collection[local ? :local : :remote][:files][file_path] = File.mtime(file_path)
+        @gems_collection[:files][file_path] = File.mtime(file_path)
       end
 
-      @gems_collection[local ? :local : :remote][:values] = GemVersionCollection.new(gems)
+      @gems_collection[:values] = GemVersionCollection.new(gems)
     end
 
     ##
@@ -125,11 +116,12 @@ module Gemirro
     # @param [String] version
     # @return [::Gem::Specification]
     #
-    def self.spec_for(gemname, version, platform = 'ruby')
+    def self.spec_for(gemname, version, platform)
       gem = Utils.stored_gem(gemname, version.to_s, platform)
 
       spec_file =
         File.join(
+          configuration.destination,
           'quick',
           Gemirro::Configuration.marshal_identifier,
           gem.gemspec_filename
@@ -137,6 +129,7 @@ module Gemirro
 
       fetch_gem(spec_file) unless File.exist?(spec_file)
 
+      # this is a separate action
       return unless File.exist?(spec_file)
 
       File.open(spec_file, 'r') do |uz_file|
@@ -148,6 +141,7 @@ module Gemirro
           inflater.finish
           inflater.close
         end
+
         Marshal.load(inflate_data)
       end
     end
@@ -188,20 +182,6 @@ module Gemirro
     end
 
     ##
-    # Return gems list from query params
-    #
-    # @return [Array]
-    #
-    def self.query_gems_list(query_gems)
-      Utils.gems_collection(false) # load collection
-      gems = Parallel.map(query_gems, in_threads: Utils.configuration.update_thread_count) do |query_gem|
-        gem_dependencies(query_gem)
-      end
-
-      gems.flatten.compact.reject(&:empty?)
-    end
-
-    ##
     # Update indexes files
     #
     # @return [Indexer]
@@ -213,9 +193,6 @@ module Gemirro
 
       Utils.logger.info('Generating indexes')
       indexer.update_index
-    #      indexer.updated_gems.each do |gem|
-    #        Utils.cache.flush_key(File.basename(gem))
-    #      end
     rescue SystemExit => e
       Utils.logger.info(e.message)
     end

@@ -1,58 +1,67 @@
-<div class="col-lg-12">
-  <div class="col-lg-3 center-block pull-none text-center">
+
     <a class="btn btn-default" href="<%= url '/'%>">Back to Gem Index</a>
   </div>
 </div>
 
-<div class="col-lg-12">
-  <% gem.by_name do |name, versions| %>
-    <div class="col-lg-6 center-block pull-none">
-      <div class="panel panel-info">
-        <div class="panel-heading">
-          <a href="<%= url("gem/#{name}") %>">
-            <h2 class="panel-title"><%= Rack::Utils.escape_html(name) %> <span class="badge pull-right"><%= Rack::Utils.escape_html(versions.newest.number) %></span></h2>
-          </a>
-        </div>
-        <div class="panel-body">
-          <% newest_gem = versions.newest %>
-          <% if spec = Gemirro::Utils.spec_for(name, newest_gem.number, newest_gem.platform) %>
-            <p><%= Rack::Utils.escape_html(spec.description) %></p>
 
+<article>
+  <% gem.by_name do |name, versions| %>
+    <dl>
+      <dt>
+        <h2><%= Rack::Utils.escape_html(name) %></h2>
+      </dt>
+      <dd>
+        <h2><%= Rack::Utils.escape_html(versions.newest.number) %></h2>
+      </dd>
+      <% newest_gem = versions.newest %>
+      <% spec = Gemirro::Utils.spec_for(name, newest_gem.number, newest_gem.platform) %>
+      <% if spec %>
+        <dd class="description">
+          <%= Rack::Utils.escape_html(spec.description) %>
+        </dd>
+
+        <% if spec.dependencies.size > 0 %>
+          <dd class="dependencies">
             <h3>Dependencies</h3>
-            <ul class="list-group">
+            <ul>
               <% spec.dependencies.each do |dependency| %>
                 <li class="list-group-item">
                   <a href="<%= url("gem/#{dependency.name}") %>"><%= Rack::Utils.escape_html([dependency.name, dependency.requirement].join(' ')) %></a>
                 </li>
               <% end %>
             </ul>
+          </dd>
+        <% end %>
 
+        <% if spec.authors.size > 0 %>
+          <dd class="authors">
             <h3>Authors</h3>
-            <ul class="list-group">
+            <ul>
               <% spec.authors.each do |author| %>
                 <li class="list-group-item">
                   <a href="<%= URI.parse(Addressable::URI.escape(spec.homepage)) %>"><%= Rack::Utils.escape_html(author) %></a>
                 </li>
               <% end %>
             </ul>
-          <% end %>
-        </div>
+          </dd>
+        <% end %>
+      <% end %>
 
-        <ul class="list-group">
-          <% versions.each.reverse_each do |version| %>
-            <li class="list-group-item clearfix">
-              <p class="pull-left">
-                <code>gem install <%= Rack::Utils.escape_html(version.name) %> -v "<%= Rack::Utils.escape_html(version.number) %>"</code>
-                <% unless version.platform =~ /^ruby/i %>
-                  <small class="platform"><%= Rack::Utils.escape_html(version.platform) %></small>
-                <% end %>
-              </p>
-              <div class="pull-right">
-                <a class="btn btn-primary btn-sm" href="<%= url("/gems/#{version.gemfile_name}.gem") %>">Download</a>
-              </div>
-            </li>
-          <% end %>
-        </ul>
-    </div>
+      <% versions.each.reverse_each do |version| %>
+        <dt>
+          <code>
+            gem install
+            <%= Rack::Utils.escape_html(version.name) %>
+            --version "<%= Rack::Utils.escape_html(version.number) %>"
+            <% unless version.platform =~ /^ruby/i %>
+              --platform <%= Rack::Utils.escape_html(version.platform) %>
+            <% end %>
+          </code>
+        </dt>
+        <dd>
+          <a class="btn" href="<%= url("/gems/#{version.gemfile_name}.gem") %>">Download</a>
+        </dd>
+      <% end %>
+    </dl>
   <% end %>
-</div>
+</article>

@@ -1,38 +1,46 @@
 
-<div class="col-lg-12">
-  <div class="col-lg-3 center-block pull-none">
-    <pre class="bg-info"><code>gem sources -a <%= url("/") %></code></pre>
-  </div>
-</div>
+<code>gem sources -a <%= url("/") %></code>
 
-<div class="col-lg-12">
-  <% if gems.any? %>
-    <div class="col-lg-6 center-block pull-none">
-      <% gems.by_name do |name, versions| %>
-        <div class="panel panel-info">
-          <div class="panel-heading">
-            <a href="<%= url("gem/#{name}") %>">
-              <h2 class="panel-title"><%= Rack::Utils.escape_html(name) %> <span class="badge pull-right"><%= Rack::Utils.escape_html(versions.newest.number) %></span></h2>
-            </a>
-          </div>
+<% if gems.any? %>
+  <article>
+    <% gems.by_name do |name, versions| %>
+      <dl>
+        <dt>
+          <a href="<%= url("gem/#{name}") %>">
+            <h2><%= Rack::Utils.escape_html(name) %></h2>
+          </a>
+        </dt>
+        <dd>
+          <h2><%= Rack::Utils.escape_html(versions.newest.number) %></h2>
+        </dd>
+        
+        <% spec = Gemirro::Utils.spec_for(name, versions.newest.number, versions.newest.platform) %>
+        <% if spec.is_a?(::Gem::Specification) %>
+          <dd class="description">
+            <%= Rack::Utils.escape_html(spec.description)  %>
+          </dd>
+        <% end %>
 
-          <div class="panel-body">
-            <% spec = Gemirro::Utils.spec_for(name, versions.newest.number) %>
-            <% if spec.is_a?(::Gem::Specification) %>
-              <%= Rack::Utils.escape_html(spec.description) %>
-            <% end %>
-
-            <% versions.reverse_each.first(5).each do |version| %>
-              <p>
-                <code>gem install <%= Rack::Utils.escape_html(version.name) %> <%= "--prerelease" if version.number.to_s.match(/[a-z]/i) %> -v "<%= Rack::Utils.escape_html(version.number) %>"</code>
+          <% versions.reverse_each.first(5).each do |version| %>
+            <dt class="version">
+              <code>
+                gem install
+                <%= Rack::Utils.escape_html(version.name) %>
+                <%= "--prerelease" if version.number.to_s.match(/[a-z]/i) %>
+                --version "<%= Rack::Utils.escape_html(version.number) %>"
                 <% unless version.platform =~ /^ruby/i %>
-                  <small class="platform"><%= Rack::Utils.escape_html(version.platform) %></small>
+                  --platform <%= Rack::Utils.escape_html(version.platform) %></small>
                 <% end %>
-              </p>
-            <% end %>
-          </div>
-        </div>
-      <% end %>
-    </div>
-  <% end %>
-</div>
+              </code>
+            </dt>
+            <dd>
+              <a class="btn btn-primary btn-sm" href="<%= url("/gems/#{version.gemfile_name}.gem") %>">Download</a>
+            </dd>
+          <% end %>
+          <% if versions.size > 5 %>
+            <dd class="full"><a href="<%= url("gem/#{name}") %>"><%= "And %d More..." % [versions.size - 5] %></a></dd>
+          <% end %>
+      </dl>
+    <% end %>
+  </article>
+<% end %>

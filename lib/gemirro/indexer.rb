@@ -242,7 +242,7 @@ module Gemirro
           f.write Marshal.dump(cg)
           f.rewind
 
-          File.rename(
+          FileUtils.cp(
             f.path,
             File.join(
               @api_v1_dependencies_dir,
@@ -270,10 +270,13 @@ module Gemirro
       Tempfile.create('names.list') do |f|
         f.write CompactIndex.names(gem_name_list).to_s
         f.rewind
-        File.rename(
+        FileUtils.cp(
           f.path,
-          File.join(@dest_directory,
-                    "names.#{Digest::MD5.file(f.path).hexdigest}.#{Digest::SHA256.file(f.path).hexdigest}.list")
+          File.join(
+            @dest_directory,
+            "names.#{Digest::MD5.file(f.path).hexdigest}.#{Digest::SHA256.file(f.path).hexdigest}.list"
+          ),
+          verbose: verbose
         )
       end
 
@@ -335,12 +338,13 @@ module Gemirro
 
         FileUtils.rm_rf(Dir.glob(File.join(@dest_directory, 'versions*.list')))
 
-        File.rename(
+        FileUtils.cp(
           f.path,
           File.join(
             @dest_directory,
             "versions.#{Digest::MD5.file(f.path).hexdigest}.#{Digest::SHA256.file(f.path).hexdigest}.list"
-          )
+          ),
+          verbose: verbose
         )
       end
 
@@ -403,12 +407,13 @@ module Gemirro
           f.write CompactIndex.info(versions).to_s
           f.rewind
 
-          File.rename(
+          FileUtils.cp(
             f.path,
             File.join(
               @infos_dir,
               "#{name}.#{Digest::MD5.file(f.path).hexdigest}.#{Digest::SHA256.file(f.path).hexdigest}.list"
-            )
+            ),
+            verbose: verbose
           )
         end
       end
@@ -643,11 +648,10 @@ module Gemirro
         gzf.write(Marshal.dump(content))
         gzf.close
 
-        FileUtils.mv(
+        FileUtils.cp(
           f.path,
           dst_name,
-          verbose: verbose,
-          force: true
+          verbose: verbose
         )
       end
     end
