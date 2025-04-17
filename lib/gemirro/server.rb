@@ -4,6 +4,7 @@ require 'sinatra/base'
 require 'thin'
 require 'uri'
 require 'addressable/uri'
+require 'base64'
 
 module Gemirro
   ##
@@ -120,10 +121,10 @@ module Gemirro
       content_type 'text/plain'
 
       content_path = Dir.glob(File.join(Gemirro.configuration.destination, 'names.*.*.list')).last
-      _, etag, repr_digest, _ = content_path.split('.', -4)
+      _, etag, repr_digest, _ = File.basename(content_path).split('.')
 
       headers 'etag' => etag
-      headers 'repr-digest' => %(sha-256="#{repr_digest}")
+      headers 'repr-digest' => %(sha-256="#{Base64.strict_encode64([repr_digest].pack("H*"))}")
       send_file content_path
     end
 
@@ -136,10 +137,11 @@ module Gemirro
       content_type 'text/plain'
 
       content_path = Dir.glob(File.join(Utils.configuration.destination, 'versions.*.*.list')).last
-      _, etag, repr_digest, _ = content_path.split('.', -4)
+      _, etag, repr_digest, _ = File.basename(content_path).split('.')
+
 
       headers 'etag' => etag
-      headers 'repr-digest' => %(sha-256="#{repr_digest}")
+      headers 'repr-digest' => %(sha-256="#{Base64.strict_encode64([repr_digest].pack("H*"))}")
       send_file content_path
     end
 
@@ -155,10 +157,10 @@ module Gemirro
       content_type 'text/plain'
 
       content_path = Dir.glob(File.join(Utils.configuration.destination, 'info', "#{params[:gemname]}.*.*.list")).last
-      _, etag, repr_digest, _ = content_path.split('.', -4)
+      _, etag, repr_digest, _ = File.basename(content_path).split('.')
 
       headers 'etag' => etag
-      headers 'repr-digest' => %(sha-256="#{repr_digest}")
+      headers 'repr-digest' => %(sha-256="#{Base64.strict_encode64([repr_digest].pack("H*"))}")
       send_file content_path
     end
 
