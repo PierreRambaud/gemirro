@@ -123,7 +123,7 @@ module Gemirro
       _, etag, repr_digest, _ = File.basename(content_path).split('.')
 
       headers 'etag' => etag
-      headers 'repr-digest' => %(sha-256="#{repr_digest}")
+      headers 'repr-digest' => %(sha-256="#{Base64.strict_encode64([repr_digest].pack("H*"))}")
       send_file content_path
     end
 
@@ -139,7 +139,7 @@ module Gemirro
       _, etag, repr_digest, _ = File.basename(content_path).split('.')
 
       headers 'etag' => etag
-      headers 'repr-digest' => %(sha-256="#{repr_digest}")
+      headers 'repr-digest' => %(sha-256="#{Base64.strict_encode64([repr_digest].pack("H*"))}")
       send_file content_path
     end
 
@@ -158,7 +158,7 @@ module Gemirro
       _, etag, repr_digest, _ = File.basename(content_path).split('.')
 
       headers 'etag' => etag
-      headers 'repr-digest' => %(sha-256="#{repr_digest}")
+      headers 'repr-digest' => %(sha-256="#{Base64.strict_encode64([repr_digest].pack("H*"))}")
       send_file content_path
     end
 
