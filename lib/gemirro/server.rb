@@ -4,6 +4,7 @@ require 'sinatra/base'
 require 'thin'
 require 'uri'
 require 'addressable/uri'
+require 'base64'
 
 module Gemirro
   ##
