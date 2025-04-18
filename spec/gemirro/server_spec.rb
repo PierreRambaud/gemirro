@@ -1,6 +1,9 @@
 require 'rack/test'
 require 'json'
 require 'parallel'
+require 'sinatra/base'
+require 'thin'
+require 'base64'
 require 'gemirro/utils'
 require 'gemirro/mirror_directory'
 require 'gemirro/mirror_file'
@@ -84,14 +87,14 @@ module Gemirro
       end
       
       it 'responds to compact_index /names' do
-        MirrorFile.new('/var/www/gemirro/names.md5.sha256.list').write('---\n- volay\n')
+        MirrorFile.new('/var/www/gemirro/names.md5.aaa256.list').write('---\n- volay\n')
 
         get '/names'
         expect(last_response.status).to eq(200)
         expect(last_response).to be_ok
         expect(last_response.body).to  eq('---\n- volay\n')
         expect(last_response.headers['etag']).to eq("md5")
-        expect(last_response.headers['repr-digest']).to  eq('sha-256="sha256"')
+        expect(last_response.headers['repr-digest']).to  eq(%(sha-256="#{Base64.strict_encode64(['aaa256'].pack('H*'))}"))
       end
 
       it 'responds to compact_index /info/[gemname]' do
@@ -105,7 +108,7 @@ module Gemirro
         
         
         MirrorDirectory.new('/var/www/gemirro/info')
-        MirrorFile.new('/var/www/gemirro/info/volay.md5.sha256.list').write('---\n 0.1.0 |checksum:sha256\n')
+        MirrorFile.new('/var/www/gemirro/info/volay.md5.aaa256.list').write('---\n 0.1.0 |checksum:sha256\n')
         
 
         get '/info/volay'
@@ -113,19 +116,19 @@ module Gemirro
         expect(last_response).to be_ok
         expect(last_response.body).to eq('---\n 0.1.0 |checksum:sha256\n')
         expect(last_response.headers['etag']).to eq("md5")
-        expect(last_response.headers['repr-digest']).to  eq('sha-256="sha256"')
+        expect(last_response.headers['repr-digest']).to  eq(%(sha-256="#{Base64.strict_encode64(['aaa256'].pack('H*'))}"))
       end
       
 
       it 'responds to compact_index /versions' do
-        MirrorFile.new('/var/www/gemirro/versions.md5.sha256.list').write('created_at: 2025-01-01T00:00:00Z\m---\nvolay 0.1.0\n')
+        MirrorFile.new('/var/www/gemirro/versions.md5.aaa256.list').write('created_at: 2025-01-01T00:00:00Z\m---\nvolay 0.1.0\n')
       
         get '/versions'
         expect(last_response.status).to eq(200)
         expect(last_response).to be_ok
         expect(last_response.body).to eq('created_at: 2025-01-01T00:00:00Z\m---\nvolay 0.1.0\n')
         expect(last_response.headers['etag']).to eq("md5")
-        expect(last_response.headers['repr-digest']).to  eq('sha-256="sha256"')
+        expect(last_response.headers['repr-digest']).to  eq(%(sha-256="#{Base64.strict_encode64(['aaa256'].pack('H*'))}"))
       end
       
 
