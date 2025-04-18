@@ -169,15 +169,9 @@ module Gemirro
       ::Gem::Specification.dirs = []
       ::Gem::Specification.all = specs
 
-      if ::Gem::VERSION >= '2.5.0'
-        build_marshal_gemspecs(specs)
-        build_modern_indices(specs) if @build_modern
-        compress_indices
-      else
-        build_marshal_gemspecs
-        build_modern_indicies if @build_modern
-        compress_indicies
-      end
+      build_marshal_gemspecs(specs)
+      build_modern_indices(specs) if @build_modern
+      compress_indices
 
       build_api_v1_dependencies(specs)
 
@@ -468,13 +462,8 @@ module Gemirro
             next
           end
 
-          if ::Gem::VERSION >= '2.5.0'
-            spec.abbreviate
-            spec.sanitize
-          else
-            abbreviate(spec)
-            sanitize(spec)
-          end
+          spec.abbreviate
+          spec.sanitize
 
           spec
         rescue SignalException
@@ -554,11 +543,7 @@ module Gemirro
       ::Gem::Specification.dirs = []
       ::Gem::Specification.all = *specs
       files =
-        if ::Gem::VERSION >= '2.5.0'
-          build_marshal_gemspecs specs
-        else
-          build_marshal_gemspecs
-        end
+        build_marshal_gemspecs specs
 
       ::Gem.time('Updated indexes') do
         update_specs_index(
@@ -578,11 +563,7 @@ module Gemirro
         )
       end
 
-      if ::Gem::VERSION >= '2.5.0'
-        compress_indices
-      else
-        compress_indicies
-      end
+      compress_indices
 
       build_api_v1_dependencies(version_specs, true)
 
