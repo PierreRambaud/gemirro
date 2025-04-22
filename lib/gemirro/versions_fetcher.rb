@@ -36,7 +36,7 @@ module Gemirro
     #
     def read_file(file, prerelease = false)
       destination = Gemirro.configuration.destination
-      file_dst = File.join(destination, file)
+      file_dst = File.join(destination, Gemirro.configuration.source_prefix + file)
       unless File.exist?(file_dst)
         throw 'No source defined' unless @source
 

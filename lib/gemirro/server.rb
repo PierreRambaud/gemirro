@@ -80,39 +80,6 @@ module Gemirro
     end
 
     ##
-    # Return gem dependencies as marshaled binary
-    #
-    # @return [nil]
-    #
-    get '/api/v1/dependencies' do
-      content_type 'application/octet-stream'
-      if params[:gems].to_s != '' && params[:gems].to_s.split(',').any?
-        Marshal.dump(dependencies_loader(params[:gems].to_s.split(',')))
-      else
-        200
-      end
-    end
-
-    ##
-    # Return gem dependencies as json
-    #
-    # @return [nil]
-    #
-    get '/api/v1/dependencies.json' do
-      content_type 'application/json'
-
-      return '[]' unless params[:gems]
-
-      gem_names = params[:gems].to_s
-                               .split(',')
-                               .map(&:strip)
-                               .reject(&:empty?)
-      return '[]' if gem_names.empty?
-
-      JSON.dump(dependencies_loader(gem_names))
-    end
-
-    ##
     # compact_index, Return list of available gem names
     #
     # @return [nil]

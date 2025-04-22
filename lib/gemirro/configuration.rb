@@ -207,5 +207,9 @@ module Gemirro
 
       @source = source
     end
+
+    def source_prefix
+      URI.parse(@source.host).host.gsub('.', '_') + '_'
+    end
   end
 end

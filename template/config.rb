@@ -60,6 +60,6 @@ Gemirro.configuration.configure do
   # All gem in the block will be downloaded with the update command.
   # Other gems will be downloaded with the server.
   define_source 'rubygems', 'https://rubygems.org' do
-    gem 'rack', '>= 1.0.0'
+    gem 'rack', '>= 3.0.0'
   end
 end

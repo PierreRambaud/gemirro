@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+require 'gemirro/gem_version'
 
 module Gemirro
   ##
@@ -33,12 +34,10 @@ module Gemirro
       @gems_collection ||= { files: {}, values: nil }
 
       file_paths =
-        %i[specs prerelease_specs].collect do |specs_file_type|
-          File.join(
+          Dir.glob(File.join(
             configuration.destination,
-            "#{specs_file_type}.#{Gemirro::Configuration.marshal_version}.gz.local"
-          )
-        end
+            "versions.*.*.list"
+          ))
 
       has_file_changed =
         @gems_collection[:files] != file_paths.each_with_object({}) do |f, r|
@@ -50,13 +49,31 @@ module Gemirro
 
       gems = []
 
-      # parallel is not for mtime, it's for the Marshal.
-      Parallel.map(file_paths, in_threads: Utils.configuration.update_thread_count) do |file_path|
-        next unless File.exist?(file_path)
 
-        gems.concat(Marshal.load(Zlib::GzipReader.open(file_path).read))
-        @gems_collection[:files][file_path] = File.mtime(file_path)
-      end
+   
+
+        versions_file = CompactIndex::VersionsFile.new(file_paths.last)
+
+
+        versions_file.contents.each_line.with_index do |line, index|
+          next if index < 2
+
+          parts = line.split
+          gem_name = parts[0]
+          checksum = parts[-1]
+          versions = parts[1..-2].collect{ |x| x.split(',') }.flatten  # All except first and last
+
+          versions.each do |ver|
+            version, platform =
+              if ver.include?('-')
+                ver.split('-', 2)
+              else
+                [ver, 'ruby']
+              end
+
+            gems << Gemirro::GemVersion.new(gem_name, version, platform)
+          end
+        end
 
       @gems_collection[:values] = GemVersionCollection.new(gems)
     end
