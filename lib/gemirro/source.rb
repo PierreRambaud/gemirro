@@ -33,10 +33,10 @@ module Gemirro
     #
     def fetch_versions
       Utils.logger.info(
-        "Fetching #{Configuration.versions_file} on #{@name} (#{@host})"
+        "Fetching versions on #{@name} (#{@host})"
       )
 
-      Http.get("#{host}/#{Configuration.versions_file}").body
+      Http.get("#{host}/versions").body
     end
 
     ##

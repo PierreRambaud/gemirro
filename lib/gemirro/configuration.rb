@@ -99,18 +99,8 @@ module Gemirro
     #
     # @return [String]
     #
-    def self.versions_file
-      "specs.#{marshal_version}.gz"
-    end
-
-    ##
-    # Returns the name of the file that contains an index
-    # of all the prerelease versions.
-    #
-    # @return [String]
-    #
-    def self.prerelease_versions_file
-      "prerelease_specs.#{marshal_version}.gz"
+    def versions_file
+      File.expand_path(URI.parse(@source.host).host.gsub('.', '_') + '_versions', destination.to_s)
     end
 
     ##
@@ -206,10 +196,6 @@ module Gemirro
       source.instance_eval(&block)
 
       @source = source
-    end
-
-    def source_prefix
-      URI.parse(@source.host).host.gsub('.', '_') + '_'
     end
   end
 end

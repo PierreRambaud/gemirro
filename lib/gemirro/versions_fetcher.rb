@@ -23,8 +23,7 @@ module Gemirro
     #
     def fetch
       VersionsFile.load(
-        read_file(Configuration.versions_file),
-        read_file(Configuration.prerelease_versions_file, true)
+        read_file(Gemirro.configuration.versions_file)
       )
     end
 
@@ -32,19 +31,15 @@ module Gemirro
     # Read file if exists otherwise download its from source
     #
     # @param [String] file name
-    # @param [TrueClass|FalseClass] prerelease Is prerelease or not
     #
-    def read_file(file, prerelease = false)
-      destination = Gemirro.configuration.destination
-      file_dst = File.join(destination, Gemirro.configuration.source_prefix + file)
-      unless File.exist?(file_dst)
+    def read_file(file)
+      unless File.exist?(file)
         throw 'No source defined' unless @source
 
-        File.write(file_dst, @source.fetch_versions) unless prerelease
-        File.write(file_dst, @source.fetch_prerelease_versions) if prerelease
+        File.write(file, @source.fetch_versions)
       end
 
-      File.read(file_dst)
+      File.read(file)
     end
   end
 end

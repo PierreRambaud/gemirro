@@ -16,23 +16,11 @@ module Gemirro
     ##
     # Reads the versions file from the specified String.
     #
-    # @param [String] spec_content
-    # @param [String] prerelease_content
+    # @param [String] versions_content
     # @return [Gemirro::VersionsFile]
     #
-    def self.load(spec_content, prerelease_content)
-      buffer = StringIO.new(spec_content)
-      reader = Zlib::GzipReader.new(buffer)
-      versions = Marshal.load(reader.read)
-
-      buffer = StringIO.new(prerelease_content)
-      reader = Zlib::GzipReader.new(buffer)
-      versions.concat(Marshal.load(reader.read))
-
-      instance = new(versions)
-
-      reader.close
-
+    def self.load(versions_content)
+      instance = new(versions_content)
       instance
     end
 
@@ -53,9 +41,39 @@ module Gemirro
     def create_versions_hash
       hash = Hash.new { |h, k| h[k] = [] }
 
-      versions.each do |version|
-        hash[version[0]] << version
+
+      versions.each_line.with_index do |line, index|
+        next if index < 2
+
+        parts = line.split
+        gem_name = parts[0]
+        checksum = parts[-1]
+        versions = parts[1..-2].collect{ |x| x.split(',') }.flatten  # All except first and last
+
+        versions.each do |ver|
+          version, platform =
+            if ver.include?('-')
+              ver.split('-', 2)
+            else
+              [ver, 'ruby']
+            end
+
+#throw versions
+
+        #  versions.each do |version|
+
+           # throw version
+            hash[gem_name] << [gem_name, ::Gem::Version.new(version), platform]
+          end
+          #gems << Gemirro::GemVersion.new(gem_name, version, platform)
+        #end
       end
+
+
+
+      #versions.each do |version|
+      #  hash[version[0]] << version
+      #end
 
       hash
     end

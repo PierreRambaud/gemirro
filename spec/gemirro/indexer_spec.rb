@@ -24,7 +24,7 @@ module Gemirro
 
       dir = MirrorDirectory.new('/tmp')
       dir.add_directory('test')
-      indexer = Indexer.new('/tmp/test')
+      indexer = Indexer.new
 
       Struct.new('HttpGet', :code, :body)
       http_get = Struct::HttpGet.new(200, 'bad')
@@ -43,7 +43,7 @@ module Gemirro
       allow(::Gem.configuration).to receive(:really_verbose)
         .once.and_return(true)
 
-      indexer = Indexer.new('/tmp/test')
+      indexer = Indexer.new
       indexer.quick_marshal_dir = '/tmp/gem_generate_index/quick/Marshal.4.8'
       indexer.dest_directory = '/tmp/test'
       indexer.directory = '/tmp/gem_generate_index'
@@ -97,7 +97,7 @@ module Gemirro
     end
 
     it 'should build indices' do
-      indexer = Indexer.new('/')
+      indexer = Indexer.new
       dir = MirrorDirectory.new('/')
       dir.add_directory('gems')
       dir.add_directory('quick')
@@ -140,7 +140,7 @@ module Gemirro
     end
 
     it 'should update index and exit ruby gems' do
-      indexer = Indexer.new('/')
+      indexer = Indexer.new
       MirrorDirectory.new('/')
       MirrorFile.new('/specs.4.8').write('')
       expect { indexer.update_index }.to raise_error(::Gem::SystemExitException)
@@ -152,7 +152,7 @@ module Gemirro
       dir.add_directory('test/gems')
       dir.add_directory('test/quick')
 
-      indexer = Indexer.new('/tmp/test')
+      indexer = Indexer.new
       indexer.quick_marshal_dir = '/tmp/gem_generate_index/quick/Marshal.4.8'
       indexer.dest_directory = '/tmp/test'
       indexer.directory = '/tmp/gem_generate_index'

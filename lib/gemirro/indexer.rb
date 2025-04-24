@@ -66,22 +66,13 @@ module Gemirro
       @latest_index =
         File.join(@quick_dir, 'latest_index')
 
-      @specs_index =
-        File.join(@directory, "specs.#{::Gem.marshal_version}")
+
       @latest_specs_index =
         File.join(@directory, "latest_specs.#{::Gem.marshal_version}")
-      @prerelease_specs_index =
-        File.join(@directory, "prerelease_specs.#{::Gem.marshal_version}")
-      @dest_specs_index =
-        File.join(@dest_directory, "specs.#{::Gem.marshal_version}")
       @dest_latest_specs_index =
         File.join(@dest_directory, "latest_specs.#{::Gem.marshal_version}")
-      @dest_prerelease_specs_index =
-        File.join(@dest_directory, "prerelease_specs.#{::Gem.marshal_version}")
       @infos_dir =
         File.join(@dest_directory, 'info')
-      @api_v1_dependencies_dir =
-        File.join(@dest_directory, 'api', 'v1', 'dependencies')
 
       @files = []
     end
@@ -89,16 +80,9 @@ module Gemirro
     ##
     # Generate indices on the destination directory
     #
-    def install_indices
-      install_indicies
-    end
-
-    ##
-    # Generate indicies on the destination directory
-    #
     # @return [Array]
     #
-    def install_indicies
+    def install_indices
       Utils.logger
            .debug("Downloading index into production dir #{@dest_directory}")
 
@@ -115,17 +99,10 @@ module Gemirro
       files.each do |path|
         file = path.sub(%r{^#{Regexp.escape @directory}/?}, '')
 
-        if ["#{@specs_index}.gz",
-            "#{@latest_specs_index}.gz",
-            "#{@prerelease_specs_index}.gz"].include?(path)
-          res = build_zlib_file(file, File.join(@directory, file), File.join(@dest_directory, file), true)
-          next unless res
-        else
-          source_content = download_from_source(file)
-          next if source_content.nil?
+        source_content = download_from_source(file)
+        next if source_content.nil?
 
-          MirrorFile.new(File.join(@dest_directory, file)).write(source_content)
-        end
+        MirrorFile.new(File.join(@dest_directory, file)).write(source_content)
 
         FileUtils.rm_rf(path)
       end
@@ -139,7 +116,7 @@ module Gemirro
     #
     def download_from_source(file)
       source_host = Gemirro.configuration.source.host
-      Utils.logger.info("Download from source: #{file}")
+      Utils.logger.info("Download from source #{source_host}/#{file}")
       resp = Http.get("#{source_host}/#{File.basename(file)}")
       return unless resp.code == 200
 
@@ -152,22 +129,12 @@ module Gemirro
     # @return [Array]
     #
     def build_indices
-      build_indicies
-    end
-
-    ##
-    # Build indicies
-    #
-    # @return [Array]
-    #
-    def build_indicies
       specs = *map_gems_to_specs(gem_file_list)
       specs.select! { |s| s.instance_of?(::Gem::Specification) }
       ::Gem::Specification.dirs = []
       ::Gem::Specification.all = specs
 
       build_marshal_gemspecs(specs)
-      #compress_indices
 
       build_compact_index_names
       build_compact_index_infos(specs)
@@ -280,7 +247,7 @@ module Gemirro
     # @return nil
     #
     def build_compact_index_infos(specs, partial = false)
-      FileUtils.mkdir_p(@infos_dir)
+      FileUtils.mkdir_p(@infos_dir, verbose: verbose)
 
       if partial
         specs.collect(&:name).uniq do |name|
@@ -473,97 +440,23 @@ module Gemirro
 
       ::Gem::Specification.dirs = []
       ::Gem::Specification.all = *specs
-      files =
-        build_marshal_gemspecs specs
+      files = build_marshal_gemspecs specs
 
-      #::Gem.time('Updated indexes') do
-      #  update_specs_index(
-      #    released,
-      #    @dest_specs_index,
-      #    @specs_index
-      #  )
-      #  update_specs_index(
-      #    released,
-      #    @dest_latest_specs_index,
-      #    @latest_specs_index
-      #  )
-      #  update_specs_index(
-      #    prerelease,
-      #    @dest_prerelease_specs_index,
-      #    @prerelease_specs_index
-      #  )
-      #end
-
-      #compress_indices
-
-      # build_api_v1_dependencies(version_specs, true)
-
-        build_compact_index_names
-        build_compact_index_infos(version_specs, true)
-        build_compact_index_versions(specs, true)
-
-=begin
-      Utils.logger.info("Updating production dir #{@dest_directory}") if verbose
-      files << @specs_index
-      files << "#{@specs_index}.gz"
-      files << @latest_specs_index
-      files << "#{@latest_specs_index}.gz"
-      files << @prerelease_specs_index
-      files << "#{@prerelease_specs_index}.gz"
-
-      files.each do |path|
-        file = path.sub(%r{^#{Regexp.escape @directory}/?}, '')
-
-        if ["#{@specs_index}.gz", "#{@latest_specs_index}.gz", "#{@prerelease_specs_index}.gz"].include?(path)
-          res = build_zlib_file(file, File.join(@directory, file), File.join(@dest_directory, file))
-          next unless res
-        else
-          FileUtils.mv(
-            File.join(@directory, file),
-            File.join(@dest_directory, file),
-            verbose: verbose,
-            force: true
-          )
-        end
-
-        File.utime(newest_mtime, newest_mtime, File.join(@dest_directory, file))
-      end
-=end
+      build_compact_index_infos(version_specs, true)
+      build_compact_index_versions(specs, true)
+      build_compact_index_names
     end
 
 
-    def build_zlib_file(file, src_name, dst_name, from_source = false)
-      content = Marshal.load(Zlib::GzipReader.open(src_name).read)
-      create_zlib_file("#{dst_name}.local", content)
+    def download_source_versions
+      Tempfile.create(File.basename(Gemirro.configuration.versions_file)) do |f|
+        f.write(download_from_source('versions'))
+        f.close
 
-      return false if @only_origin
-
-      if from_source
-        source_content = download_from_source(file)
-        source_content = Marshal.load(
-          Zlib::GzipReader.new(
-            StringIO.new(source_content)
-          ).read
-        )
-      else
-        source_content = Marshal.load(Zlib::GzipReader.open(dst_name).read)
-      end
-
-      return false if source_content.nil?
-
-      new_content = source_content.concat(content).uniq
-      create_zlib_file(dst_name, new_content)
-    end
-
-    def create_zlib_file(dst_name, content)
-      Tempfile.create(File.basename(dst_name)) do |f|
-        gzf = Zlib::GzipWriter.new(f)
-        gzf.write(Marshal.dump(content))
-        gzf.close
-
+        FileUtils.rm(Gemirro.configuration.versions_file, verbose: verbose)
         FileUtils.cp(
           f.path,
-          dst_name,
+          Gemirro.configuration.versions_file,
           verbose: verbose
         )
       end

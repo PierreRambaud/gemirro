@@ -48,32 +48,28 @@ module Gemirro
       return @gems_collection[:values] if !has_file_changed && !@gems_collection[:values].nil?
 
       gems = []
+      versions_file = CompactIndex::VersionsFile.new(file_paths.last)
 
 
-   
+      versions_file.contents.each_line.with_index do |line, index|
+        next if index < 2
 
-        versions_file = CompactIndex::VersionsFile.new(file_paths.last)
+        parts = line.split
+        gem_name = parts[0]
+        checksum = parts[-1]
+        versions = parts[1..-2].collect{ |x| x.split(',') }.flatten  # All except first and last
 
+        versions.each do |ver|
+          version, platform =
+            if ver.include?('-')
+              ver.split('-', 2)
+            else
+              [ver, 'ruby']
+            end
 
-        versions_file.contents.each_line.with_index do |line, index|
-          next if index < 2
-
-          parts = line.split
-          gem_name = parts[0]
-          checksum = parts[-1]
-          versions = parts[1..-2].collect{ |x| x.split(',') }.flatten  # All except first and last
-
-          versions.each do |ver|
-            version, platform =
-              if ver.include?('-')
-                ver.split('-', 2)
-              else
-                [ver, 'ruby']
-              end
-
-            gems << Gemirro::GemVersion.new(gem_name, version, platform)
-          end
+          gems << Gemirro::GemVersion.new(gem_name, version, platform)
         end
+      end
 
       @gems_collection[:values] = GemVersionCollection.new(gems)
     end
