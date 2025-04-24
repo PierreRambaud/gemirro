@@ -100,7 +100,9 @@ module Gemirro
     # @return [String]
     #
     def versions_file
-      File.expand_path(URI.parse(@source.host).host.gsub('.', '_') + '_versions', destination.to_s)
+      return unless @source
+
+      File.expand_path("#{URI.parse(@source.host).host.gsub('.', '_')}_versions", destination.to_s)
     end
 
     ##

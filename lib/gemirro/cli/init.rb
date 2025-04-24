@@ -27,9 +27,9 @@ Gemirro::CLI.options.command 'init' do
     end
 
     # make sure index updates blank local specs
-    #['specs.4.8', 'latest_specs.4.8', 'prerelease_specs.4.8'].each do |s|
+    # ['specs.4.8', 'latest_specs.4.8', 'prerelease_specs.4.8'].each do |s|
     #  File.utime(Time.at(0), Time.at(0), File.join(directory, 'public', s))
-    #end
+    # end
 
     puts "Initialized empty mirror in #{directory}"
   end

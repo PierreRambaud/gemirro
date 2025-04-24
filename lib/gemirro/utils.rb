@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require 'gemirro/gem_version'
 
 module Gemirro
@@ -34,10 +35,10 @@ module Gemirro
       @gems_collection ||= { files: {}, values: nil }
 
       file_paths =
-          Dir.glob(File.join(
-            configuration.destination,
-            "versions.*.*.list"
-          ))
+        Dir.glob(File.join(
+                   configuration.destination,
+                   'versions.*.*.list'
+                 ))
 
       has_file_changed =
         @gems_collection[:files] != file_paths.each_with_object({}) do |f, r|
@@ -50,14 +51,13 @@ module Gemirro
       gems = []
       versions_file = CompactIndex::VersionsFile.new(file_paths.last)
 
-
       versions_file.contents.each_line.with_index do |line, index|
         next if index < 2
 
         parts = line.split
         gem_name = parts[0]
-        checksum = parts[-1]
-        versions = parts[1..-2].collect{ |x| x.split(',') }.flatten  # All except first and last
+        parts[-1]
+        versions = parts[1..-2].collect { |x| x.split(',') }.flatten # All except first and last
 
         versions.each do |ver|
           version, platform =

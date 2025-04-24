@@ -217,31 +217,20 @@ module Gemirro
     end
 
     context 'dependencies' do
-      it 'should retrieve nothing' do
+      it 'should retrieve nothing and give 404' do
         get '/api/v1/dependencies'
-        expect(last_response.headers['Content-Type'])
-          .to eq('application/octet-stream')
-        expect(last_response.body).to eq('')
-        expect(last_response).to be_ok
+        expect(last_response.status).to eq(404)
+        expect(last_response).to_not be_ok
       end
 
-      it 'should retrieve empty json' do
-        get '/api/v1/dependencies.json'
-        expect(last_response.headers['Content-Type'])
-          .to eq('application/json')
-        expect(last_response.body).to eq('[]')
-        expect(last_response).to be_ok
-      end
 
-      it 'should retrieve empty json when gem was not found' do
+      it 'should retrieve nothing and give 404' do
         get '/api/v1/dependencies.json?gems=gemirro'
-        expect(last_response.headers['Content-Type'])
-          .to eq('application/json')
-        expect(last_response.body).to eq('[]')
-        expect(last_response).to be_ok
+        expect(last_response.status).to eq(404)
+        expect(last_response).to_not be_ok
       end
 
-      it 'should retrieve json when gem was found' do
+      it 'should retrieve nothing and give 404' do
         MirrorDirectory.new('/var/www/gemirro')
                        .add_directory('quick/Marshal.4.8')
         # rubocop:disable Metrics/LineLength
@@ -298,11 +287,9 @@ module Gemirro
         allow(Utils).to receive(:gems_collection)
           .and_return(collection)
         get '/api/v1/dependencies.json?gems=volay'
-        expect(last_response.headers['Content-Type'])
-          .to eq('application/json')
-
-        expect(last_response.body).to match(/"name":"volay"/)
-        expect(last_response).to be_ok
+        expect(last_response.status).to eq(404)
+        expect(last_response).to_not be_ok
+      end
       end
     end
   end

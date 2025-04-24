@@ -12,7 +12,7 @@ module Gemirro
 
     before(:each) do
       @source = Source.new('RubyGems', 'https://rubygems.org')
-      @versions_file = VersionsFile.new(['0.0.1', '0.0.2'])
+      @versions_file = VersionsFile.new(%(created_at: 2025-04-24T03:46:59Z\n---\nrack 3.0.0,3.0.1 d545a45462d63b1b4865bbb89a109366))
       @fetcher = GemsFetcher.new(@source, @versions_file)
       Gemirro.configuration.ignored_gems.clear
     end

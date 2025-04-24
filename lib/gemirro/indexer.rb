@@ -66,7 +66,6 @@ module Gemirro
       @latest_index =
         File.join(@quick_dir, 'latest_index')
 
-
       @latest_specs_index =
         File.join(@directory, "latest_specs.#{::Gem.marshal_version}")
       @dest_latest_specs_index =
@@ -391,13 +390,10 @@ module Gemirro
 
       @updated_gems = []
 
-
       # detect files manually added to public/gems
       @updated_gems += (present_gemfiles - indexed_gemfiles).collect { |x| File.join(@dest_directory, 'gems', x) }
       # detect files manually deleted from public/gems
       @updated_gems += (indexed_gemfiles - present_gemfiles).collect { |x| File.join(@dest_directory, 'gems', x) }
-
-
 
       versions_mtime =
         begin
@@ -436,17 +432,16 @@ module Gemirro
       Utils.logger.info('Reloading for /info/[gemname]')
       version_specs = map_gems_to_specs(u2)
 
-      #prerelease, released = specs.partition { |s| s.version.prerelease? }
+      # prerelease, released = specs.partition { |s| s.version.prerelease? }
 
       ::Gem::Specification.dirs = []
       ::Gem::Specification.all = *specs
-      files = build_marshal_gemspecs specs
+      build_marshal_gemspecs specs
 
       build_compact_index_infos(version_specs, true)
       build_compact_index_versions(specs, true)
       build_compact_index_names
     end
-
 
     def download_source_versions
       Tempfile.create(File.basename(Gemirro.configuration.versions_file)) do |f|

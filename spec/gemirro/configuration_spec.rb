@@ -39,8 +39,8 @@ module Gemirro
       expect(Configuration.marshal_identifier).to match(/Marshal\.(\d+)\.(\d+)/)
     end
 
-    it 'should return versions file' do
-      expect(Configuration.versions_file).to match(/specs\.(\d+)\.(\d+).gz/)
+    it 'should error on version since no source is defined' do
+      expect(Gemirro.configuration.versions_file).to match(nil)
     end
 
     it 'should return marshal file' do
@@ -83,6 +83,13 @@ module Gemirro
       expect(result.gems).to eq([])
       expect(result.host).to eq('https://rubygems.org')
       expect(result.name).to eq('rubygems')
+    end
+
+
+    it 'should return versions file with source' do
+      result = @config.define_source('RubyGems', 'https://rubygems.org') do
+      end
+      expect(@config.versions_file).to match(/rubygems_org_versions$/)
     end
   end
 end
