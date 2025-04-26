@@ -11,7 +11,7 @@ module Gemirro
   #  @return [Hash]
   #
   class VersionsFile
-    attr_reader :versions, :versions_hash
+    attr_reader :versions_string, :versions_hash
 
     ##
     # Reads the versions file from the specified String.
@@ -19,15 +19,14 @@ module Gemirro
     # @param [String] versions_content
     # @return [Gemirro::VersionsFile]
     #
-    def self.load(versions_content)
-      new(versions_content)
-    end
 
     ##
-    # @param [Array] versions
+    # @param [String] versions
     #
-    def initialize(versions)
-      @versions      = versions
+    def initialize(versions_string)
+      throw "#{versions_string.class} is wrong format, expect String; #{versions_string.inspect}" unless versions_string.is_a? String
+
+      @versions_string = versions_string
       @versions_hash = create_versions_hash
     end
 
@@ -40,7 +39,8 @@ module Gemirro
     def create_versions_hash
       hash = Hash.new { |h, k| h[k] = [] }
 
-      versions.each_line.with_index do |line, index|
+
+      versions_string.each_line.with_index do |line, index|
         next if index < 2
 
         parts = line.split

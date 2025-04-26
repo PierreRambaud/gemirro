@@ -22,7 +22,7 @@ module Gemirro
     # @return [Gemirro::VersionsFile]
     #
     def fetch
-      VersionsFile.load(
+      VersionsFile.new(
         read_file(Gemirro.configuration.versions_file)
       )
     end

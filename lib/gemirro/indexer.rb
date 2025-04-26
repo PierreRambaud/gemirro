@@ -91,7 +91,7 @@ module Gemirro
       if files.include?(@quick_marshal_dir) && !files.include?(@quick_dir)
         files.delete @quick_marshal_dir
         FileUtils.mkdir_p(File.dirname(@quick_marshal_dir_base), verbose: verbose)
-        FileUtils.rm_rf(@quick_marshal_dir_base, verbose: verbose)
+        FileUtils.rm_rf(@quick_marshal_dir_base, verbose: verbose) if File.exist?(@quick_marshal_dir_base)
         FileUtils.mv(@quick_marshal_dir, @quick_marshal_dir_base, verbose: verbose, force: true)
       end
 
@@ -210,7 +210,7 @@ module Gemirro
         end
 
       Tempfile.create('versions.list') do |f|
-        previous_versions_file = Dir.glob(File.join(@dest_directory, 'versions*.list')).last
+        previous_versions_file = Dir.glob(File.join(@dest_directory, 'versions.*.*.list')).last
 
         if partial && previous_versions_file
           versions_file = CompactIndex::VersionsFile.new(previous_versions_file)
@@ -223,7 +223,7 @@ module Gemirro
         f.write CompactIndex.versions(versions_file, cg)
         f.rewind
 
-        FileUtils.rm_rf(Dir.glob(File.join(@dest_directory, 'versions*.list')))
+        FileUtils.rm_rf(Dir.glob(File.join(@dest_directory, 'versions.*.*.list')))
 
         FileUtils.cp(
           f.path,

@@ -17,10 +17,9 @@ module Gemirro
 
     it 'should fetch versions' do
       allow(@source).to receive(:fetch_versions).once.and_return([])
-      allow(@source).to receive(:fetch_prerelease_versions).once.and_return([])
-      allow(VersionsFile).to receive(:load).with('nothing', 'nothing')
-      allow(File).to receive(:write).twice
-      allow(File).to receive(:read).twice.and_return('nothing')
+      allow(VersionsFile).to receive(:load).with('nothing')
+      allow(File).to receive(:write).once
+      allow(File).to receive(:read).once.and_return('nothing')
       expect(@fetcher.fetch).to be_nil
     end
   end
