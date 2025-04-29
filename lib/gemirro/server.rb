@@ -90,7 +90,7 @@ module Gemirro
       content_path = Dir.glob(File.join(Gemirro.configuration.destination, 'names.*.*.list')).last
       _, etag, repr_digest, _ = File.basename(content_path).split('.')
 
-      headers 'etag' => etag
+      headers 'etag' => %("#{etag}")
       headers 'repr-digest' => %(sha-256=#{Base64.strict_encode64([repr_digest].pack('H*'))})
       send_file content_path
     end
@@ -106,7 +106,7 @@ module Gemirro
       content_path = Dir.glob(File.join(Utils.configuration.destination, 'versions.*.*.list')).last
       _, etag, repr_digest, _ = File.basename(content_path).split('.')
 
-      headers 'etag' => etag
+      headers 'etag' => %("#{etag}")
       headers 'repr-digest' => %(sha-256=#{Base64.strict_encode64([repr_digest].pack('H*'))})
       send_file content_path
     end
@@ -125,7 +125,7 @@ module Gemirro
       content_path = Dir.glob(File.join(Utils.configuration.destination, 'info', "#{params[:gemname]}.*.*.list")).last
       _, etag, repr_digest, _ = File.basename(content_path).split('.')
 
-      headers 'etag' => etag
+      headers 'etag' => %("#{etag}")
       headers 'repr-digest' => %(sha-256=#{Base64.strict_encode64([repr_digest].pack('H*'))})
       send_file content_path
     end
