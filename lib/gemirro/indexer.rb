@@ -91,7 +91,9 @@ module Gemirro
       if files.include?(@quick_marshal_dir) && !files.include?(@quick_dir)
         files.delete @quick_marshal_dir
         FileUtils.mkdir_p(File.dirname(@quick_marshal_dir_base), verbose: verbose)
-        FileUtils.rm_rf(@quick_marshal_dir_base, verbose: verbose) if File.exist?(@quick_marshal_dir_base)
+        if @quick_marshal_dir_base && File.exist?(@quick_marshal_dir_base)
+          FileUtils.rm_rf(@quick_marshal_dir_base, verbose: verbose)
+        end
         FileUtils.mv(@quick_marshal_dir, @quick_marshal_dir_base, verbose: verbose, force: true)
       end
 
@@ -431,8 +433,6 @@ module Gemirro
 
       Utils.logger.info('Reloading for /info/[gemname]')
       version_specs = map_gems_to_specs(u2)
-
-      # prerelease, released = specs.partition { |s| s.version.prerelease? }
 
       ::Gem::Specification.dirs = []
       ::Gem::Specification.all = *specs

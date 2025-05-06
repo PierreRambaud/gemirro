@@ -55,6 +55,8 @@ module Gemirro
     # @return [Array]
     #
     def versions_for(gem)
+      return [] unless @versions_file
+
       available = @versions_file.versions_for(gem.name)
       return [available.last] if gem.only_latest?
 

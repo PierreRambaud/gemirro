@@ -40,19 +40,6 @@ module Gemirro
     end
 
     ##
-    # Fetches a list of all the available Gems and their versions.
-    #
-    # @return [String]
-    #
-    def fetch_prerelease_versions
-      Utils.logger.info(
-        "Fetching #{Configuration.prerelease_versions_file} " \
-        "on #{@name} (#{@host})"
-      )
-      Http.get("#{host}/#{Configuration.prerelease_versions_file}").body
-    end
-
-    ##
     # Fetches the `.gem` file of a given Gem and version.
     #
     # @param [String] name

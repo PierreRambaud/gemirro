@@ -73,7 +73,7 @@ module Gemirro
       end
 
       it 'should display gem specifications' do
-        MirrorFile.new('/var/www/gemirro/versions.md5.aaa256.list').write(%(created_at: 2025-01-01T00:00:00Z\n---\nvolay 0.1.0))
+        MirrorFile.new('/var/www/gemirro/versions.md5.aaa256.list').write(%(created_at: 2025-01-01T00:00:00Z\n---\nvolay 0.1.0 checksum))
 
         get '/gem/volay'
 
@@ -82,14 +82,16 @@ module Gemirro
       end
       
       it 'responds to compact_index /names' do
-        MirrorFile.new('/var/www/gemirro/names.md5.aaa256.list').write(%(\n---\nvolay\n))
+        MirrorFile.new('/var/www/gemirro/names.md5.aaa256.list').write(%(---\nvolay))
 
         get '/names'
         expect(last_response.status).to eq(200)
         expect(last_response).to be_ok
-        expect(last_response.body).to  eq(%(---\n- volay\n))
-        expect(last_response.headers['etag']).to eq("md5")
-        expect(last_response.headers['repr-digest']).to  eq(%(sha-256="#{Base64.strict_encode64(['aaa256'].pack('H*'))}"))
+
+
+        expect(last_response.body).to  eq(%(---\nvolay))
+        expect(last_response.headers['etag']).to eq('"md5"')
+        expect(last_response.headers['repr-digest']).to  eq(%(sha-256=#{Base64.strict_encode64(['aaa256'].pack('H*'))}))
       end
 
       it 'responds to compact_index /info/[gemname]' do
@@ -101,8 +103,8 @@ module Gemirro
         expect(last_response.status).to eq(200)
         expect(last_response).to be_ok
         expect(last_response.body).to eq('---\n 0.1.0 |checksum:sha256\n')
-        expect(last_response.headers['etag']).to eq("md5")
-        expect(last_response.headers['repr-digest']).to  eq(%(sha-256="#{Base64.strict_encode64(['aaa256'].pack('H*'))}"))
+        expect(last_response.headers['etag']).to eq('"md5"')
+        expect(last_response.headers['repr-digest']).to  eq(%(sha-256=#{Base64.strict_encode64(['aaa256'].pack('H*'))}))
       end
       
 
@@ -113,8 +115,8 @@ module Gemirro
         expect(last_response.status).to eq(200)
         expect(last_response).to be_ok
         expect(last_response.body).to eq(%(created_at: 2025-01-01T00:00:00Z\n---\nvolay 0.1.0))
-        expect(last_response.headers['etag']).to eq("md5")
-        expect(last_response.headers['repr-digest']).to  eq(%(sha-256="#{Base64.strict_encode64(['aaa256'].pack('H*'))}"))
+        expect(last_response.headers['etag']).to eq('"md5"')
+        expect(last_response.headers['repr-digest']).to  eq(%(sha-256=#{Base64.strict_encode64(['aaa256'].pack('H*'))}))
       end
       
 

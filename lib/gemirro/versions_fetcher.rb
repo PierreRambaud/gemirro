@@ -22,9 +22,9 @@ module Gemirro
     # @return [Gemirro::VersionsFile]
     #
     def fetch
-      VersionsFile.new(
-        read_file(Gemirro.configuration.versions_file)
-      )
+      return unless Gemirro.configuration.versions_file
+
+      VersionsFile.new(read_file(Gemirro.configuration.versions_file))
     end
 
     ##

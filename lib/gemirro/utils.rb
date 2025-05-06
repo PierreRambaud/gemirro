@@ -49,7 +49,7 @@ module Gemirro
       return @gems_collection[:values] if !has_file_changed && !@gems_collection[:values].nil?
 
       gems = []
-      
+
       CompactIndex::VersionsFile.new(file_paths.last).contents.each_line.with_index do |line, index|
         next if index < 2
 
@@ -197,7 +197,7 @@ module Gemirro
     # @return [Indexer]
     #
     def self.update_indexes
-      indexer = Gemirro::Indexer.new(Utils.configuration.destination)
+      indexer = Gemirro::Indexer.new
       indexer.only_origin = true
       indexer.ui = ::Gem::SilentUI.new
 
