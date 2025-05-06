@@ -7,44 +7,20 @@ module Gemirro
   describe 'VersionsFile' do
     include FakeFS::SpecHelpers
 
-    it 'should be initialized' do
-      @versions_file = VersionsFile.new([['gemirro', '0.0.1'],
-                                         ['gemirro', '0.0.2']])
-      expect(@versions_file.versions).to eq([['gemirro', '0.0.1'],
-                                             ['gemirro', '0.0.2']])
-      expect(@versions_file.versions_hash).to eq(
-        'gemirro' => [
-          ['gemirro', '0.0.1'],
-          ['gemirro', '0.0.2']
-        ]
-      )
-    end
-
     it 'should load versions file' do
-      spec = StringIO.new('w')
-      w_gz = Zlib::GzipWriter.new(spec)
-      w_gz.write(Marshal.dump([['gemirro', '0.0.1'],
-                               ['gemirro', '0.0.2']]))
-      w_gz.close
-      prerelease = StringIO.new('w')
-      w_gz = Zlib::GzipWriter.new(prerelease)
-      w_gz.write(Marshal.dump([['gemirro', '0.0.1.alpha1'],
-                               ['gemirro', '0.0.2.alpha2']]))
-      w_gz.close
+      spec = %(created_at: 2025-01-01T00:00:00Z\n---\ngemirro 0.0.1.alpha1,0.0.1,0.0.2.alpha2,0.0.2 checksum)
 
-      result = VersionsFile.load(spec.string, prerelease.string)
+      result = VersionsFile.new(spec)
       expect(result).to be_a(VersionsFile)
 
-      expect(result.versions).to eq([['gemirro', '0.0.1'],
-                                     ['gemirro', '0.0.2'],
-                                     ['gemirro', '0.0.1.alpha1'],
-                                     ['gemirro', '0.0.2.alpha2']])
+      expect(result.versions_string).to eq(%(created_at: 2025-01-01T00:00:00Z\n---\ngemirro 0.0.1.alpha1,0.0.1,0.0.2.alpha2,0.0.2 checksum))
+
       expect(result.versions_hash).to eq(
         'gemirro' => [
-          ['gemirro', '0.0.1'],
-          ['gemirro', '0.0.2'],
-          ['gemirro', '0.0.1.alpha1'],
-          ['gemirro', '0.0.2.alpha2']
+          ['gemirro', ::Gem::Version.new('0.0.1.alpha1'), 'ruby'],
+          ['gemirro', ::Gem::Version.new('0.0.1'), 'ruby'],
+          ['gemirro', ::Gem::Version.new('0.0.2.alpha2'), 'ruby'],
+          ['gemirro', ::Gem::Version.new('0.0.2'), 'ruby']
         ]
       )
     end

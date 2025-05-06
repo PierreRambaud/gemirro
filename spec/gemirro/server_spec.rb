@@ -1,6 +1,9 @@
 require 'rack/test'
 require 'json'
 require 'parallel'
+require 'sinatra/base'
+require 'thin'
+require 'base64'
 require 'gemirro/utils'
 require 'gemirro/mirror_directory'
 require 'gemirro/mirror_file'
@@ -37,7 +40,6 @@ module Gemirro
       Utils.instance_eval('@gems_source_collection = nil')
       FakeFS::FileSystem.clone(Gemirro::Configuration.views_directory)
       allow_any_instance_of(Indexer).to receive(:compress_indices)
-      allow_any_instance_of(Indexer).to receive(:compress_indicies)
       allow_any_instance_of(Indexer).to receive(:rand).and_return('0')
 
       source = Source.new('Rubygems', 'https://rubygems.org')
@@ -50,6 +52,9 @@ module Gemirro
         allow(@fake_logger).to receive(:tap)
           .and_return(nil)
           .and_yield(@fake_logger)
+
+
+        MirrorFile.new('/var/www/gemirro/versions.md5.aaa256.list').write('created_at: 2025-01-01T00:00:00Z\n---\nvolay 0.1.0\n')
 
         get '/'
         expect(last_response).to be_ok
@@ -68,14 +73,7 @@ module Gemirro
       end
 
       it 'should display gem specifications' do
-        marshal_dump = Marshal.dump([['volay',
-                                      ::Gem::Version.create('0.1.0'),
-                                      'ruby']])
-
-        MirrorFile.new('/var/www/gemirro/specs.4.8.gz.local').write(Marshal.dump({}))
-
-
-        allow(Zlib::GzipReader).to receive(:open).and_return(double(read: marshal_dump))
+        MirrorFile.new('/var/www/gemirro/versions.md5.aaa256.list').write(%(created_at: 2025-01-01T00:00:00Z\n---\nvolay 0.1.0 checksum))
 
         get '/gem/volay'
 
@@ -84,48 +82,41 @@ module Gemirro
       end
       
       it 'responds to compact_index /names' do
-        MirrorFile.new('/var/www/gemirro/names.md5.sha256.list').write('---\n- volay\n')
+        MirrorFile.new('/var/www/gemirro/names.md5.aaa256.list').write(%(---\nvolay))
 
         get '/names'
         expect(last_response.status).to eq(200)
         expect(last_response).to be_ok
-        expect(last_response.body).to  eq('---\n- volay\n')
-        expect(last_response.headers['etag']).to eq("md5")
-        expect(last_response.headers['repr-digest']).to  eq('sha-256="sha256"')
+
+
+        expect(last_response.body).to  eq(%(---\nvolay))
+        expect(last_response.headers['etag']).to eq('"md5"')
+        expect(last_response.headers['repr-digest']).to  eq(%(sha-256=#{Base64.strict_encode64(['aaa256'].pack('H*'))}))
       end
 
       it 'responds to compact_index /info/[gemname]' do
-        marshal_dump = Marshal.dump([['volay',
-                                      ::Gem::Version.create('0.1.0'),
-                                      'ruby']])
-
-        MirrorFile.new('/var/www/gemirro/specs.4.8.gz.local').write(Marshal.dump({}))
-      
-        allow(Zlib::GzipReader).to receive(:open).and_return(double(read: marshal_dump))
-        
-        
         MirrorDirectory.new('/var/www/gemirro/info')
-        MirrorFile.new('/var/www/gemirro/info/volay.md5.sha256.list').write('---\n 0.1.0 |checksum:sha256\n')
+        MirrorFile.new('/var/www/gemirro/info/volay.md5.aaa256.list').write('---\n 0.1.0 |checksum:sha256\n')
         
 
         get '/info/volay'
         expect(last_response.status).to eq(200)
         expect(last_response).to be_ok
         expect(last_response.body).to eq('---\n 0.1.0 |checksum:sha256\n')
-        expect(last_response.headers['etag']).to eq("md5")
-        expect(last_response.headers['repr-digest']).to  eq('sha-256="sha256"')
+        expect(last_response.headers['etag']).to eq('"md5"')
+        expect(last_response.headers['repr-digest']).to  eq(%(sha-256=#{Base64.strict_encode64(['aaa256'].pack('H*'))}))
       end
       
 
       it 'responds to compact_index /versions' do
-        MirrorFile.new('/var/www/gemirro/versions.md5.sha256.list').write('created_at: 2025-01-01T00:00:00Z\m---\nvolay 0.1.0\n')
+        MirrorFile.new('/var/www/gemirro/versions.md5.aaa256.list').write(%(created_at: 2025-01-01T00:00:00Z\n---\nvolay 0.1.0))
       
         get '/versions'
         expect(last_response.status).to eq(200)
         expect(last_response).to be_ok
-        expect(last_response.body).to eq('created_at: 2025-01-01T00:00:00Z\m---\nvolay 0.1.0\n')
-        expect(last_response.headers['etag']).to eq("md5")
-        expect(last_response.headers['repr-digest']).to  eq('sha-256="sha256"')
+        expect(last_response.body).to eq(%(created_at: 2025-01-01T00:00:00Z\n---\nvolay 0.1.0))
+        expect(last_response.headers['etag']).to eq('"md5"')
+        expect(last_response.headers['repr-digest']).to  eq(%(sha-256=#{Base64.strict_encode64(['aaa256'].pack('H*'))}))
       end
       
 
@@ -214,31 +205,20 @@ module Gemirro
     end
 
     context 'dependencies' do
-      it 'should retrieve nothing' do
+      it 'should retrieve nothing and give 404' do
         get '/api/v1/dependencies'
-        expect(last_response.headers['Content-Type'])
-          .to eq('application/octet-stream')
-        expect(last_response.body).to eq('')
-        expect(last_response).to be_ok
+        expect(last_response.status).to eq(404)
+        expect(last_response).to_not be_ok
       end
 
-      it 'should retrieve empty json' do
-        get '/api/v1/dependencies.json'
-        expect(last_response.headers['Content-Type'])
-          .to eq('application/json')
-        expect(last_response.body).to eq('[]')
-        expect(last_response).to be_ok
-      end
 
-      it 'should retrieve empty json when gem was not found' do
+      it 'should retrieve nothing and give 404' do
         get '/api/v1/dependencies.json?gems=gemirro'
-        expect(last_response.headers['Content-Type'])
-          .to eq('application/json')
-        expect(last_response.body).to eq('[]')
-        expect(last_response).to be_ok
+        expect(last_response.status).to eq(404)
+        expect(last_response).to_not be_ok
       end
 
-      it 'should retrieve json when gem was found' do
+      it 'should retrieve nothing and give 404' do
         MirrorDirectory.new('/var/www/gemirro')
                        .add_directory('quick/Marshal.4.8')
         # rubocop:disable Metrics/LineLength
@@ -295,11 +275,8 @@ module Gemirro
         allow(Utils).to receive(:gems_collection)
           .and_return(collection)
         get '/api/v1/dependencies.json?gems=volay'
-        expect(last_response.headers['Content-Type'])
-          .to eq('application/json')
-
-        expect(last_response.body).to match(/"name":"volay"/)
-        expect(last_response).to be_ok
+        expect(last_response.status).to eq(404)
+        expect(last_response).to_not be_ok
       end
     end
   end

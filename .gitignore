@@ -4,3 +4,4 @@
 /.ruby-version
 /*.gem
 /.bundle
+.DS_Store

@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require File.expand_path('../version', __FILE__)
+
 module Gemirro
   # CLI mode
   module CLI
@@ -58,7 +60,7 @@ module Gemirro
     # @return [String]
     #
     def self.version_information
-      "gemirro v#{VERSION} on #{RUBY_DESCRIPTION}"
+      "gemirro v#{Gemirro::VERSION} on #{RUBY_DESCRIPTION}"
     end
   end
 end

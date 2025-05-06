@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'gemirro/gem_version'
+
 module Gemirro
   ##
   # The Utils class is responsible for executing specific traitments
@@ -33,12 +35,10 @@ module Gemirro
       @gems_collection ||= { files: {}, values: nil }
 
       file_paths =
-        %i[specs prerelease_specs].collect do |specs_file_type|
-          File.join(
-            configuration.destination,
-            "#{specs_file_type}.#{Gemirro::Configuration.marshal_version}.gz.local"
-          )
-        end
+        Dir.glob(File.join(
+                   Gemirro.configuration.destination,
+                   'versions.*.*.list'
+                 ))
 
       has_file_changed =
         @gems_collection[:files] != file_paths.each_with_object({}) do |f, r|
@@ -50,12 +50,22 @@ module Gemirro
 
       gems = []
 
-      # parallel is not for mtime, it's for the Marshal.
-      Parallel.map(file_paths, in_threads: Utils.configuration.update_thread_count) do |file_path|
-        next unless File.exist?(file_path)
+      CompactIndex::VersionsFile.new(file_paths.last).contents.each_line.with_index do |line, index|
+        next if index < 2
 
-        gems.concat(Marshal.load(Zlib::GzipReader.open(file_path).read))
-        @gems_collection[:files][file_path] = File.mtime(file_path)
+        gem_name = line.split[0]
+        versions = line.split[1..-2].collect { |x| x.split(',') }.flatten # All except first and last
+
+        versions.each do |ver|
+          version, platform =
+            if ver.include?('-')
+              ver.split('-', 2)
+            else
+              [ver, 'ruby']
+            end
+
+          gems << Gemirro::GemVersion.new(gem_name, version, platform)
+        end
       end
 
       @gems_collection[:values] = GemVersionCollection.new(gems)
@@ -187,7 +197,7 @@ module Gemirro
     # @return [Indexer]
     #
     def self.update_indexes
-      indexer = Gemirro::Indexer.new(Utils.configuration.destination)
+      indexer = Gemirro::Indexer.new
       indexer.only_origin = true
       indexer.ui = ::Gem::SilentUI.new
 

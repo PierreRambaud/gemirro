@@ -11,36 +11,24 @@ module Gemirro
   #  @return [Hash]
   #
   class VersionsFile
-    attr_reader :versions, :versions_hash
+    attr_reader :versions_string, :versions_hash
 
     ##
     # Reads the versions file from the specified String.
     #
-    # @param [String] spec_content
-    # @param [String] prerelease_content
+    # @param [String] versions_content
     # @return [Gemirro::VersionsFile]
     #
-    def self.load(spec_content, prerelease_content)
-      buffer = StringIO.new(spec_content)
-      reader = Zlib::GzipReader.new(buffer)
-      versions = Marshal.load(reader.read)
-
-      buffer = StringIO.new(prerelease_content)
-      reader = Zlib::GzipReader.new(buffer)
-      versions.concat(Marshal.load(reader.read))
-
-      instance = new(versions)
-
-      reader.close
-
-      instance
-    end
 
     ##
-    # @param [Array] versions
+    # @param [String] versions
     #
-    def initialize(versions)
-      @versions      = versions
+    def initialize(versions_string)
+      unless versions_string.is_a? String
+        throw "#{versions_string.class} is wrong format, expect String; #{versions_string.inspect}"
+      end
+
+      @versions_string = versions_string
       @versions_hash = create_versions_hash
     end
 
@@ -53,10 +41,24 @@ module Gemirro
     def create_versions_hash
       hash = Hash.new { |h, k| h[k] = [] }
 
-      versions.each do |version|
-        hash[version[0]] << version
-      end
+      versions_string.each_line.with_index do |line, index|
+        next if index < 2
 
+        parts = line.split
+        gem_name = parts[0]
+        parts[-1]
+        versions = parts[1..-2].collect { |x| x.split(',') }.flatten # All except first and last
+
+        versions.each do |ver|
+          version, platform =
+            if ver.include?('-')
+              ver.split('-', 2)
+            else
+              [ver, 'ruby']
+            end
+          hash[gem_name] << [gem_name, ::Gem::Version.new(version), platform]
+        end
+      end
       hash
     end
 
