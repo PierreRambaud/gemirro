@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    gemirro (1.6.0)
+    gemirro (2.0.0)
       addressable (~> 2.8)
       builder (~> 3.2)
       compact_index (~> 0.15)
