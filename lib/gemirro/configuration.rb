@@ -193,9 +193,9 @@ module Gemirro
     # @param [String] url
     # @param [Proc] block
     #
-    def define_source(name, url, &block)
+    def define_source(name, url, &)
       source = Source.new(name, url)
-      source.instance_eval(&block)
+      source.instance_eval(&)
 
       @source = source
     end

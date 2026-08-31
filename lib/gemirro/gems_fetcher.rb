@@ -78,11 +78,7 @@ module Gemirro
     #
     def fetch_gemspec(gem, version)
       filename = gem.gemspec_filename(version)
-      satisfied = if gem.only_latest?
-                    true
-                  else
-                    gem.requirement.satisfied_by?(version)
-                  end
+      satisfied = gem.only_latest? || gem.requirement.satisfied_by?(version)
 
       if gemspec_exists?(filename) || !satisfied
         Utils.logger.debug("Skipping #{filename}")
@@ -162,8 +158,8 @@ module Gemirro
     ##
     # @see Gemirro::Configuration#ignore_gem?
     #
-    def ignore_gem?(*args)
-      Utils.configuration.ignore_gem?(*args)
+    def ignore_gem?(*)
+      Utils.configuration.ignore_gem?(*)
     end
   end
 end

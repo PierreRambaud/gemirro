@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'gemirro/configuration'
 require 'gemirro/http'
 require 'gemirro/utils'
 require 'gemirro/source'

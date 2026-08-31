@@ -2,61 +2,135 @@
 
 module Gemirro
   ##
-  # The Http class is responsible for executing GET request
-  # to a specific url and return an response as an HTTP::Message
-  #
-  # @!attribute [r] client
-  #  @return [HTTPClient]
+  # The Http class is responsible for executing GET requests against a
+  # given URL, following redirects and reusing keep-alive connections.
   #
   class Http
-    attr_accessor :client
-
     ##
-    # Requests the given HTTP resource.
+    # Raised when a request comes back with a non-successful,
+    # non-redirect HTTP status.
     #
-    # @param [String] url
-    # @return [HTTP::Message]
-    #
-    def self.get(url)
-      response = client.get(url, follow_redirect: true)
+    class Error < StandardError; end
 
-      raise HTTPClient::BadResponseError, response.reason unless HTTP::Status.successful?(response.status)
+    MAX_REDIRECTS = 10
 
-      response
-    end
-
-    ##
-    # @return [HTTPClient]
-    #
-    def self.client
-      client ||= HTTPClient.new
-      config = Utils.configuration
-      if defined?(config.upstream_user)
-        user = config.upstream_user
-        password = config.upstream_password
-        domain = config.upstream_domain
-        client.set_auth(domain, user, password)
+    class << self
+      ##
+      # Requests the given HTTP resource, following redirects.
+      #
+      # @param [String] url
+      # @return [Net::HTTPResponse]
+      #
+      def get(url)
+        fetch(URI.parse(url), MAX_REDIRECTS)
       end
 
-      if defined?(config.proxy)
-        proxy = config.proxy
-        client.proxy = (proxy)
+      ##
+      # Closes and forgets every connection cached for the current
+      # Thread. Mostly useful for tests.
+      #
+      def reset!
+        pool.each_value { |connection| connection.finish if connection.started? }
+        pool.clear
       end
 
-      # Use my own ca file for self signed cert
-      if defined?(config.rootca)
-        abort "The configuration file #{config.rootca} does not exist" unless File.file?(config.rootca)
-        client.ssl_config.verify_mode = OpenSSL::SSL::VERIFY_PEER
-        client.ssl_config.set_trust_ca(config.rootca)
-      elsif defined?(config.verify_mode)
-        client.ssl_config.verify_mode = OpenSSL::SSL::VERIFY_NONE unless config.verify_mode
+      private
+
+      ##
+      # @param [URI] uri
+      # @param [Integer] redirects_left
+      # @return [Net::HTTPResponse]
+      #
+      def fetch(uri, redirects_left)
+        response = connection_for(uri).request(build_request(uri))
+
+        case response
+        when Net::HTTPRedirection
+          raise Error, "Too many redirects for #{uri}" if redirects_left <= 0
+
+          fetch(URI.parse(response['location']), redirects_left - 1)
+        when Net::HTTPSuccess
+          response
+        else
+          raise Error, "#{response.code} #{response.message}"
+        end
       end
 
-      # Enforce base auth
-      if defined?(config.basic_auth) && config.basic_auth
-        client.www_auth.basic_auth.force_auth = (true)
+      ##
+      # @param [URI] uri
+      # @return [Net::HTTP::Get]
+      #
+      def build_request(uri)
+        request = Net::HTTP::Get.new(uri)
+        config = Utils.configuration
+        request.basic_auth(config.upstream_user, config.upstream_password) if defined?(config.upstream_user)
+
+        request
       end
-      @client = client
+
+      ##
+      # Returns a started, keep-alive connection for the given URI,
+      # reusing one already opened by the current Thread when possible.
+      #
+      # @param [URI] uri
+      # @return [Net::HTTP]
+      #
+      def connection_for(uri)
+        key = "#{uri.scheme}://#{uri.host}:#{uri.port}"
+        pool[key] ||= build_connection(uri)
+      end
+
+      ##
+      # Connection pool for the current Thread. Kept per-Thread so
+      # sockets are never shared/interleaved across concurrent requests.
+      #
+      # @return [Hash]
+      #
+      def pool
+        Thread.current[:gemirro_http_pool] ||= {}
+      end
+
+      ##
+      # @param [URI] uri
+      # @return [Net::HTTP]
+      #
+      def build_connection(uri)
+        config = Utils.configuration
+        http = Net::HTTP.new(uri.host, uri.port, *proxy_args(config))
+        http.use_ssl = uri.scheme == 'https'
+        configure_ssl(http, config)
+
+        http.start
+      end
+
+      ##
+      # @param [Net::HTTP] http
+      # @param [Gemirro::Configuration] config
+      #
+      def configure_ssl(http, config)
+        if defined?(config.rootca)
+          abort "The configuration file #{config.rootca} does not exist" unless File.file?(config.rootca)
+
+          http.verify_mode = OpenSSL::SSL::VERIFY_PEER
+          http.ca_file = config.rootca
+        elsif defined?(config.verify_mode) && !config.verify_mode
+          http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+        end
+      end
+
+      ##
+      # Splits a `proxy 'http://user:pass@host:port'` configuration
+      # value into the args expected by `Net::HTTP.new`.
+      #
+      # @param [Gemirro::Configuration] config
+      # @return [Array]
+      #
+      def proxy_args(config)
+        return [] unless defined?(config.proxy) && config.proxy
+
+        proxy_uri = URI.parse(config.proxy)
+        [proxy_uri.host, proxy_uri.port, proxy_uri.user, proxy_uri.password]
+      end
     end
   end
 end

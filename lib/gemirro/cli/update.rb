@@ -1,27 +1,52 @@
 # frozen_string_literal: true
 
-Gemirro::CLI.options.command 'update' do
-  banner 'Usage: gemirro update [OPTIONS]'
-  description 'Updates the list of Gems'
-  separator "\nOptions:\n"
+module Gemirro
+  module CLI
+    # `gemirro update` command
+    module UpdateCommand
+      ##
+      # @param [Array] argv
+      #
+      def self.run(argv)
+        options = {}
+        option_parser(options).parse!(argv)
 
-  on :c=, :config=, 'Path to the configuration file'
-  on :l=, :log_level=, 'Set logger level'
+        Gemirro::CLI.load_configuration(options[:config])
+        config = Gemirro.configuration
+        config.logger_level = options[:log_level] if options[:log_level]
 
-  run do |opts, _args|
-    Gemirro::CLI.load_configuration(opts[:c])
-    config.logger_level = opts[:l] if opts[:l]
+        source = config.source
+        versions = Gemirro::VersionsFetcher.new(source).fetch
+        gems     = Gemirro::GemsFetcher.new(source, versions)
 
-    source = Gemirro.configuration.source
-    versions = Gemirro::VersionsFetcher.new(source).fetch
-    gems     = Gemirro::GemsFetcher.new(source, versions)
+        gems.fetch
 
-    gems.fetch
+        source.gems.each do |gem|
+          gem.gemspec = true
+        end
 
-    source.gems.each do |gem|
-      gem.gemspec = true
+        gems.fetch
+      end
+
+      ##
+      # @param [Hash] options
+      # @return [OptionParser]
+      #
+      def self.option_parser(options)
+        OptionParser.new do |opts|
+          opts.banner = 'Usage: gemirro update [OPTIONS]'
+          opts.separator ''
+          opts.separator 'Options:'
+          opts.separator ''
+
+          opts.on('-c', '--config CONFIG', 'Path to the configuration file') { |v| options[:config] = v }
+          opts.on('-l', '--log_level LEVEL', 'Set logger level') { |v| options[:log_level] = v }
+          opts.on('-h', '--help', 'Display this help message.') do
+            puts opts
+            exit
+          end
+        end
+      end
     end
-
-    gems.fetch
   end
 end
