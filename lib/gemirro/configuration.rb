@@ -166,9 +166,11 @@ module Gemirro
     # @param [String] version
     #
     def ignore_gem(name, version, platform)
-      ignored_gems[platform] ||= {}
-      ignored_gems[platform][name] ||= []
-      ignored_gems[platform][name] << version
+      ignored_gems_mutex.synchronize do
+        ignored_gems[platform] ||= {}
+        ignored_gems[platform][name] ||= []
+        ignored_gems[platform][name] << version
+      end
     end
 
     ##
@@ -179,11 +181,23 @@ module Gemirro
     # @return [TrueClass|FalseClass]
     #
     def ignore_gem?(name, version, platform)
-      if ignored_gems[platform][name]
-        ignored_gems[platform][name].include?(version)
-      else
-        false
+      ignored_gems_mutex.synchronize do
+        if ignored_gems[platform][name]
+          ignored_gems[platform][name].include?(version)
+        else
+          false
+        end
       end
+    end
+
+    ##
+    # Guards {#ignored_gems} against concurrent mutation, since gems can
+    # be fetched from multiple threads at once (see {GemsFetcher#fetch}).
+    #
+    # @return [Mutex]
+    #
+    def ignored_gems_mutex
+      @ignored_gems_mutex ||= Mutex.new
     end
 
     ##

@@ -17,7 +17,7 @@ module Gemirro
         Gemirro::CLI.ensure_destination!(config)
 
         indexer    = Gemirro::Indexer.new
-        indexer.ui = Gem::SilentUI.new
+        indexer.ui = ::Gem::SilentUI.new
 
         if File.exist?(File.join(config.versions_file))
           indexer.download_source_versions

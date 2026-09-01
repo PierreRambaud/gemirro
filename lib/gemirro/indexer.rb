@@ -119,7 +119,7 @@ module Gemirro
       source_host = Gemirro.configuration.source.host
       Utils.logger.info("Download from source #{source_host}/#{file}")
       resp = Http.get("#{source_host}/#{File.basename(file)}")
-      return unless resp.code == 200
+      return unless resp.code.to_i == 200
 
       resp.body
     end

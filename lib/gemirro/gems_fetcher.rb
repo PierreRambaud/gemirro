@@ -23,10 +23,12 @@ module Gemirro
     end
 
     ##
-    # Fetches the Gems.
+    # Fetches the Gems, in parallel across
+    # `Gemirro.configuration.update_thread_count` threads since each Gem is
+    # an independent network round-trip.
     #
     def fetch
-      @source.gems.each do |gem|
+      Parallel.each(@source.gems, in_threads: Utils.configuration.update_thread_count) do |gem|
         versions_for(gem).each do |versions|
           gem.platform = versions[1] if versions
           version = versions[0] if versions
