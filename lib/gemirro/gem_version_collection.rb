@@ -59,8 +59,8 @@ module Gemirro
     ##
     # Each method
     #
-    def each(&block)
-      @gems.each(&block)
+    def each(&)
+      @gems.each(&)
     end
 
     ##
@@ -69,7 +69,7 @@ module Gemirro
     # @param [Proc] block
     # @return [Array]
     #
-    def by_name(&block)
+    def by_name(&)
       if @grouped.nil?
         @grouped = @gems.group_by(&:name).map do |name, collection|
           [name, GemVersionCollection.new(collection)]
@@ -85,7 +85,7 @@ module Gemirro
       end
 
       if block_given?
-        @grouped.each(&block)
+        @grouped.each(&)
       else
         @grouped
       end

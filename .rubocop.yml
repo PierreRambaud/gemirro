@@ -1,7 +1,7 @@
 AllCops:
   SuggestExtensions: false
   NewCops: enable
-  TargetRubyVersion: 3.0
+  TargetRubyVersion: 3.2
   Include:
     - '**/Gemfile'
     - lib/**/*.rb
@@ -19,6 +19,8 @@ Naming/FileName:
 Metrics/MethodLength:
   Enabled: false
 Metrics/ClassLength:
+  Enabled: false
+Metrics/ModuleLength:
   Enabled: false
 Metrics/CyclomaticComplexity:
   Enabled: false

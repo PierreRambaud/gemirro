@@ -3,11 +3,4 @@
 
 require File.expand_path('../../lib/gemirro', __FILE__)
 
-options = Gemirro::CLI.options
-
-begin
-  puts options if options.parse.empty?
-rescue Slop::InvalidOptionError => e
-  puts e.message
-  puts options
-end
+Gemirro::CLI.run(ARGV)

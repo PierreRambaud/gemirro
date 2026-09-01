@@ -23,10 +23,12 @@ module Gemirro
     end
 
     ##
-    # Fetches the Gems.
+    # Fetches the Gems, in parallel across
+    # `Gemirro.configuration.update_thread_count` threads since each Gem is
+    # an independent network round-trip.
     #
     def fetch
-      @source.gems.each do |gem|
+      Parallel.each(@source.gems, in_threads: Utils.configuration.update_thread_count) do |gem|
         versions_for(gem).each do |versions|
           gem.platform = versions[1] if versions
           version = versions[0] if versions
@@ -78,11 +80,7 @@ module Gemirro
     #
     def fetch_gemspec(gem, version)
       filename = gem.gemspec_filename(version)
-      satisfied = if gem.only_latest?
-                    true
-                  else
-                    gem.requirement.satisfied_by?(version)
-                  end
+      satisfied = gem.only_latest? || gem.requirement.satisfied_by?(version)
 
       if gemspec_exists?(filename) || !satisfied
         Utils.logger.debug("Skipping #{filename}")
@@ -162,8 +160,8 @@ module Gemirro
     ##
     # @see Gemirro::Configuration#ignore_gem?
     #
-    def ignore_gem?(*args)
-      Utils.configuration.ignore_gem?(*args)
+    def ignore_gem?(*)
+      Utils.configuration.ignore_gem?(*)
     end
   end
 end

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'sinatra/base'
-require 'thin'
+require 'puma'
 require 'uri'
 require 'addressable/uri'
 require 'base64'
@@ -33,6 +33,7 @@ module Gemirro
       config.server.port = '2000' if config.server.port.nil?
 
       set :static, true
+      set :server, 'puma'
 
       set :views, Gemirro::Configuration.views_directory
       set :port, config.server.port

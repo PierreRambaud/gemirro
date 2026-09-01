@@ -47,7 +47,7 @@ module Gemirro
       version = ::Gem::Version.new('0.0.1')
       Utils.configuration.ignore_gem('gemirro', '0.0.1', 'ruby')
       allow(@source).to receive(:fetch_gem)
-        .once.with('gemirro', version).and_raise(ArgumentError)
+        .once.with('gemirro-0.0.1.gem').and_raise(ArgumentError)
       allow(Utils.logger).to receive(:error)
         .once.with(/Failed to retrieve/)
       allow(Utils.logger).to receive(:debug)

@@ -17,6 +17,7 @@ module Gemirro
   #
   class GemVersion
     include Comparable
+
     attr_reader :name, :number, :platform
 
     ##

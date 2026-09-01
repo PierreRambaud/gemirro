@@ -27,10 +27,8 @@ module Gemirro
     #
     def write(content)
       FileUtils.mkdir_p(File.dirname(@path))
-      handle = File.open(@path, 'w')
-
-      handle.write(content)
-      handle.close
+      File.write(@path, content)
+      nil
     end
 
     ##
@@ -39,12 +37,7 @@ module Gemirro
     # @return [String]
     #
     def read
-      handle  = File.open(@path, 'r')
-      content = handle.read
-
-      handle.close
-
-      content
+      File.read(@path)
     end
   end
 end

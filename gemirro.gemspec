@@ -16,23 +16,21 @@ Gem::Specification.new do |s|
 
   s.files = File.read(File.expand_path('../MANIFEST', __FILE__)).split("\n")
 
-  s.required_ruby_version = '>= 3.0'
+  s.required_ruby_version = '>= 3.2'
 
   s.add_dependency 'addressable', '~>2.8'
   s.add_dependency 'builder', '~>3.2'
   s.add_dependency 'compact_index', '~> 0.15'
   s.add_dependency 'confstruct', '~>1.1'
-  s.add_dependency 'erubis', '~>2.7'
-  s.add_dependency 'httpclient', '~>2.8'
   s.add_dependency 'logger', '> 0' # stdlib
   s.add_dependency 'mutex_m', '> 0' # stdlib
   s.add_dependency 'ostruct', '> 0' # stdlib
   s.add_dependency 'parallel', '~>1.21'
+  s.add_dependency 'puma', '~> 6.4'
+  s.add_dependency 'rackup', '~> 2.2'
   s.add_dependency 'rubygems-generate_index', '> 0' # stdlib
-  s.add_dependency 'sinatra', '>=3.1', '<4.0'
-  s.add_dependency 'slop', '~>3.6'
+  s.add_dependency 'sinatra', '~> 4.0'
   s.add_dependency 'stringio', '> 0' # stdlib
-  s.add_dependency 'thin', '~>1.8'
 
   s.metadata['rubygems_mfa_required'] = 'true'
 end
