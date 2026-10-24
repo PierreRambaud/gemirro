@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'addressable/uri'
 require 'gemirro/gem_version'
 
 module Gemirro
@@ -25,6 +26,7 @@ module Gemirro
     URI_REGEXP = /^(.*)-(\d+(?:\.\d+){1,4}.*?)(?:-(x86-(?:(?:mswin|mingw)(?:32|64)).*?|java))?\.(gem(?:spec\.rz)?)$/
     GEMSPEC_TYPE = 'gemspec.rz'
     GEM_TYPE = 'gem'
+    SAFE_HOMEPAGE_SCHEMES = %w[http https].freeze
 
     ##
     # Generate Gems collection from Marshal dump - always the .local file
@@ -154,6 +156,31 @@ module Gemirro
 
         Marshal.load(inflate_data)
       end
+    end
+
+    ##
+    # Return a normalized homepage URL that is safe to use as a link target,
+    # or nil when it is missing, unparsable or not an http(s) URL with a host.
+    # Gem metadata comes from upstream sources and must not be trusted.
+    #
+    # @param [String] homepage
+    # @return [String, nil]
+    #
+    def self.safe_homepage(homepage)
+      return if homepage.nil?
+
+      # Browsers ignore control characters and whitespace inside a scheme
+      # (e.g. "java\tscript:"), so drop them before validating.
+      value = homepage.to_s.gsub(/[[:cntrl:][:space:]]/, '')
+      return if value.empty?
+
+      uri = Addressable::URI.parse(value).normalize
+      return unless SAFE_HOMEPAGE_SCHEMES.include?(uri.scheme&.downcase)
+      return if uri.host.nil? || uri.host.empty?
+
+      uri.to_s
+    rescue Addressable::URI::InvalidURIError, ArgumentError, TypeError
+      nil
     end
 
     ##

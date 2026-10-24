@@ -81,6 +81,39 @@ module Gemirro
         expect(last_response.status).to eq(200)
         expect(last_response).to be_ok
       end
+
+      it 'should not link a javascript: homepage from gem metadata' do
+        MirrorFile.new('/var/www/gemirro/versions.md5.aaa256.list').write(%(created_at: 2025-01-01T00:00:00Z\n---\nvolay 0.1.0 checksum))
+        spec = ::Gem::Specification.new do |s|
+          s.name = 'volay'
+          s.version = '0.1.0'
+          s.authors = ['Mallory']
+          s.homepage = 'javascript:alert(1)'
+        end
+        allow(Utils).to receive(:spec_for).and_return(spec)
+
+        get '/gem/volay'
+
+        expect(last_response).to be_ok
+        expect(last_response.body).to include('Mallory')
+        expect(last_response.body).not_to include('javascript:')
+      end
+
+      it 'should link an https homepage from gem metadata' do
+        MirrorFile.new('/var/www/gemirro/versions.md5.aaa256.list').write(%(created_at: 2025-01-01T00:00:00Z\n---\nvolay 0.1.0 checksum))
+        spec = ::Gem::Specification.new do |s|
+          s.name = 'volay'
+          s.version = '0.1.0'
+          s.authors = ['Alice']
+          s.homepage = 'https://example.com/volay'
+        end
+        allow(Utils).to receive(:spec_for).and_return(spec)
+
+        get '/gem/volay'
+
+        expect(last_response).to be_ok
+        expect(last_response.body).to include('href="https://example.com/volay"')
+      end
       
       it 'responds to compact_index /names' do
         MirrorFile.new('/var/www/gemirro/names.md5.aaa256.list').write(%(---\nvolay))

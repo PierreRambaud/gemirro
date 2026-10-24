@@ -34,12 +34,17 @@
         <% end %>
 
         <% if spec.authors.size > 0 %>
+          <% homepage = Gemirro::Utils.safe_homepage(spec.homepage) %>
           <dd class="authors">
             <h3>Authors</h3>
             <ul>
               <% spec.authors.each do |author| %>
                 <li class="list-group-item">
-                  <a href="<%= URI.parse(Addressable::URI.escape(spec.homepage)) %>"><%= Rack::Utils.escape_html(author) %></a>
+                  <% if homepage %>
+                    <a href="<%= Rack::Utils.escape_html(homepage) %>" rel="noopener noreferrer nofollow"><%= Rack::Utils.escape_html(author) %></a>
+                  <% else %>
+                    <%= Rack::Utils.escape_html(author) %>
+                  <% end %>
                 </li>
               <% end %>
             </ul>
